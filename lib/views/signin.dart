@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class SignInPage extends StatelessWidget {
+class SignInScreen extends StatelessWidget {
   static String id = 'signin';
   @override
   Widget build(BuildContext context) {
