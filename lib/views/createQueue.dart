@@ -1,9 +1,11 @@
 import 'dart:developer';
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:qme_subscriber/constants.dart';
-import 'package:qme_subscriber/utilities/time.dart';
-import 'package:qme_subscriber/widgets/text.dart';
+import 'package:intl/intl.dart';
+import '../views/queues.dart';
+import '../constants.dart';
+import '../utilities/time.dart';
+import '../widgets/text.dart';
 
 class CreateQueueScreen extends StatefulWidget {
   static final id = 'createQueue';
@@ -12,33 +14,68 @@ class CreateQueueScreen extends StatefulWidget {
 }
 
 class _CreateQueueScreenState extends State<CreateQueueScreen> {
-  DateTime _startDateTime = DateTime.now(), _endDataTime;
+  DateTime _startDateTime, _endDateTime;
+  Map<String, dynamic> formData = {};
+  int avgTime, maxPeople;
+  final formKey = GlobalKey<FormState>();
 
-  Future _selectDate() async {
+  Future<DateTime> _selectDate(DateTime oldDateTime) async {
+    DateTime dateTime = oldDateTime;
     DateTime picked = await showDatePicker(
         context: context,
         initialDate: DateTime.now(),
         firstDate: DateTime.now(),
         lastDate: DateTime.now().add(Duration(days: 90)));
     if (picked != null) {
-      setState(() {
-        _startDateTime = picked;
-      });
-      log(_startDateTime.toString());
+      dateTime == null
+          ? dateTime = picked
+          : dateTime = DateTime(
+              picked.year,
+              picked.month,
+              picked.day,
+              dateTime.hour,
+              dateTime.minute,
+            );
+      log('DATE PICKED\n${picked.toString()}\nDate Selected: ${dateTime.toString()}');
+      return dateTime;
+    } else {
+      return oldDateTime;
     }
   }
 
-  Future _selectTime() async {
+  Future<DateTime> _selectTime(DateTime oldDateTime) async {
+    DateTime newDateTime = oldDateTime;
     TimeOfDay picked = await showTimePicker(
       initialTime: TimeOfDay.now(),
       context: context,
+      builder: (BuildContext context, Widget child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
-        _startDateTime
-            .add(Duration(hours: picked.hour, minutes: picked.minute));
+        if (newDateTime != null) {
+          newDateTime = newDateTime
+              .add(Duration(hours: picked.hour, minutes: picked.minute));
+          log('Time added');
+        } else {
+          final now = DateTime.now();
+          newDateTime = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            picked.hour,
+            picked.minute,
+          );
+        }
       });
-      log(_startDateTime.toString());
+      log('TIME PICKED\n${picked.toString()}\nDate Selected: ${newDateTime.toString()}');
+      return newDateTime;
+    } else {
+      return oldDateTime;
     }
   }
 
@@ -47,57 +84,252 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     return Scaffold(
       appBar: AppBar(
         //  title: Text('Create Queue'),
-        leading: Icon(Icons.arrow_back_ios),
+        leading: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Icon(Icons.arrow_back_ios)),
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              ThemedText(
-                words: ['Create Queue'],
-                fontSize: 50,
-              ),
-              Text('Start', style: kBigTextStyle),
-              Row(
-                children: <Widget>[
-                  Flexible(
-                    child: InkWell(
-                      onTap: () {
-                        _selectDate();
-                      },
-                      child: IgnorePointer(
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                            hintText: 'DD-MM-YYYY',
-                            labelText: getDate(_startDateTime),
+              ThemedText(words: ['Create Queue'], fontSize: 50),
+              SizedBox(height: 20),
+              Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('Start', style: kBigTextStyle.copyWith(fontSize: 26)),
+                    Row(
+                      children: <Widget>[
+                        Flexible(
+                          child: InkWell(
+                            onTap: () async {
+                              DateTime picked =
+                                  await _selectDate(_startDateTime);
+                              setState(() {
+                                log('Date set state called');
+                                _startDateTime = picked;
+                                formData['startDateTime'] = picked;
+                              });
+                            },
+                            child: IgnorePointer(
+                              child: TextFormField(
+                                controller: TextEditingController()
+                                  ..text = _startDateTime != null
+                                      ? getDate(_startDateTime)
+                                      : null,
+                                decoration:
+                                    InputDecoration(hintText: 'DD-MM-YYYY'),
+                                validator: (value) => value.isEmpty
+                                    ? 'Date cannot be left empty'
+                                    : null,
+                              ),
+                            ),
                           ),
-//                          onSaved: (String val) {},
                         ),
-                      ),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: InkWell(
+                            onTap: () async {
+                              DateTime temp = await _selectTime(_startDateTime);
+                              if (temp != null) {
+                                setState(() {
+                                  log('Time Set state called');
+                                  _startDateTime = temp;
+                                  formData['startDateTime'] = _startDateTime;
+                                });
+                              } else {
+                                log('no time selected');
+                              }
+                            },
+                            child: IgnorePointer(
+                              child: TextFormField(
+                                controller: TextEditingController()
+                                  ..text = _startDateTime != null
+                                      ? getTime(_startDateTime)
+                                      : null,
+                                decoration: InputDecoration(hintText: 'hh:mm'),
+                                validator: (value) => value.isEmpty
+                                    ? 'Time cannot me left empty '
+                                    : null,
+                                onSaved: (String val) {},
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Flexible(
-                    child: InkWell(
-                      onTap: () {
-                        _selectTime();
+                    SizedBox(height: 15),
+                    Text('End', style: kBigTextStyle.copyWith(fontSize: 26)),
+                    Row(
+                      children: <Widget>[
+                        Flexible(
+                          child: InkWell(
+                            onTap: () async {
+                              DateTime picked = await _selectDate(_endDateTime);
+                              setState(() {
+                                log('Date set state called');
+                                _endDateTime = picked;
+                                formData['endDateTime'] = _endDateTime;
+                              });
+                            },
+                            child: IgnorePointer(
+                              child: TextFormField(
+                                controller: TextEditingController()
+                                  ..text = _endDateTime != null
+                                      ? getDate(_endDateTime)
+                                      : null,
+                                decoration:
+                                    InputDecoration(hintText: 'DD-MM-YYYY'),
+                                validator: (value) => value.isEmpty
+                                    ? 'Date cannot be left empty'
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: InkWell(
+                            onTap: () async {
+                              DateTime temp = await _selectTime(_endDateTime);
+                              if (temp != null) {
+                                setState(() {
+                                  log('Time Set state called');
+                                  _endDateTime = temp;
+                                  formData['endDateTime'] = _endDateTime;
+                                });
+                              } else {
+                                log('no time selected');
+                              }
+                            },
+                            child: IgnorePointer(
+                              child: TextFormField(
+                                controller: TextEditingController()
+                                  ..text = _endDateTime != null
+                                      ? getTime(_endDateTime)
+                                      : null,
+                                decoration: InputDecoration(hintText: 'hh:mm'),
+                                validator: (value) => value.isEmpty
+                                    ? 'Time cannot me left empty '
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 15),
+                    TextFormField(
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Average Time per token (in minutes)',
+                        hintStyle: TextStyle(color: Colors.redAccent),
+                        hoverColor: Colors.green,
+                      ),
+                      onSaved: (value) {
+                        log(value);
                       },
-                      child: IgnorePointer(
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                              hintText: 'Time',
-                              labelText: getTime(_startDateTime)),
-//                        maxLength: 10,
-                          // validator: validateDob,
-                          onSaved: (String val) {},
-                        ),
-                      ),
+                      validator: (value) {
+                        if (value.isEmpty)
+                          return 'This field cannot be left empty';
+                        else {
+                          try {
+                            avgTime = int.parse(value);
+                            formData['avgTime'] = avgTime;
+                            log("Everything in avgTime is ok");
+                            return null;
+                          } on FormatException catch (e) {
+                            log(e.toString());
+                            return 'Please enter an integer value';
+                          } catch (e) {
+                            return e.toString();
+                          }
+                        }
+                      },
                     ),
-                  ),
-                ],
-              )
+                    SizedBox(height: 15),
+                    TextFormField(
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Maximum number of people allowed in queue',
+                        hintStyle: TextStyle(color: Colors.redAccent),
+                        hoverColor: Colors.green,
+                      ),
+                      validator: (value) {
+                        if (value.isEmpty)
+                          return 'This field cannot be left empty';
+                        else {
+                          try {
+                            maxPeople = int.parse(value);
+                            formData['maxPeople'] = maxPeople;
+                            log("Everything in maxPeople is ok");
+                            return null;
+                          } on FormatException catch (e) {
+                            log(e.toString());
+                            return 'Please enter an integer value';
+                          } catch (e) {
+                            return e.toString();
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              CreateQueueButton(
+                formKey: formKey,
+                formData: formData,
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CreateQueueButton extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final Map<String, dynamic> formData;
+  CreateQueueButton({@required this.formKey, @required this.formData});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50.0,
+      margin: EdgeInsets.all(20),
+      alignment: Alignment.center,
+      child: Material(
+        borderRadius: BorderRadius.circular(20.0),
+        shadowColor: Colors.greenAccent,
+        color: Colors.green,
+        elevation: 7.0,
+        child: InkWell(
+          onTap: () {
+            log('${formData.toString()}');
+            if (formKey.currentState.validate()) {
+              log('Form Valid');
+              // TODO Call api to create queue
+              // TODO If queue created successfully then
+              Navigator.pop(context);
+              // TODO if queue creating failed show a message with the error
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Center(
+              child: Text(
+                'Create Queue',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat'),
+              ),
+            ),
           ),
         ),
       ),
