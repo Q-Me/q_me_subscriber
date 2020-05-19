@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:qme_subscriber/views/people.dart';
+import 'package:qme_subscriber/views/viewQueue.dart';
 import 'views/signup.dart';
 import 'views/signin.dart';
 import 'views/profile.dart';
@@ -19,8 +21,10 @@ class MyApp extends StatelessWidget {
         ProfileScreen.id: (BuildContext context) => ProfileScreen(),
         QueuesPage.id: (BuildContext context) => QueuesPage(),
         CreateQueueScreen.id: (BuildContext context) => CreateQueueScreen(),
+        ViewQueueScreen.id: (BuildContext context) => ViewQueueScreen(),
+        PeopleScreen.id: (BuildContext context) => PeopleScreen(),
       },
-      initialRoute: CreateQueueScreen.id,
+      initialRoute: PeopleScreen.id,
     );
   }
 }
