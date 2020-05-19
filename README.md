@@ -1,4 +1,4 @@
-# qme_subscriber
+# Q Me Subscriber App
 
 Subscriber app for Q Me
 
