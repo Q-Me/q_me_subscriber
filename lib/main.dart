@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         ViewQueueScreen.id: (BuildContext context) => ViewQueueScreen(),
         PeopleScreen.id: (BuildContext context) => PeopleScreen(),
       },
-      initialRoute: PeopleScreen.id,
+      initialRoute: SignUpScreen.id,
     );
   }
 }

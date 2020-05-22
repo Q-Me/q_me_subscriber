@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
+
 Users usersFromJson(String str) => Users.fromJson(json.decode(str));
 
 String usersToJson(Users data) => json.encode(data.toJson());
@@ -26,30 +28,36 @@ class Users {
 
 class User {
   String userId;
-  String name;
+  String firstName;
+  String lastName;
   String email;
   String phone;
   int tokenNo;
 
   User({
     this.userId,
-    this.name,
+    @required this.firstName,
+    this.lastName,
     this.email,
     this.phone,
     this.tokenNo,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
-        userId: json["user_id"],
-        name: json["name"],
-        email: json["email"],
-        phone: json["phone"],
-        tokenNo: json["token_no"],
-      );
+  factory User.fromJson(Map<String, dynamic> json) {
+    final splitName = json["name"].split("|");
+    return User(
+      userId: json["user_id"],
+      firstName: splitName[0],
+      lastName: splitName.length > 1 ? splitName[1] : null,
+      email: json["email"],
+      phone: json["phone"],
+      tokenNo: json["token_no"],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "user_id": userId,
-        "name": name,
+        "name": firstName,
         "email": email,
         "phone": phone,
         "token_no": tokenNo,

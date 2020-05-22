@@ -18,17 +18,19 @@ class ApiBaseHelper {
   }
 
   Future<dynamic> post(String url,
-      {Map req, Map<String, String> headers}) async {
+      {Map<String, String> req, Map<String, String> headers}) async {
     var responseJson;
+    Map<String, String> myHeader = headers == null ? {} : headers;
+
     try {
       if (req != null) {
-        headers['Accept'] = 'application/json';
-        headers['Content-type'] = 'application/json';
+        myHeader['Accept'] = 'application/json';
+        myHeader['Content-type'] = 'application/json';
       }
-//      log('Posting to ${baseURL + url}\nRequest:$req\nHeader:$headers');
+//      log('Posting to ${baseURL + url}\nRequest:$req\nHeader:$myHeader');
       final response = await http.post(
         baseURL + url,
-        headers: headers,
+        headers: myHeader,
         body: jsonEncode(req),
       );
       responseJson = _returnResponse(response);

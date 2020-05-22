@@ -1,175 +1,207 @@
 import 'package:flutter/material.dart';
-import 'package:qme_subscriber/constants.dart';
+import 'package:qme_subscriber/api/base_helper.dart';
+import 'package:qme_subscriber/bloc/poeple.dart';
+import 'package:qme_subscriber/widgets/loader.dart';
+import '../constants.dart';
 import '../model/user.dart';
-
-final sampleJson = '''
-{
-    "user": [
-        {
-            "user_id": "teAZLZQQz",
-            "name": "Kavya1",
-            "email": "Kavya24@gmail.com",
-            "phone": "9898009900",
-            "token_no": 1
-        },
-        {
-            "user_id": "YVVnAiZpp",
-            "name": "K2",
-            "email": "K2@gmail.com",
-            "phone": "9898009900",
-            "token_no": 2
-        },
-        {
-            "user_id": "1wURstfk9",
-            "name": "K3",
-            "email": "K3@gmail.com",
-            "phone": "9898009900",
-            "token_no": 3
-        },
-        {
-            "user_id": "teAZLZQQz",
-            "name": "Kavya1",
-            "email": "Kavya24@gmail.com",
-            "phone": "9898009900",
-            "token_no": 1
-        },
-        {
-            "user_id": "YVVnAiZpp",
-            "name": "K2",
-            "email": "K2@gmail.com",
-            "phone": "9898009900",
-            "token_no": 2
-        },
-        {
-            "user_id": "1wURstfk9",
-            "name": "K3",
-            "email": "K3@gmail.com",
-            "phone": "9898009900",
-            "token_no": 3
-        },
-        {
-            "user_id": "teAZLZQQz",
-            "name": "Kavya1",
-            "email": "Kavya24@gmail.com",
-            "phone": "9898009900",
-            "token_no": 1
-        },
-        {
-            "user_id": "YVVnAiZpp",
-            "name": "K2",
-            "email": "K2@gmail.com",
-            "phone": "9898009900",
-            "token_no": 2
-        },
-        {
-            "user_id": "1wURstfk9",
-            "name": "K3",
-            "email": "K3@gmail.com",
-            "phone": "9898009900",
-            "token_no": 3
-        }
-    ]
-}
-''';
+import '../widgets/badge.dart';
+import '../widgets/error.dart';
+import 'dart:developer';
+import 'package:provider/provider.dart';
 
 class PeopleScreen extends StatefulWidget {
   static final id = 'people';
+
+  final String status;
+  final String queueId;
+  PeopleScreen({this.status = 'WAITING', this.queueId});
   @override
   _PeopleScreenState createState() => _PeopleScreenState();
 }
 
 class _PeopleScreenState extends State<PeopleScreen> {
-  final List<User> users = usersFromJson(sampleJson).user;
-  User user;
+  List<User> users;
+  PeopleBloc peopleBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    peopleBloc = PeopleBloc(queueId: widget.queueId, status: widget.status);
+    peopleBloc.fetchPeopleList();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (peopleBloc == null) {
+      peopleBloc = PeopleBloc(queueId: widget.queueId, status: widget.status);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    user = users[0];
-
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.menu),
+        leading: Icon(Icons.arrow_back_ios),
         title: Text('Queue Tokens'),
       ),
-      body: Column(
+      body: ChangeNotifierProvider.value(
+        value: peopleBloc,
+        child: Column(
+          children: <Widget>[
+            StreamBuilder<ApiResponse<User>>(
+                stream: peopleBloc.personStream,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    switch (snapshot.data.status) {
+                      case Status.LOADING:
+                        return Loading(loadingMessage: snapshot.data.message);
+                        break;
+                      case Status.COMPLETED:
+                        return TokenDetails(
+                            user: snapshot.data.data, status: widget.status);
+                        break;
+                      case Status.ERROR:
+                        return Error(
+                          errorMessage: snapshot.data.message,
+                          onRetryPressed: () => peopleBloc.fetchPeopleList(),
+                        );
+                        break;
+                    }
+                  } else {
+                    return Text('No stream data');
+                  }
+                  return Text('some uncaught error happened');
+                }),
+            Expanded(
+              flex: 2,
+              child: StreamBuilder<ApiResponse<List<User>>>(
+                  stream: peopleBloc.peopleListStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      switch (snapshot.data.status) {
+                        case Status.LOADING:
+                          return Loading(loadingMessage: snapshot.data.message);
+                          break;
+
+                        case Status.COMPLETED:
+                          return ListView.builder(
+                              itemCount: snapshot.data.data.length,
+                              itemBuilder: (context, index) {
+                                User _user = snapshot.data.data[index];
+                                return GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        Provider.of<PeopleBloc>(context,
+                                                listen: false)
+                                            .addPersonDetails(_user);
+                                      });
+                                    },
+                                    child: TokenCard(user: _user));
+                              });
+                          break;
+
+                        case Status.ERROR:
+                          return Error(
+                            errorMessage: snapshot.data.message,
+                            onRetryPressed: () => peopleBloc.fetchPeopleList(),
+                          );
+                          break;
+                      }
+                    } else {
+                      return Text('No snapshot data');
+                    }
+                    return Container();
+                  }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class TokenDetails extends StatelessWidget {
+  const TokenDetails({
+    @required this.user,
+    @required this.status,
+  });
+
+  final User user;
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+//    log('Building TokenDetails');
+    return Expanded(
+      flex: 1,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              user.name,
-                              style: kBigTextStyle.copyWith(fontSize: 20),
-                            ),
-                            Text(
-                              user.email,
-                              style: kBigTextStyle.copyWith(fontSize: 15),
-                            ),
-                            Text(
-                              user.phone,
-                              style: kBigTextStyle.copyWith(fontSize: 20),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text(
-                            'Token No.',
-                            style: kBigTextStyle,
-                          ),
-                          Text(
-                            user.tokenNo.toString(),
-                            style: kSmallTextStyle.copyWith(fontSize: 40),
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    MyButton('Cancel Token'),
-                    MyButton('Next Token'),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Row(
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text('Token No.', style: kSmallTextStyle),
-                      Spacer(flex: 1),
-                      Text('Name of Person', style: kSmallTextStyle),
-                      Spacer(flex: 6),
-                      Text('Status', style: kSmallTextStyle),
+                      Text(
+                        user.lastName != null
+                            ? user.firstName + ' ' + user.lastName
+                            : user.firstName,
+                        style: kBigTextStyle.copyWith(fontSize: 20),
+                      ),
+                      Text(
+                        user.email,
+                        style: kBigTextStyle.copyWith(fontSize: 15),
+                      ),
+                      Text(
+                        user.phone,
+                        style: kBigTextStyle.copyWith(fontSize: 20),
+                      ),
                     ],
                   ),
-                )
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      'Token No.',
+                      style: kBigTextStyle,
+                    ),
+                    Text(
+                      user.tokenNo.toString(),
+                      style: kSmallTextStyle.copyWith(fontSize: 40),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              CancelTokenButton(),
+              NextTokenButton(),
+            ],
+          ),
+          Container(child: Text('Showing people $status in the queue')),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              children: <Widget>[
+                Text('Token No.', style: kSmallTextStyle),
+                Spacer(flex: 1),
+                Text('Name of Person', style: kSmallTextStyle),
+                Spacer(flex: 6),
+                Text('Status', style: kSmallTextStyle),
               ],
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: ListView.builder(
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  User _user = users[index];
-                  return TokenCard(user: _user);
-                }),
-          ),
+          )
         ],
       ),
     );
@@ -187,11 +219,14 @@ class TokenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final int token =
+        Provider.of<PeopleBloc>(context, listen: false).person.tokenNo;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
       child: Card(
-        elevation: 3,
+        elevation: token == _user.tokenNo ? 0 : 3,
         shadowColor: Colors.greenAccent,
+        color: token == _user.tokenNo ? Colors.green[200] : Colors.white,
         child: Container(
           padding: EdgeInsets.all(10),
           child: Row(
@@ -199,19 +234,13 @@ class TokenCard extends StatelessWidget {
               Spacer(flex: 1),
               Text(_user.tokenNo.toString(), style: kSmallTextStyle),
               Spacer(flex: 2),
-              Text(_user.name),
+              Text(_user.lastName != null
+                  ? _user.firstName + ' ' + _user.lastName
+                  : _user.firstName),
               Spacer(flex: 5),
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.blue[100],
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Text(
-                  'WAITING',
-                  style: TextStyle(fontSize: 12),
-                ),
-              )
+              badgeMap['WAITING'],
+//              Badge(label: 'ACTIVE', color: Colors.lightBlue),
+//              Badge(label: 'DONE', color: Colors.green),
             ],
           ),
         ),
@@ -220,9 +249,40 @@ class TokenCard extends StatelessWidget {
   }
 }
 
-class MyButton extends StatelessWidget {
-  final String label;
-  MyButton(this.label);
+class CancelTokenButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50.0,
+      margin: EdgeInsets.all(10),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(width: 1, color: Colors.red),
+      ),
+      child: InkWell(
+        onTap: () {
+          Provider.of<PeopleBloc>(context, listen: false).cancelToken();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Center(
+            child: Text(
+              'Cancel Token',
+              style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Montserrat'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class NextTokenButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -235,12 +295,14 @@ class MyButton extends StatelessWidget {
         color: Colors.green,
         elevation: 7.0,
         child: InkWell(
-          onTap: () {},
+          onTap: () {
+            Provider.of<PeopleBloc>(context, listen: false).nextToken();
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Center(
               child: Text(
-                label,
+                'Next Token',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 16.0,

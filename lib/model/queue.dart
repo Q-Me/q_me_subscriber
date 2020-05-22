@@ -112,5 +112,3 @@ final sampleJson = """
     ]
 }
 """;
-
-List<Queue> sampleQueue() => queuesFromJson(sampleJson).queue;

@@ -31,6 +31,8 @@ dependencies:
   assorted_layout_widgets: ^1.0.18
   intl: ^0.16.1
   keyboard_avoider: ^0.1.2
+  shared_preferences: ^0.5.7
+  provider: ^4.1.1
   http: ^0.12.1
 
 dev_dependencies:

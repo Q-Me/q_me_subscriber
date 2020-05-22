@@ -1,10 +1,14 @@
 import 'dart:convert';
-import 'package:qme_subscriber/model/subscriber.dart';
-import 'package:qme_subscriber/views/createQueue.dart';
-import 'package:qme_subscriber/widgets/text.dart';
-
-import '../constants.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:qme_subscriber/api/base_helper.dart';
+import '../model/subscriber.dart';
+import '../views/createQueue.dart';
+import '../widgets/text.dart';
+import '../widgets/loader.dart';
+import '../widgets/error.dart';
+import '../bloc/queues.dart';
+import '../constants.dart';
 import '../model/queue.dart';
 import '../utilities/time.dart';
 
@@ -17,6 +21,8 @@ final queueStatusList = <String>[
 ];
 
 class QueuesPage extends StatefulWidget {
+  final subscriberId;
+  QueuesPage({this.subscriberId});
   static final id = 'queues';
   @override
   _QueuesPageState createState() => _QueuesPageState();
@@ -30,8 +36,25 @@ class _QueuesPageState extends State<QueuesPage> {
     "email": "S2@gmail.com",
     "phone": "9898009900"
 }''');
-
+  QueuesBloc queuesBloc;
   String queueDisplayStatus = queueStatusList[0];
+
+  @override
+  void initState() {
+    super.initState();
+    queuesBloc = QueuesBloc(
+        subscriberId: widget.subscriberId, queueStatus: queueDisplayStatus);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (queuesBloc == null) {
+      queuesBloc = QueuesBloc(
+          subscriberId: widget.subscriberId, queueStatus: queueDisplayStatus);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -51,35 +74,60 @@ class _QueuesPageState extends State<QueuesPage> {
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
-            child: Column(
-              children: <Widget>[
-                // TODO make this widget sharable
-                ThemedText(words: ['Hello ${subscriberData.name}']),
-                Row(
-                  children: <Widget>[
-                    Text('Showing '),
-                    DropdownButton<String>(
-                      items: queueStatusList.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      hint: Text(queueDisplayStatus),
-                      value: queueDisplayStatus,
-                      onChanged: (value) {
-                        setState(() {
-                          queueDisplayStatus = value;
-                        });
-                      },
-                    ),
-                    Text(' queues.'),
-                  ],
-                ),
-                // TODO make this widget sharable
-                //  this below widget is used as it is from the user app
-                QueuesDisplay(sampleQueue()),
-              ],
+            child: ChangeNotifierProvider.value(
+              value: queuesBloc,
+              child: Column(
+                children: <Widget>[
+                  // TODO make this widget sharable
+                  ThemedText(words: ['Hello ${subscriberData.name}']),
+                  Row(
+                    children: <Widget>[
+                      Text('Showing '),
+                      DropdownButton<String>(
+                        items: queueStatusList.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        hint: Text(queueDisplayStatus),
+                        value: queueDisplayStatus,
+                        onChanged: (value) {
+                          setState(() {
+                            queueDisplayStatus = value;
+                          });
+                        },
+                      ),
+                      Text(' queues.'),
+                    ],
+                  ),
+                  // TODO make this widget sharable
+                  //  this below widget is used as it is from the user app
+                  StreamBuilder<ApiResponse<List<Queue>>>(
+                      stream: queuesBloc.queuesListStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          switch (snapshot.data.status) {
+                            case Status.LOADING:
+                              return Loading(
+                                  loadingMessage: snapshot.data.message);
+                              break;
+                            case Status.COMPLETED:
+                              return QueuesDisplay(snapshot.data.data);
+                              break;
+                            case Status.ERROR:
+                              return Error(
+                                errorMessage: snapshot.data.message,
+                                onRetryPressed: () => queuesBloc
+                                    .fetchQueuesList(queueDisplayStatus),
+                              );
+                              break;
+                          }
+                        }
+                        return Text('Default return');
+                      }),
+                ],
+              ),
             ),
           ),
         ),
