@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'app_exceptions.dart';
 import 'dart:io';
 import 'endpoints.dart';
-import 'dart:developer';
+//import 'dart:developer';
 
 class ApiBaseHelper {
   Future<dynamic> get(String url) async {

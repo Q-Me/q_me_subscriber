@@ -54,14 +54,14 @@ class Queue {
   factory Queue.fromJson(Map<String, dynamic> json) => Queue(
         queueId: json["queue_id"],
         subscriberId: json["subscriber_id"],
-        startDateTime: DateTime.parse(json["start_date_time"]),
-        endDateTime: DateTime.parse(json["end_date_time"]),
+        startDateTime: DateTime.parse(json["start_date_time"]).toLocal(),
+        endDateTime: DateTime.parse(json["end_date_time"]).toLocal(),
         maxAllowed: json["max_allowed"],
         avgTimeOnCounter: json["avg_time_on_counter"],
         status: json["status"],
         currentToken: json["current_token"],
         lastIssuedToken: json["last_issued_token"],
-        lastUpdate: DateTime.parse(json["last_update"]),
+        lastUpdate: DateTime.parse(json["last_update"]).toLocal(),
         totalIssuedTokens: json["total_issued_tokens"],
       );
 

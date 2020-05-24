@@ -89,6 +89,22 @@ class SubscriberRepository {
 
   Future<String> getAccessToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String refreshToken = await getRefreshToken();
+    var response;
+    try {
+      response = await accessToken(refreshToken);
+    } catch (e) {
+      log('Error in getting new accessToken API: ' + e.toString());
+      return '-1';
+    }
+    log('Refresh Token API response: ' + response.toString());
+    prefs.setString('accessToken', response['accessToken']);
+
+    return response['accessToken'];
+  }
+
+  Future<String> getAccessTokenFromStorage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     String accessToken = prefs.getString('accessToken') ?? null;
     return accessToken;
   }
@@ -96,6 +112,7 @@ class SubscriberRepository {
   Future<String> getRefreshToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String refreshToken = prefs.getString('refreshToken') ?? null;
+    log('refresh Token from storage: $refreshToken');
     return refreshToken;
   }
 }

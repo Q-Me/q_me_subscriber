@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:developer';
 import '../api/endpoints.dart';
 import '../api/base_helper.dart';
 
@@ -10,11 +13,13 @@ class QueueRepository {
     @required Map<String, String> queueDetails,
     @required String accessToken,
   }) async {
+    log('Queue Repository: Create Queue : ${queueDetails.toString()}');
     final response = await _helper.post(
       kCreateQueue,
       req: queueDetails,
       headers: {'Authorization': 'Bearer $accessToken'},
     );
+    //DELETE FROM `activequeue` WHERE `subscriber_id` = `aTCiQhsHV`
     return response;
   }
 
@@ -22,6 +27,7 @@ class QueueRepository {
     @required String status,
     @required String accessToken,
   }) async {
+    log('Queue Repository: Getting all queues with status $status');
     final response = await _helper.post(
       kViewAllQueues,
       req: {"status": status},

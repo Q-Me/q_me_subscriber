@@ -1,7 +1,8 @@
 import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:qme_subscriber/repository/queue.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import '../views/queues.dart';
 import '../constants.dart';
 import '../utilities/time.dart';
@@ -21,14 +22,21 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
 
   Future<DateTime> _selectDate(DateTime oldDateTime) async {
     DateTime dateTime = oldDateTime;
+    final now = DateTime.now();
     DateTime picked = await showDatePicker(
         context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime.now(),
-        lastDate: DateTime.now().add(Duration(days: 90)));
+        initialDate: now,
+        firstDate: now,
+        lastDate: now.add(Duration(days: 90)));
     if (picked != null) {
       dateTime == null
-          ? dateTime = picked
+          ? dateTime = DateTime(
+              picked.year,
+              picked.month,
+              picked.day,
+              now.hour,
+              now.minute,
+            )
           : dateTime = DateTime(
               picked.year,
               picked.month,
@@ -58,8 +66,8 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     if (picked != null) {
       setState(() {
         if (newDateTime != null) {
-          newDateTime = newDateTime
-              .add(Duration(hours: picked.hour, minutes: picked.minute));
+          newDateTime = DateTime(newDateTime.year, newDateTime.month,
+              newDateTime.day, picked.hour, picked.minute);
           log('Time added');
         } else {
           final now = DateTime.now();
@@ -264,7 +272,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                         else {
                           try {
                             maxPeople = int.parse(value);
-                            formData['maxPeople'] = maxPeople;
+                            formData['max_allowed'] = value;
                             log("Everything in maxPeople is ok");
                             return null;
                           } on FormatException catch (e) {
@@ -308,13 +316,40 @@ class CreateQueueButton extends StatelessWidget {
         color: Colors.green,
         elevation: 7.0,
         child: InkWell(
-          onTap: () {
+          onTap: () async {
             log('${formData.toString()}');
             if (formKey.currentState.validate()) {
               log('Form Valid');
-              // TODO Call api to create queue
-              // TODO If queue created successfully then
-              Navigator.pop(context);
+
+              // Prepare the request
+              Map<String, String> newFormData = {
+                'start_date_time': getApiDateTime(formData['startDateTime']),
+                'end_date_time': getApiDateTime(formData['endDateTime']),
+                'avg_time_on_counter': formData['avgTime'].toString(),
+                'max_allowed': formData['max_allowed'].toString(),
+              };
+              log('Request:' + newFormData.toString());
+
+              final String accessToken =
+                  await SubscriberRepository().getAccessTokenFromStorage();
+
+              // Call api to create queue
+              var response;
+              try {
+                response = await QueueRepository().createQueue(
+                    queueDetails: newFormData, accessToken: accessToken);
+                Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text(response['msg']),
+                ));
+              } catch (e) {
+                log('Error in creating queue API: ' + e.toString());
+                Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text(e.toString()),
+                ));
+                return;
+              }
+              // If queue created successfully then
+              Navigator.pushNamed(context, QueuesPage.id);
               // TODO if queue creating failed show a message with the error
             }
           },

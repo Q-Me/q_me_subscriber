@@ -114,6 +114,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     return Container();
                   }),
             ),
+            EndQueueButton(),
           ],
         ),
       ),
@@ -133,77 +134,93 @@ class TokenDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 //    log('Building TokenDetails');
-    return Expanded(
-      flex: 1,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        user.lastName != null
-                            ? user.firstName + ' ' + user.lastName
-                            : user.firstName,
-                        style: kBigTextStyle.copyWith(fontSize: 20),
-                      ),
-                      Text(
-                        user.email,
-                        style: kBigTextStyle.copyWith(fontSize: 15),
-                      ),
-                      Text(
-                        user.phone,
-                        style: kBigTextStyle.copyWith(fontSize: 20),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Expanded(
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Token No.',
-                      style: kBigTextStyle,
+                      user.lastName != null
+                          ? user.firstName + ' ' + user.lastName
+                          : user.firstName,
+                      style: kBigTextStyle.copyWith(fontSize: 20),
                     ),
                     Text(
-                      user.tokenNo.toString(),
-                      style: kSmallTextStyle.copyWith(fontSize: 40),
+                      user.email,
+                      style: kBigTextStyle.copyWith(fontSize: 15),
+                    ),
+                    Text(
+                      user.phone,
+                      style: kBigTextStyle.copyWith(fontSize: 20),
                     ),
                   ],
                 ),
-              )
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              CancelTokenButton(),
-              NextTokenButton(),
-            ],
-          ),
-          Container(child: Text('Showing people $status in the queue')),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Row(
-              children: <Widget>[
-                Text('Token No.', style: kSmallTextStyle),
-                Spacer(flex: 1),
-                Text('Name of Person', style: kSmallTextStyle),
-                Spacer(flex: 6),
-                Text('Status', style: kSmallTextStyle),
-              ],
+              ),
             ),
-          )
-        ],
-      ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    'Token No.',
+                    style: kBigTextStyle,
+                  ),
+                  Text(
+                    user.tokenNo.toString(),
+                    style: kSmallTextStyle.copyWith(fontSize: 40),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            CancelTokenButton(),
+            NextTokenButton(),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Showing people $status in the queue'),
+            /*DropdownButton<String>(
+              items: queueStatusList.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              hint: Text(status),
+              value: status,
+              onChanged: (value) {
+                  Provider.of<PeopleBloc>(context).status = value;
+                  log('New queueDisplayStatus:$status');
+                  Provider.of<PeopleBloc>(context).fetchPeopleList();
+              },
+            ),*/
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            children: <Widget>[
+              Text('Token No.', style: kSmallTextStyle),
+              Spacer(flex: 1),
+              Text('Name of Person', style: kSmallTextStyle),
+              Spacer(flex: 6),
+              Text('Status', style: kSmallTextStyle),
+            ],
+          ),
+        )
+      ],
     );
   }
 }
@@ -309,6 +326,77 @@ class NextTokenButton extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     fontFamily: 'Montserrat'),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class EndQueueButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50.0,
+      margin: EdgeInsets.all(10),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(width: 1, color: Colors.lightGreen),
+      ),
+      child: InkWell(
+        onTap: () async {
+          // show a dialog box to ask if the queue is ended forcefully or not
+          bool isForced;
+
+          await showDialog<void>(
+            context: context,
+            barrierDismissible: false, // user must tap button!
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('End Queue'),
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: <Widget>[
+                      Text(
+                          'You are about to end the queue. Users won\'t be able to join this queue after it is ended.'),
+                      Text('\nWould you like to end the queue?'),
+                    ],
+                  ),
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Force End'),
+                    onPressed: () {
+                      isForced = true;
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: Text('End Normally'),
+                    onPressed: () {
+                      isForced = false;
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+          Provider.of<PeopleBloc>(context, listen: false)
+              .endQueue(isForced: isForced);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Center(
+            child: Text(
+              'End Queue',
+              style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Montserrat'),
             ),
           ),
         ),

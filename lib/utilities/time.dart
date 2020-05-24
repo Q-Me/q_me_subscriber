@@ -10,3 +10,6 @@ DateTime nextTokenTime(Queue queue) => queue.startDateTime
 
 String getFullDateTime(DateTime dateTime) =>
     DateFormat('hh:mm aaa\nMMM d, yyyy\nEEE').format(dateTime);
+
+String getApiDateTime(DateTime dateTime) =>
+    DateFormat('MM-dd-yyyy HH:mm').format(dateTime);

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:qme_subscriber/repository/queue.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import '../repository/user.dart';
 import '../api/base_helper.dart';
 import '../model/user.dart';
@@ -32,6 +34,7 @@ class PeopleBloc extends ChangeNotifier {
   }
 
   fetchPeopleList({String status}) async {
+    this.status = status;
     peopleListSink.add(ApiResponse.loading('Fetching Popular Subscribers'));
     personSink.add(ApiResponse.loading('Loading persons\'s details'));
     try {
@@ -72,6 +75,20 @@ class PeopleBloc extends ChangeNotifier {
   addPersonDetails(User user) {
     personSink.add(ApiResponse.completed(user));
     person = user;
+  }
+
+  endQueue({bool isForced}) async {
+    log('Ending queue..{isForced:$isForced}');
+    return;
+    // TODO
+    final String accessToken =
+        await SubscriberRepository().getAccessTokenFromStorage();
+    var response;
+    response = await QueueRepository().endQueue(
+      queueId: this.queueId,
+      isForced: isForced,
+      accessToken: accessToken,
+    );
   }
 
   dispose() {

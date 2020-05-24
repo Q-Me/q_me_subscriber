@@ -1,35 +1,42 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/views/people.dart';
 import 'dart:developer';
 import '../model/queue.dart';
 import '../constants.dart';
+import '../widgets/loader.dart';
+import '../widgets/error.dart';
+import '../bloc/queueDetails.dart';
 import '../utilities/time.dart';
 
 class ViewQueueScreen extends StatefulWidget {
   static final id = 'viewQueueScreen';
+  final String queueId;
+  ViewQueueScreen({this.queueId});
   @override
   _ViewQueueScreenState createState() => _ViewQueueScreenState();
 }
 
 class _ViewQueueScreenState extends State<ViewQueueScreen> {
-  final Queue queue = Queue.fromJson(jsonDecode("""
-  {
-    "queue": {
-        "queue_id": "yl3IWW4rA",
-        "subscriber_id": "4Q3fOuppX",
-        "start_date_time": "2021-05-01T18:36:00.000Z",
-        "end_date_time": "2021-05-01T23:30:00.000Z",
-        "max_allowed": 100,
-        "avg_time_on_counter": 3,
-        "status": "UPCOMING",
-        "current_token": 4,
-        "last_issued_token": 50,
-        "last_update": "2020-04-30T17:52:55.000Z",
-        "total_issued_tokens": 10
+  QueueDetailsBloc queueDetails;
+
+  @override
+  void initState() {
+    super.initState();
+    queueDetails = QueueDetailsBloc(widget.queueId);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (queueDetails == null) {
+      queueDetails = QueueDetailsBloc(widget.queueId);
     }
-}""")["queue"]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +50,31 @@ class _ViewQueueScreenState extends State<ViewQueueScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            QueueDetails(queue),
+            ChangeNotifierProvider.value(
+              value: queueDetails,
+              child: StreamBuilder<ApiResponse<Queue>>(
+                  stream: queueDetails.queueDetailsStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      switch (snapshot.data.status) {
+                        case Status.LOADING:
+                          return Loading(loadingMessage: snapshot.data.message);
+                          break;
+                        case Status.COMPLETED:
+                          return QueueDetails(snapshot.data.data);
+                          break;
+                        case Status.ERROR:
+                          return Error(
+                            errorMessage: snapshot.data.message,
+                            onRetryPressed: () =>
+                                queueDetails.fetchQueueDetails(),
+                          );
+                          break;
+                      }
+                    }
+                    return Text('Default return');
+                  }),
+            ),
           ],
         ),
       ),
@@ -53,9 +84,7 @@ class _ViewQueueScreenState extends State<ViewQueueScreen> {
 
 class QueueDetails extends StatefulWidget {
   final Queue queue;
-  QueueDetails(this.queue) {
-    log('QueueDetails constructor:${queue.toJson()}');
-  }
+  QueueDetails(this.queue);
   @override
   _QueueDetailsState createState() => _QueueDetailsState();
 }
@@ -76,7 +105,7 @@ class _QueueDetailsState extends State<QueueDetails> {
             children: <Widget>[
               GridQueueDetails(widget.queue),
               // Start Queue Button,
-              StartQueueButton(),
+              QueueButton(),
               // End Queue button,
             ],
           ),
@@ -173,7 +202,7 @@ class GridItemQueue extends StatelessWidget {
   }
 }
 
-class StartQueueButton extends StatelessWidget {
+class QueueButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -186,16 +215,43 @@ class StartQueueButton extends StatelessWidget {
         color: Colors.green,
         elevation: 7.0,
         child: InkWell(
-          onTap: () {
-            // TODO Call start queue API
-            // TODO Move to people list screen
-            Navigator.pushNamed(context, PeopleScreen.id);
+          onTap: () async {
+            if (Provider.of<QueueDetailsBloc>(context, listen: false)
+                    .queue
+                    .status ==
+                'UPCOMING') {
+              // Call start queue API
+              final result =
+                  await Provider.of<QueueDetailsBloc>(context, listen: false)
+                      .startQueue();
+              if (result == 'Queue Created Successfully.')
+                // Move to people list screen
+                Navigator.pushNamed(context, PeopleScreen.id);
+              else {
+                Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text(result),
+                ));
+              }
+            } else {
+              final String queueId =
+                  Provider.of<QueueDetailsBloc>(context, listen: false).queueId;
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PeopleScreen(queueId: queueId),
+                  ));
+            }
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Center(
               child: Text(
-                'Start Queue',
+                Provider.of<QueueDetailsBloc>(context, listen: false)
+                            .queue
+                            .status ==
+                        'UPCOMING'
+                    ? 'Start Queue'
+                    : 'View Queue',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 16.0,

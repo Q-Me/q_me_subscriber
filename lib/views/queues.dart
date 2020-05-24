@@ -1,8 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:developer';
 import 'package:qme_subscriber/api/base_helper.dart';
-import '../model/subscriber.dart';
+import 'package:qme_subscriber/views/signin.dart';
+import '../views/viewQueue.dart';
 import '../views/createQueue.dart';
 import '../widgets/text.dart';
 import '../widgets/loader.dart';
@@ -29,29 +30,20 @@ class QueuesPage extends StatefulWidget {
 }
 
 class _QueuesPageState extends State<QueuesPage> {
-  final Subscriber subscriberData = subscriberFromJson('''{
-    "id": "4Q3fOuppX",
-    "name": "S2",
-    "owner": "Kavya",
-    "email": "S2@gmail.com",
-    "phone": "9898009900"
-}''');
   QueuesBloc queuesBloc;
   String queueDisplayStatus = queueStatusList[0];
 
   @override
   void initState() {
     super.initState();
-    queuesBloc = QueuesBloc(
-        subscriberId: widget.subscriberId, queueStatus: queueDisplayStatus);
+    queuesBloc = QueuesBloc(queueStatus: queueDisplayStatus);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (queuesBloc == null) {
-      queuesBloc = QueuesBloc(
-          subscriberId: widget.subscriberId, queueStatus: queueDisplayStatus);
+      queuesBloc = QueuesBloc(queueStatus: queueDisplayStatus);
     }
   }
 
@@ -70,64 +62,78 @@ class _QueuesPageState extends State<QueuesPage> {
             Navigator.pushNamed(context, CreateQueueScreen.id);
           },
         ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
-            child: ChangeNotifierProvider.value(
-              value: queuesBloc,
-              child: Column(
-                children: <Widget>[
-                  // TODO make this widget sharable
-                  ThemedText(words: ['Hello ${subscriberData.name}']),
-                  Row(
-                    children: <Widget>[
-                      Text('Showing '),
-                      DropdownButton<String>(
-                        items: queueStatusList.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        hint: Text(queueDisplayStatus),
-                        value: queueDisplayStatus,
-                        onChanged: (value) {
-                          setState(() {
-                            queueDisplayStatus = value;
-                          });
-                        },
-                      ),
-                      Text(' queues.'),
-                    ],
-                  ),
-                  // TODO make this widget sharable
-                  //  this below widget is used as it is from the user app
-                  StreamBuilder<ApiResponse<List<Queue>>>(
-                      stream: queuesBloc.queuesListStream,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          switch (snapshot.data.status) {
-                            case Status.LOADING:
-                              return Loading(
-                                  loadingMessage: snapshot.data.message);
-                              break;
-                            case Status.COMPLETED:
-                              return QueuesDisplay(snapshot.data.data);
-                              break;
-                            case Status.ERROR:
+        body: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
+          child: ChangeNotifierProvider.value(
+            value: queuesBloc,
+            child: Column(
+              children: <Widget>[
+                // TODO make this widget sharable
+                ThemedText(
+                  words: ['Hello'],
+                  fontSize: 50,
+                ),
+                Row(
+                  children: <Widget>[
+                    Text('Showing '),
+                    DropdownButton<String>(
+                      items: queueStatusList.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      hint: Text(queueDisplayStatus),
+                      value: queueDisplayStatus,
+                      onChanged: (value) {
+                        setState(() {
+                          queueDisplayStatus = value;
+                          log('New queueDisplayStatus:$queueDisplayStatus');
+                          queuesBloc.fetchQueuesList(queueDisplayStatus);
+                        });
+                      },
+                    ),
+                    Text(' queues.'),
+                  ],
+                ),
+                // TODO make this widget sharable
+                //  this below widget is used as it is from the user app
+                StreamBuilder<ApiResponse<List<Queue>>>(
+                    stream: queuesBloc.queuesListStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        switch (snapshot.data.status) {
+                          case Status.LOADING:
+                            return Loading(
+                                loadingMessage: snapshot.data.message);
+                            break;
+                          case Status.COMPLETED:
+                            return Expanded(
+                                child: QueuesDisplay(snapshot.data.data));
+                            break;
+                          case Status.ERROR:
+                            if (snapshot.data.message ==
+                                'Unauthorised: {"error":"Invalid access token"}') {
                               return Error(
-                                errorMessage: snapshot.data.message,
-                                onRetryPressed: () => queuesBloc
-                                    .fetchQueuesList(queueDisplayStatus),
+                                buttonLabel: 'Login Again',
+                                errorMessage:
+                                    'Session expired. Please Login again',
+                                onRetryPressed: () => Navigator.pushNamed(
+                                    context, SignInScreen.id),
                               );
-                              break;
-                          }
+                            }
+                            return Error(
+                              errorMessage: snapshot.data.message,
+                              onRetryPressed: () => queuesBloc
+                                  .fetchQueuesList(queueDisplayStatus),
+                            );
+                            break;
                         }
-                        return Text('Default return');
-                      }),
-                ],
-              ),
+                      }
+                      return Text('Default return');
+                    }),
+                SizedBox(height: 60),
+              ],
             ),
           ),
         ),
@@ -145,7 +151,6 @@ class QueuesDisplay extends StatelessWidget {
     return queues != null && queues.length != 0
         ? ListView.builder(
             itemCount: queues.length,
-            cacheExtent: 4,
             physics: const AlwaysScrollableScrollPhysics(),
             shrinkWrap: true,
             itemBuilder: (context, index) => QueueItem(queues[index]))
@@ -236,7 +241,13 @@ class QueueItem extends StatelessWidget {
                             color: Colors.green,
                             elevation: 7.0,
                             child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ViewQueueScreen(
+                                            queueId: queue.queueId)));
+                              },
                               child: Padding(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 8.0),
