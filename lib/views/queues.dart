@@ -13,14 +13,6 @@ import '../constants.dart';
 import '../model/queue.dart';
 import '../utilities/time.dart';
 
-final queueStatusList = <String>[
-  'UPCOMING',
-  'ACTIVE',
-  'CANCELLED',
-  'DONE',
-  'FORCE DONE',
-];
-
 class QueuesPage extends StatefulWidget {
   final subscriberId;
   QueuesPage({this.subscriberId});
@@ -31,7 +23,7 @@ class QueuesPage extends StatefulWidget {
 
 class _QueuesPageState extends State<QueuesPage> {
   QueuesBloc queuesBloc;
-  String queueDisplayStatus = queueStatusList[0];
+  String queueDisplayStatus = kQueueStatusList[0];
 
   @override
   void initState() {
@@ -77,7 +69,7 @@ class _QueuesPageState extends State<QueuesPage> {
                   children: <Widget>[
                     Text('Showing '),
                     DropdownButton<String>(
-                      items: queueStatusList.map((String value) {
+                      items: kQueueStatusList.map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -227,56 +219,81 @@ class QueueItem extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                            child: Text(
-                                'Last Updated at\n${getFullDateTime(queue.lastUpdate)}')),
-                        Container(
-                          height: 35.0,
-                          width: MediaQuery.of(context).size.width / 4,
-                          child: Material(
-                            borderRadius: BorderRadius.circular(20.0),
-                            shadowColor: Colors.greenAccent,
-                            color: Colors.green,
-                            elevation: 7.0,
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => ViewQueueScreen(
-                                            queueId: queue.queueId)));
-                              },
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Center(
-                                  child: Text(
-                                    'View',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'Montserrat'),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    Expanded(
+                      child: Container(
+                          child: Text(
+                              'Last Updated at\n${getFullDateTime(queue.lastUpdate)}')),
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          /*Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
+//              Container(
+//                height: 35.0,
+//                width: MediaQuery.of(context).size.width / 4,
+//                child: Material(
+//                  borderRadius: BorderRadius.circular(20.0),
+//                  shadowColor: Colors.greenAccent,
+//                  color: Colors.green,
+//                  elevation: 7.0,
+//                  child: InkWell(
+//                    onTap: () {
+//                      // TODO Ask isn dialog box to make he wants to delete the queue
+//                    },
+//                    child: Padding(
+//                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+//                      child: Center(
+//                        child: Text(
+//                          'Delete',
+//                          style: TextStyle(
+//                              color: Colors.white,
+//                              fontSize: 16.0,
+//                              fontWeight: FontWeight.w600,
+//                              fontFamily: 'Montserrat'),
+//                        ),
+//                      ),
+//                    ),
+//                  ),
+//                ),
+//              ),
+              Container(
+                height: 35.0,
+                width: MediaQuery.of(context).size.width / 4,
+                child: Material(
+                  borderRadius: BorderRadius.circular(20.0),
+                  shadowColor: Colors.greenAccent,
+                  color: Colors.green,
+                  elevation: 7.0,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  ViewQueueScreen(queueId: queue.queueId)));
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Center(
+                        child: Text(
+                          'View',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Montserrat'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
-          ),*/
+          ),
         ],
       ),
     );

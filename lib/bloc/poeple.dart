@@ -3,16 +3,17 @@ import 'package:qme_subscriber/repository/queue.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import '../repository/user.dart';
 import '../api/base_helper.dart';
+import '../api/app_exceptions.dart';
 import '../model/user.dart';
 import 'dart:async';
 import 'dart:developer';
 
 class PeopleBloc extends ChangeNotifier {
   UserRepository _peopleRepository;
-  String queueId, status;
+
+  String queueId, status, _accessToken;
   List<User> peopleList;
   User person;
-  int currentToken = 0;
 
   StreamController _peopleListController;
   StreamController _personController;
@@ -26,6 +27,7 @@ class PeopleBloc extends ChangeNotifier {
   Stream<ApiResponse<User>> get personStream => _personController.stream;
 
   PeopleBloc({@required this.queueId, @required this.status}) {
+    log('PeopleBloc initializes with queueId:$queueId and status:$status');
     _peopleListController = StreamController<ApiResponse<List<User>>>();
     _personController = StreamController<ApiResponse<User>>();
 
@@ -34,39 +36,70 @@ class PeopleBloc extends ChangeNotifier {
   }
 
   fetchPeopleList({String status}) async {
-    this.status = status;
-    peopleListSink.add(ApiResponse.loading('Fetching Popular Subscribers'));
+    this.status = status != null ? status : this.status;
+    peopleListSink.add(ApiResponse.loading('Fetching people\'s list'));
     personSink.add(ApiResponse.loading('Loading persons\'s details'));
     try {
-//      log('Fetching users data');
-      // TODO call api repository with the status
-      peopleList = rawPeopleList;
-      addPersonDetails(peopleList[0]);
-      // TODO Check for empty list
-      if (peopleList.length == 0) {
-        peopleListSink.add(ApiResponse.error('Nobody is in queue'));
-      }
-      peopleListSink.add(ApiResponse.completed(peopleList));
+      log('Fetching users data for queue:$queueId and status:${this.status}');
+      _accessToken = _accessToken == null
+          ? await SubscriberRepository().getAccessTokenFromStorage()
+          : _accessToken;
 
-//      log('Added people list to sink');
+      // call api repository with the status
+      final response = await _peopleRepository.getQueueUser(
+          queueId: queueId, status: this.status, accessToken: _accessToken);
+      log('People Repository API response:' + response.toString());
+      peopleList = Users.fromJson(response).user;
+
+      // Check for empty list
+      if (peopleList.length == 0) {
+        log('Empty list');
+        peopleListSink.add(ApiResponse.error('Nobody is in queue'));
+        personSink.add(ApiResponse.error(
+            'Since nobody is in queue. Cannot fetch peron\'s details.'));
+      } else {
+        log('Added people list to sink');
+        addPersonDetails(peopleList[0]);
+        peopleListSink.add(ApiResponse.completed(peopleList));
+      }
     } catch (e) {
       peopleListSink.add(ApiResponse.error(e.toString()));
-      print(e);
+      log('Error in PeopleBloc:' + e.toString());
     }
   }
 
   cancelToken() async {
     log('Canceling token');
     // TODO Cancel the token of current person
-    rawPeopleList.removeAt(0);
+    try {
+      final response = await QueueRepository().nextQueue(
+          queueId: this.queueId,
+          accessToken: this._accessToken,
+          status: "CANCELLED BY SUBSCRIBER");
+      log('Cancel Queue Response: ' + response.toString());
+      // TODO return the response on success
+    } catch (e) {
+      log('Cancel API call failed:' + e.toString());
+    }
+
     // fetch new people list
     fetchPeopleList(status: status);
   }
 
   nextToken() async {
     log('Moving to token');
-    // TODO make the token of current person as done
-    rawPeopleList.removeAt(0);
+    // make the token of current person as done
+    try {
+      final response = await QueueRepository().nextQueue(
+          queueId: this.queueId,
+          accessToken: this._accessToken,
+          status: "DONE");
+      log('Next Token Response: ' + response.toString());
+      // TODO show the response on success
+
+    } catch (e) {
+      log('Next Token call failed:' + e.toString());
+    }
 
     // fetch new people list
     fetchPeopleList(status: status);
@@ -77,18 +110,27 @@ class PeopleBloc extends ChangeNotifier {
     person = user;
   }
 
-  endQueue({bool isForced}) async {
+  endQueue({@required bool isForced}) async {
     log('Ending queue..{isForced:$isForced}');
-    return;
-    // TODO
-    final String accessToken =
-        await SubscriberRepository().getAccessTokenFromStorage();
-    var response;
-    response = await QueueRepository().endQueue(
-      queueId: this.queueId,
-      isForced: isForced,
-      accessToken: accessToken,
-    );
+    //
+    try {
+      final response = await QueueRepository().endQueue(
+        queueId: this.queueId,
+        isForced: isForced,
+        accessToken: _accessToken,
+      );
+
+      log('End Queue repository response:' + response.toString());
+      return 'Queue ended successfully.';
+    } on BadRequestException catch (e) {
+      log('Error in ending queue:${e.toString()}');
+      return e.toMap()['error'];
+    } catch (e) {
+      log('Ending queue failed.' + e.toString());
+      return e.toString();
+
+      // TODO show the response on success
+    }
   }
 
   dispose() {

@@ -97,7 +97,7 @@ class SubscriberRepository {
       log('Error in getting new accessToken API: ' + e.toString());
       return '-1';
     }
-    log('Refresh Token API response: ' + response.toString());
+//    log('Refresh Token API response: ' + response.toString());
     prefs.setString('accessToken', response['accessToken']);
 
     return response['accessToken'];
@@ -112,7 +112,7 @@ class SubscriberRepository {
   Future<String> getRefreshToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String refreshToken = prefs.getString('refreshToken') ?? null;
-    log('refresh Token from storage: $refreshToken');
+//    log('refresh Token from storage: $refreshToken');
     return refreshToken;
   }
 }

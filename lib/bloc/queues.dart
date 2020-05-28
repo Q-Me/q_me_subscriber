@@ -34,7 +34,7 @@ class QueuesBloc extends ChangeNotifier {
 
   fetchQueuesList(String status) async {
     final String message = 'Fetching $status Queues';
-    log('Queues BLOC: fetchQueueList' + message);
+//    log('Queues BLOC: fetchQueueList' + message);
     queuesListSink.add(ApiResponse.loading(message));
     try {
       _accessToken = _accessToken == null

@@ -205,6 +205,10 @@ class GridItemQueue extends StatelessWidget {
 class QueueButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final String queueId =
+        Provider.of<QueueDetailsBloc>(context, listen: false).queueId;
+    final Queue queue =
+        Provider.of<QueueDetailsBloc>(context, listen: false).queue;
     return Container(
       height: 50.0,
       margin: EdgeInsets.all(20),
@@ -216,25 +220,28 @@ class QueueButton extends StatelessWidget {
         elevation: 7.0,
         child: InkWell(
           onTap: () async {
-            if (Provider.of<QueueDetailsBloc>(context, listen: false)
-                    .queue
-                    .status ==
-                'UPCOMING') {
+            if (queue.status == 'UPCOMING') {
               // Call start queue API
               final result =
                   await Provider.of<QueueDetailsBloc>(context, listen: false)
                       .startQueue();
-              if (result == 'Queue Created Successfully.')
+              log('Result of start queue:$result');
+              if (result == 'Queue Created Successfully.') {
                 // Move to people list screen
-                Navigator.pushNamed(context, PeopleScreen.id);
-              else {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PeopleScreen(queueId: queueId)));
+              } else if (result ==
+                  'Queue started successfully but no person in queue.') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => PeopleScreen()));
+              } else {
                 Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text(result),
+                  content: Text(result.toString()),
                 ));
               }
             } else {
-              final String queueId =
-                  Provider.of<QueueDetailsBloc>(context, listen: false).queueId;
               Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -246,12 +253,7 @@ class QueueButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Center(
               child: Text(
-                Provider.of<QueueDetailsBloc>(context, listen: false)
-                            .queue
-                            .status ==
-                        'UPCOMING'
-                    ? 'Start Queue'
-                    : 'View Queue',
+                queue.status == 'UPCOMING' ? 'Start Queue' : 'View Queue',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 16.0,

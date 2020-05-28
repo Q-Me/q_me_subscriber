@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/bloc/poeple.dart';
+import 'package:qme_subscriber/views/queues.dart';
+import 'package:qme_subscriber/views/viewQueue.dart';
 import 'package:qme_subscriber/widgets/loader.dart';
 import '../constants.dart';
 import '../model/user.dart';
@@ -26,6 +28,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
   @override
   void initState() {
     super.initState();
+    log('Showing people of queueId:${widget.queueId}');
     peopleBloc = PeopleBloc(queueId: widget.queueId, status: widget.status);
     peopleBloc.fetchPeopleList();
   }
@@ -42,77 +45,114 @@ class _PeopleScreenState extends State<PeopleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.arrow_back_ios),
+        leading: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ViewQueueScreen(
+                            queueId: widget.queueId,
+                          )));
+            },
+            child: Icon(Icons.arrow_back_ios)),
         title: Text('Queue Tokens'),
       ),
       body: ChangeNotifierProvider.value(
         value: peopleBloc,
         child: Column(
           children: <Widget>[
-            StreamBuilder<ApiResponse<User>>(
-                stream: peopleBloc.personStream,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    switch (snapshot.data.status) {
-                      case Status.LOADING:
-                        return Loading(loadingMessage: snapshot.data.message);
-                        break;
-                      case Status.COMPLETED:
-                        return TokenDetails(
-                            user: snapshot.data.data, status: widget.status);
-                        break;
-                      case Status.ERROR:
-                        return Error(
-                          errorMessage: snapshot.data.message,
-                          onRetryPressed: () => peopleBloc.fetchPeopleList(),
-                        );
-                        break;
-                    }
-                  } else {
-                    return Text('No stream data');
-                  }
-                  return Text('some uncaught error happened');
-                }),
             Expanded(
-              flex: 2,
-              child: StreamBuilder<ApiResponse<List<User>>>(
-                  stream: peopleBloc.peopleListStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      switch (snapshot.data.status) {
-                        case Status.LOADING:
-                          return Loading(loadingMessage: snapshot.data.message);
-                          break;
+              child: Container(
+                child: widget.queueId != null ||
+                        (peopleBloc.peopleList != null &&
+                            peopleBloc.peopleList.length != 0)
+                    ? Column(
+                        children: <Widget>[
+                          StreamBuilder<ApiResponse<User>>(
+                              stream: peopleBloc.personStream,
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  switch (snapshot.data.status) {
+                                    case Status.LOADING:
+                                      return Loading(
+                                          loadingMessage:
+                                              snapshot.data.message);
+                                      break;
+                                    case Status.COMPLETED:
+                                      return TokenDetails(
+                                          user: snapshot.data.data,
+                                          status: widget.status);
+                                      break;
+                                    case Status.ERROR:
+                                      return Error(
+                                        errorMessage: snapshot.data.message,
+                                        onRetryPressed: () =>
+                                            peopleBloc.fetchPeopleList(),
+                                      );
+                                      break;
+                                  }
+                                } else {
+                                  return Text('No stream data');
+                                }
+                                return Text('some uncaught error happened');
+                              }),
+                          Expanded(
+                            flex: 2,
+                            child: StreamBuilder<ApiResponse<List<User>>>(
+                                stream: peopleBloc.peopleListStream,
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    switch (snapshot.data.status) {
+                                      case Status.LOADING:
+                                        return Loading(
+                                            loadingMessage:
+                                                snapshot.data.message);
+                                        break;
 
-                        case Status.COMPLETED:
-                          return ListView.builder(
-                              itemCount: snapshot.data.data.length,
-                              itemBuilder: (context, index) {
-                                User _user = snapshot.data.data[index];
-                                return GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        Provider.of<PeopleBloc>(context,
-                                                listen: false)
-                                            .addPersonDetails(_user);
-                                      });
-                                    },
-                                    child: TokenCard(user: _user));
-                              });
-                          break;
+                                      case Status.COMPLETED:
+                                        return ListView.builder(
+                                            itemCount:
+                                                snapshot.data.data.length,
+                                            itemBuilder: (context, index) {
+                                              User _user =
+                                                  snapshot.data.data[index];
+                                              return GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      Provider.of<PeopleBloc>(
+                                                              context,
+                                                              listen: false)
+                                                          .addPersonDetails(
+                                                              _user);
+                                                    });
+                                                  },
+                                                  child:
+                                                      TokenCard(user: _user));
+                                            });
+                                        break;
 
-                        case Status.ERROR:
-                          return Error(
-                            errorMessage: snapshot.data.message,
-                            onRetryPressed: () => peopleBloc.fetchPeopleList(),
-                          );
-                          break;
-                      }
-                    } else {
-                      return Text('No snapshot data');
-                    }
-                    return Container();
-                  }),
+                                      case Status.ERROR:
+                                        return Error(
+                                          errorMessage: snapshot.data.message,
+                                          onRetryPressed: () =>
+                                              peopleBloc.fetchPeopleList(),
+                                        );
+                                        break;
+                                    }
+                                  } else {
+                                    return Text('No snapshot data');
+                                  }
+                                  return Container();
+                                }),
+                          ),
+                        ],
+                      )
+                    : Error(
+                        errorMessage: 'Nobody is in queue.',
+                        buttonLabel: 'Refresh',
+                        onRetryPressed: () => peopleBloc.fetchPeopleList(),
+                      ),
+              ),
             ),
             EndQueueButton(),
           ],
@@ -188,25 +228,28 @@ class TokenDetails extends StatelessWidget {
             NextTokenButton(),
           ],
         ),
-        Row(
-          children: <Widget>[
-            Text('Showing people $status in the queue'),
-            /*DropdownButton<String>(
-              items: queueStatusList.map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              hint: Text(status),
-              value: status,
-              onChanged: (value) {
+        Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+//          crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text('Showing people $status'),
+              /*
+              DropdownButton<String>(
+                items: kDropdownList,
+                hint: Text(status),
+//                value: status,
+                onChanged: (value) {
                   Provider.of<PeopleBloc>(context).status = value;
                   log('New queueDisplayStatus:$status');
                   Provider.of<PeopleBloc>(context).fetchPeopleList();
-              },
-            ),*/
-          ],
+                },
+              ),
+               */
+              Text(' in the queue'),
+            ],
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -384,8 +427,16 @@ class EndQueueButton extends StatelessWidget {
               );
             },
           );
-          Provider.of<PeopleBloc>(context, listen: false)
-              .endQueue(isForced: isForced);
+          final String result =
+              await Provider.of<PeopleBloc>(context, listen: false)
+                  .endQueue(isForced: isForced);
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text(result),
+          ));
+
+          if (result == 'Queue ended successfully.') {
+            Navigator.pushNamed(context, QueuesPage.id);
+          }
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),

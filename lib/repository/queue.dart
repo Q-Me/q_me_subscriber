@@ -13,7 +13,7 @@ class QueueRepository {
     @required Map<String, String> queueDetails,
     @required String accessToken,
   }) async {
-    log('Queue Repository: Create Queue : ${queueDetails.toString()}');
+//    log('Queue Repository: Create Queue : ${queueDetails.toString()}');
     final response = await _helper.post(
       kCreateQueue,
       req: queueDetails,
@@ -27,7 +27,7 @@ class QueueRepository {
     @required String status,
     @required String accessToken,
   }) async {
-    log('Queue Repository: Getting all queues with status $status');
+//    log('Queue Repository: Getting all queues with status $status');
     final response = await _helper.post(
       kViewAllQueues,
       req: {"status": status},
@@ -87,12 +87,12 @@ class QueueRepository {
 
   Future<Map<String, dynamic>> endQueue({
     @required String queueId,
-    @required isForced,
+    @required bool isForced,
     @required String accessToken,
   }) async {
     final response = await _helper.post(
       kEndQueue,
-      req: {"queue_id": queueId, "isForced": isForced},
+      req: {"queue_id": queueId, "isForced": "$isForced"},
       headers: {'Authorization': 'Bearer $accessToken'},
     );
     return response;

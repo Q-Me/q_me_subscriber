@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import '../api/app_exceptions.dart';
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/repository/queue.dart';
@@ -56,9 +56,18 @@ class QueueDetailsBloc extends ChangeNotifier {
           queueId: queueId, accessToken: _accessToken);
       log('Start Queue API response:' + response.toString());
       return response['msg'];
+    } // TODO Catch invalid request
+
+    on BadRequestException catch (e) {
+      log("BadRequestException:Error in Starting Queue:" + e.toString());
+      return e.toMap()['error'];
     } catch (e) {
       final msg = 'Start Queue error:' + e.toString();
       log(msg);
+      if (msg == '{msg: Queue started successfully but no person in queue.}') {
+        return 'Queue already started';
+      }
+
       return msg;
     }
   }

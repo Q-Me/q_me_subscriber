@@ -31,3 +31,18 @@ const kSmallTextStyle = TextStyle(
   color: Colors.black38,
   fontWeight: FontWeight.w600,
 );
+
+final kQueueStatusList = <String>[
+  "UPCOMING",
+  "ACTIVE",
+  "DONE",
+  "FORCED DONE",
+  "CANCELLED"
+];
+
+final kDropdownList = kQueueStatusList
+    .map((String value) => DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        ))
+    .toList();
