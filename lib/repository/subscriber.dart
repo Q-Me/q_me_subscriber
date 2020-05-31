@@ -5,6 +5,7 @@ import '../model/subscriber.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/endpoints.dart';
 import '../api/base_helper.dart';
+import 'dart:math' show Random;
 
 class SubscriberRepository {
   ApiBaseHelper _helper = ApiBaseHelper();
@@ -52,10 +53,14 @@ class SubscriberRepository {
     if (subscriberData.id != null) prefs.setString('id', subscriberData.id);
     if (subscriberData.name != null)
       prefs.setString('name', subscriberData.name);
-    if (subscriberData.accessToken != null)
+    if (subscriberData.accessToken != null) {
       prefs.setString('accessToken', subscriberData.accessToken);
-    if (subscriberData.refreshToken != null)
+      prefs.setString(
+          'expiry', DateTime.now().add(Duration(days: 1)).toString());
+    }
+    if (subscriberData.refreshToken != null) {
       prefs.setString('refreshToken', subscriberData.refreshToken);
+    }
     if (subscriberData.email != null)
       prefs.setString('isUser', subscriberData.email);
     if (subscriberData.phone != null)
@@ -114,5 +119,38 @@ class SubscriberRepository {
     String refreshToken = prefs.getString('refreshToken') ?? null;
 //    log('refresh Token from storage: $refreshToken');
     return refreshToken;
+  }
+
+  Future<bool> isTokenExpired() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final expiry = prefs.getString('expiry');
+    if (expiry == null) {
+      return true;
+    }
+    return DateTime.now().isAfter(DateTime.parse(prefs.getString('expiry')));
+  }
+
+  Future<bool> isRefreshTokenSet() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('expiry') != null ? true : false;
+  }
+}
+//
+//import 'dart:async';
+
+class AuthService {
+  // Login
+  Future<bool> login() async {
+    // Simulate a future for response after 2 second.
+    return await Future<bool>.delayed(
+        new Duration(seconds: 2), () => new Random().nextBool());
+
+    // If accessToken Expired
+  }
+
+  // Logout
+  Future<void> logout() async {
+    // Simulate a future for response after 1 second.
+    return await Future<void>.delayed(new Duration(seconds: 1));
   }
 }

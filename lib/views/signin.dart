@@ -20,6 +20,12 @@ class _SignInScreenState extends State<SignInScreen> {
       GlobalKey<FormState>(); // Used in login button and forget password
   String email;
   String password;
+  final scaffoldKey = new GlobalKey<ScaffoldState>();
+  void _showSnackBar(String text) {
+    scaffoldKey.currentState.showSnackBar(new SnackBar(
+      content: new Text(text),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,9 +114,10 @@ class _SignInScreenState extends State<SignInScreen> {
                                                           response['id'],
                                                     )));
                                       } catch (e) {
-                                        Scaffold.of(context).showSnackBar(
-                                            SnackBar(
-                                                content: Text(e.toString())));
+//                                        Scaffold.of(context).showSnackBar(
+//                                            SnackBar(
+//                                                content: Text(e.toString())));
+                                        _showSnackBar(e.toString());
                                         log('Error in signIn API: ' +
                                             e.toString());
                                         return;
