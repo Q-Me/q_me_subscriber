@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'dart:developer';
 import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/views/signin.dart';
+import 'package:qme_subscriber/widgets/appDrawer.dart';
 import '../views/viewQueue.dart';
 import '../views/createQueue.dart';
 import '../widgets/text.dart';
@@ -45,7 +46,9 @@ class _QueuesPageState extends State<QueuesPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Home'),
+//          leading: Icon(Icons.home),
         ),
+        drawer: AppDrawer(),
         floatingActionButton: FloatingActionButton.extended(
           label: Text('Create Queue'),
           icon: Icon(Icons.add),
@@ -81,7 +84,8 @@ class _QueuesPageState extends State<QueuesPage> {
                         setState(() {
                           queueDisplayStatus = value;
                           log('New queueDisplayStatus:$queueDisplayStatus');
-                          queuesBloc.fetchQueuesList(queueDisplayStatus);
+                          queuesBloc.fetchQueuesList(
+                              status: queueDisplayStatus);
                         });
                       },
                     ),
@@ -116,8 +120,8 @@ class _QueuesPageState extends State<QueuesPage> {
                             }
                             return Error(
                               errorMessage: snapshot.data.message,
-                              onRetryPressed: () => queuesBloc
-                                  .fetchQueuesList(queueDisplayStatus),
+                              onRetryPressed: () => queuesBloc.fetchQueuesList(
+                                  status: queueDisplayStatus),
                             );
                             break;
                         }
@@ -229,72 +233,108 @@ class QueueItem extends StatelessWidget {
               ],
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-//              Container(
-//                height: 35.0,
-//                width: MediaQuery.of(context).size.width / 4,
-//                child: Material(
-//                  borderRadius: BorderRadius.circular(20.0),
-//                  shadowColor: Colors.greenAccent,
-//                  color: Colors.green,
-//                  elevation: 7.0,
-//                  child: InkWell(
-//                    onTap: () {
-//                      // TODO Ask isn dialog box to make he wants to delete the queue
-//                    },
-//                    child: Padding(
-//                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-//                      child: Center(
-//                        child: Text(
-//                          'Delete',
-//                          style: TextStyle(
-//                              color: Colors.white,
-//                              fontSize: 16.0,
-//                              fontWeight: FontWeight.w600,
-//                              fontFamily: 'Montserrat'),
-//                        ),
-//                      ),
-//                    ),
-//                  ),
-//                ),
-//              ),
-              Container(
-                height: 35.0,
-                width: MediaQuery.of(context).size.width / 4,
-                child: Material(
-                  borderRadius: BorderRadius.circular(20.0),
-                  shadowColor: Colors.greenAccent,
-                  color: Colors.green,
-                  elevation: 7.0,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  ViewQueueScreen(queueId: queue.queueId)));
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Center(
-                        child: Text(
-                          'View',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Montserrat'),
-                        ),
-                      ),
-                    ),
-                  ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                Visibility(
+                  child: DeleteButton(queueId: queue.queueId),
+                  visible: queue.status == 'UPCOMING' && queue.currentToken == 0
+                      ? true
+                      : false,
                 ),
-              ),
-            ],
+                ViewButton(queueId: queue.queueId),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class DeleteButton extends StatelessWidget {
+  const DeleteButton({Key key, @required this.queueId}) : super(key: key);
+  final String queueId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 35.0,
+      width: MediaQuery.of(context).size.width / 4,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(width: 1, color: Colors.red),
+      ),
+      child: InkWell(
+        onTap: () async {
+          // TODO Ask isn dialog box to make he wants to delete the queue
+          log('Delete button clicked');
+          String msg = await Provider.of<QueuesBloc>(context, listen: false)
+              .deleteQueue(queueId: queueId);
+          Scaffold.of(context).showSnackBar(SnackBar(content: Text(msg)));
+          if (msg == 'Queue Delete Success') {
+            Provider.of<QueuesBloc>(context, listen: false).fetchQueuesList();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Center(
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Montserrat'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ViewButton extends StatelessWidget {
+  const ViewButton({
+    Key key,
+    @required this.queueId,
+  }) : super(key: key);
+
+  final String queueId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 35.0,
+      width: MediaQuery.of(context).size.width / 4,
+      child: Material(
+        borderRadius: BorderRadius.circular(20.0),
+        shadowColor: Colors.greenAccent,
+        color: Colors.green,
+        elevation: 7.0,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ViewQueueScreen(queueId: queueId)));
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Center(
+              child: Text(
+                'View',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat'),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

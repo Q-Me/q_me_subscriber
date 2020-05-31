@@ -92,18 +92,20 @@ class SubscriberRepository {
     );
   }
 
-  Future<String> getAccessToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String refreshToken = await getRefreshToken();
+  Future<String> getAccessToken({String refreshToken, prefs}) async {
+    SharedPreferences _prefs = prefs ?? await SharedPreferences.getInstance();
+    final String _refreshToken = refreshToken ?? await getRefreshToken();
     var response;
     try {
-      response = await accessToken(refreshToken);
+      response = await accessToken(_refreshToken);
     } catch (e) {
       log('Error in getting new accessToken API: ' + e.toString());
       return '-1';
     }
 //    log('Refresh Token API response: ' + response.toString());
-    prefs.setString('accessToken', response['accessToken']);
+    _prefs.setString('accessToken', response['accessToken']);
+    _prefs.setString(
+        'expiry', DateTime.now().add(Duration(days: 1)).toString());
 
     return response['accessToken'];
   }
@@ -132,25 +134,33 @@ class SubscriberRepository {
 
   Future<bool> isRefreshTokenSet() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('expiry') != null ? true : false;
-  }
-}
-//
-//import 'dart:async';
-
-class AuthService {
-  // Login
-  Future<bool> login() async {
-    // Simulate a future for response after 2 second.
-    return await Future<bool>.delayed(
-        new Duration(seconds: 2), () => new Random().nextBool());
-
-    // If accessToken Expired
+    return prefs.getString('expiry') != null &&
+            prefs.getString('refreshToken') != null
+        ? true
+        : false;
   }
 
-  // Logout
-  Future<void> logout() async {
-    // Simulate a future for response after 1 second.
-    return await Future<void>.delayed(new Duration(seconds: 1));
+  Future<bool> isSessionReady() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final expiry = prefs.getString('expiry');
+    final refreshToken = prefs.getString('refreshToken');
+    final accessToken = prefs.getString('accessToken');
+
+    if (expiry != null &&
+        DateTime.now().isBefore(DateTime.parse(expiry)) &&
+        accessToken != null) {
+      // accessToken is valid
+      return true;
+    } else {
+      // invalid accessToken
+      if (refreshToken != null) {
+        // Get new accessToken from refreshToken
+        final result =
+            await getAccessToken(refreshToken: refreshToken, prefs: prefs);
+        return result != '-1' ? true : false;
+      } else {
+        return false;
+      }
+    }
   }
 }

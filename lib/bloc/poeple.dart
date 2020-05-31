@@ -136,6 +136,7 @@ class PeopleBloc extends ChangeNotifier {
   dispose() {
     _peopleListController?.close();
     _personController?.close();
+    super.dispose();
   }
 }
 

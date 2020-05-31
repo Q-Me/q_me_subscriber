@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:flutter/material.dart';
 
-import 'package:qme_subscriber/api/base_helper.dart';
-import '../model/subscriber.dart';
+import '../api/base_helper.dart';
 import '../repository/subscriber.dart';
 
 class SignUpBloc {

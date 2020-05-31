@@ -72,7 +72,9 @@ class QueueDetailsBloc extends ChangeNotifier {
     }
   }
 
+  @override
   dispose() {
     _queueDetailsController?.close();
+    super.dispose();
   }
 }
