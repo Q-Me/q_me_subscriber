@@ -14,7 +14,8 @@ class AppDrawer extends StatelessWidget {
           _createDrawerItem(
             icon: Icons.home,
             text: 'Home',
-            onTap: () => Navigator.pushReplacementNamed(context, QueuesPage.id),
+            onTap: () =>
+                Navigator.pushReplacementNamed(context, QueuesScreen.id),
           ),
           _createDrawerItem(
             icon: Icons.person,

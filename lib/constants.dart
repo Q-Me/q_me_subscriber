@@ -46,3 +46,6 @@ final kDropdownList = kQueueStatusList
           child: Text(value),
         ))
     .toList();
+
+final kLabelStyle = TextStyle(
+    fontFamily: 'Montserrat', fontWeight: FontWeight.bold, color: Colors.grey);

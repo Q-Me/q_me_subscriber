@@ -9,7 +9,7 @@ import '../repository/subscriber.dart';
 import '../views/queues.dart';
 
 class SignInScreen extends StatefulWidget {
-  static String id = 'signIn';
+  static const String id = '/signIn';
 
   @override
   _SignInScreenState createState() => _SignInScreenState();
@@ -105,14 +105,16 @@ class _SignInScreenState extends State<SignInScreen> {
                                             .storeSubscriberData(
                                                 Subscriber.fromJson(response));
 
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    QueuesPage(
-                                                      subscriberId:
-                                                          response['id'],
-                                                    )));
+//                                        Navigator.push(
+//                                            context,
+//                                            MaterialPageRoute(
+//                                                builder: (context) =>
+//                                                    QueuesPage(
+//                                                      subscriberId:
+//                                                          response['id'],
+//                                                    )));
+                                        Navigator.pushNamed(
+                                            context, QueuesScreen.id);
                                       } catch (e) {
 //                                        Scaffold.of(context).showSnackBar(
 //                                            SnackBar(

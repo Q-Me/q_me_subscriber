@@ -13,7 +13,7 @@ import '../bloc/queueDetails.dart';
 import '../utilities/time.dart';
 
 class ViewQueueScreen extends StatefulWidget {
-  static final id = 'viewQueueScreen';
+  static const id = '/viewQueueScreen';
   final String queueId;
   ViewQueueScreen({this.queueId});
   @override
@@ -140,6 +140,7 @@ class GridQueueDetails extends StatelessWidget {
                   '${getDate(queue.endDateTime)}',
                 ),
               ]),
+              TableRow(children: [SizedBox(height: 10), SizedBox(height: 10)]),
               TableRow(children: [
                 GridItemQueue(
                   'Average time per token',
@@ -226,27 +227,38 @@ class QueueButton extends StatelessWidget {
                   await Provider.of<QueueDetailsBloc>(context, listen: false)
                       .startQueue();
               log('Result of start queue:$result');
-              if (result == 'Queue Created Successfully.') {
+              if (result == 'Queue Created Successfully.' ||
+                  result ==
+                      'Queue started successfully but no person in queue.') {
                 // Move to people list screen
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => PeopleScreen(queueId: queueId)));
-              } else if (result ==
-                  'Queue started successfully but no person in queue.') {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => PeopleScreen()));
+//                Navigator.push(
+//                    context,
+//                    MaterialPageRoute(
+//                        builder: (context) => PeopleScreen(queueId: queueId)));
+                Navigator.pushNamed(
+                  context,
+                  PeopleScreen.id,
+                  arguments: {"status": "WAITING", "queueId": queueId},
+                );
               } else {
                 Scaffold.of(context).showSnackBar(SnackBar(
                   content: Text(result.toString()),
                 ));
               }
             } else {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PeopleScreen(queueId: queueId),
-                  ));
+//              Navigator.push(
+//                  context,
+//                  MaterialPageRoute(
+//                    builder: (context) => PeopleScreen(queueId: queueId),
+//                  ));
+              // Queue was already started previously so send to people screen
+
+              // Goto to people screen
+              Navigator.pushNamed(
+                context,
+                PeopleScreen.id,
+                arguments: {"status": "WAITING", "queueId": queueId},
+              );
             }
           },
           child: Padding(

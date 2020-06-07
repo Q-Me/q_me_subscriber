@@ -1,10 +1,4 @@
-// To parse this JSON data, do
-//
-//     final subscriber = subscriberFromJson(jsonString);
-
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer';
 
 Subscriber subscriberFromJson(String str) =>
     Subscriber.fromJson(json.decode(str));
@@ -20,6 +14,11 @@ class Subscriber {
   String accessToken;
   String refreshToken;
   String address;
+  String category;
+  double latitude;
+  double longitude;
+  int verified;
+  DateTime tokenExpiry;
 
   Subscriber({
     this.id,
@@ -30,6 +29,11 @@ class Subscriber {
     this.accessToken,
     this.refreshToken,
     this.address,
+    this.latitude,
+    this.longitude,
+    this.verified,
+    this.tokenExpiry,
+    this.category,
   });
 
   factory Subscriber.fromJson(Map<String, dynamic> json) => Subscriber(
@@ -39,16 +43,31 @@ class Subscriber {
         email: json["email"],
         phone: json["phone"],
         address: json["address"],
+        latitude:
+            json["latitude"] != null ? double.parse(json["latitude"]) : null,
+        longitude:
+            json["longitude"] != null ? double.parse(json["longitude"]) : null,
+        verified: json["verified"] == 'true' ? 1 : 0,
+        category: json["category"],
         accessToken: json['accessToken'],
+        tokenExpiry: json["tokenExpiry"] != null
+            ? DateTime.parse(json["tokenExpiry"])
+            : null,
         refreshToken: json['refreshToken'],
       );
 
   Map<String, dynamic> toJson() => {
+        "id": id,
         "name": name,
         "owner": owner,
         "email": email,
         "phone": phone,
         "address": address,
+        "latitude": latitude,
+        "longitude": longitude,
+        "verified": verified == 1 ? true : false,
+        "category": category,
+        "tokenExpiry": tokenExpiry.toString(),
         "accessToken": accessToken,
         "refreshToken": refreshToken,
       };

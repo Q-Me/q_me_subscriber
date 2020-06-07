@@ -30,7 +30,7 @@ class User {
   String userId;
   String firstName;
   String lastName;
-  String email;
+//  String email;
   String phone;
   int tokenNo;
 
@@ -38,7 +38,7 @@ class User {
     this.userId,
     @required this.firstName,
     this.lastName,
-    this.email,
+//    this.email,
     this.phone,
     this.tokenNo,
   });
@@ -49,7 +49,7 @@ class User {
       userId: json["user_id"],
       firstName: splitName[0],
       lastName: splitName.length > 1 ? splitName[1] : null,
-      email: json["email"],
+//      email: json["email"],
       phone: json["phone"],
       tokenNo: json["token_no"],
     );
@@ -58,7 +58,7 @@ class User {
   Map<String, dynamic> toJson() => {
         "user_id": userId,
         "name": firstName,
-        "email": email,
+//        "email": email,
         "phone": phone,
         "token_no": tokenNo,
       };

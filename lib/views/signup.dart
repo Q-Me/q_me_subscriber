@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
-import 'package:qme_subscriber/api/base_helper.dart';
+import 'package:qme_subscriber/api/keys.dart';
+import '../constants.dart';
 import 'package:qme_subscriber/bloc/signup.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/views/queues.dart';
 import 'dart:developer';
 
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_place_picker/google_maps_place_picker.dart';
+
 import '../widgets/button.dart';
 import '../widgets/text.dart';
 import '../widgets/formField.dart';
 
 class SignUpScreen extends StatefulWidget {
-  static final id = 'signup';
+  static const id = '/signup';
 
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
@@ -24,6 +28,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Map<String, String> formData = {};
   bool passwordVisible;
   SignUpBloc signUpBloc;
+  Subscriber subscriber;
+  final List<String> subscriberCategory = [
+    "Saloon",
+    "Grocery Store",
+    "Supermarket",
+    "Medical Store",
+    "Airport"
+  ];
+  String selectedCategory;
 
   @override
   void initState() {
@@ -31,10 +44,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     passwordVisible = false;
     super.initState();
     signUpBloc = SignUpBloc();
+    subscriber = Subscriber();
+    selectedCategory = "<Select Category>";
   }
 
   @override
   Widget build(BuildContext context) {
+    var _mapLocationController = TextEditingController();
     return SafeArea(
       child: Scaffold(
         resizeToAvoidBottomPadding: false,
@@ -62,6 +78,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             name: 'OWNER\'S NAME',
                             callback: (value) {
                               formData['owner'] = value;
+                              subscriber.owner = value;
                             },
                           ),
                           SizedBox(height: 10.0),
@@ -69,6 +86,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             name: 'BUSINESS NAME',
                             callback: (value) {
                               formData['name'] = value;
+                              subscriber.name = value;
+                            },
+                          ),
+                          SizedBox(height: 10.0),
+                          DropdownButton<String>(
+                            items: subscriberCategory.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                            hint: Text(selectedCategory),
+                            value: selectedCategory,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedCategory = value;
+                                log('Category selected:$selectedCategory');
+                                formData['category'] = selectedCategory;
+                              });
                             },
                           ),
                           SizedBox(height: 10.0),
@@ -78,6 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             required: true,
                             callback: (value) {
                               formData['phone'] = value;
+                              subscriber.phone = value;
                             },
                           ),
                           SizedBox(height: 10.0),
@@ -85,7 +122,58 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             name: 'ADDRESS',
                             callback: (value) {
                               formData['address'] = value;
+                              subscriber.address = value;
                             },
+                          ),
+                          TextFormField(
+                            onChanged: (value) {
+                              formData['address'] = value;
+                            },
+                            controller: _mapLocationController,
+                            showCursor: false,
+                            readOnly: true,
+                            onTap: () {
+                              log('Address field tapped');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PlacePicker(
+                                    resizeToAvoidBottomInset: true,
+                                    apiKey: mapsApiKey,
+                                    onPlacePicked: (result) {
+                                      log('${result.geometry.location.lat},${result.geometry.location.lng}');
+
+                                      _mapLocationController.text =
+                                          '${result.geometry.location.lat},${result.geometry.location.lng}';
+
+                                      subscriber.latitude =
+                                          result.geometry.location.lat;
+                                      formData['latitude'] =
+                                          subscriber.latitude.toString();
+
+                                      subscriber.longitude =
+                                          result.geometry.location.lng;
+                                      formData['longitude'] =
+                                          subscriber.longitude.toString();
+
+                                      Navigator.of(context).pop();
+                                    },
+                                    useCurrentLocation: true,
+                                  ),
+                                ),
+                              );
+                            },
+                            decoration: InputDecoration(
+                              labelText: 'MAP LOCATION',
+                              labelStyle: kLabelStyle,
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.location_on),
+                                color: Theme.of(context).primaryColor,
+                                onPressed: () {
+                                  log('Location button clicked');
+                                },
+                              ),
+                            ),
                           ),
                           SizedBox(height: 10.0),
                           MyFormField(
@@ -94,6 +182,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             required: true,
                             callback: (value) {
                               formData['email'] = value;
+                              subscriber.email = value;
                             },
                           ),
                           SizedBox(height: 10.0),
@@ -110,10 +199,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             },
                             decoration: InputDecoration(
                               labelText: 'PASSWORD',
-                              labelStyle: TextStyle(
-                                  fontFamily: 'Montserrat',
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey),
+                              labelStyle: kLabelStyle,
                               focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                       color: Theme.of(context).primaryColor)),
@@ -149,10 +235,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             },
                             decoration: InputDecoration(
                               labelText: 'CONFIRM PASSWORD',
-                              labelStyle: TextStyle(
-                                  fontFamily: 'Montserrat',
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey),
+                              labelStyle: kLabelStyle,
                               focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(color: Colors.green)),
                               focusColor: Theme.of(context).primaryColorDark,
@@ -215,8 +298,8 @@ class SignUpButton extends StatelessWidget {
         elevation: 7.0,
         child: InkWell(
           onTap: () async {
+            log('$formData');
             if (formKey.currentState.validate()) {
-              log('$formData');
               log('${formData is Map<String, String>}');
 
               // check phone number length
@@ -250,7 +333,7 @@ class SignUpButton extends StatelessWidget {
                 return;
               }
 
-              if (response['msg'] == 'Registation successful') {
+              if (response['msg'] == 'Registration successful') {
                 log('SignUp SUCCESSFUL');
                 try {
                   // SignIn the user
@@ -269,25 +352,26 @@ class SignUpButton extends StatelessWidget {
                 if (response['isSubscriber'] != null &&
                     response['isSubscriber'] == true) {
                   // SignIn success
+
                   // Store tokens into memory
+                  formData.putIfAbsent('id', () => response['id']);
+                  formData.putIfAbsent(
+                      'accessToken', () => response['accessToken']);
+                  formData.putIfAbsent(
+                      'refreshToken', () => response['refreshToken']);
                   await SubscriberRepository().storeSubscriberData(
                     Subscriber.fromJson(
-                      {
-                        'id': response['id'],
-                        'name': formData['name'],
-                        'email': formData['email'],
-                        'owner': formData['owner'],
-                        'phone': formData['phone'],
-                        'address': formData['address'],
-                      },
+                      formData,
                     ),
                   );
+
+                  // Store profile info in local DB
 
                   // Navigate to QueuesPage
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => QueuesPage(
+                          builder: (context) => QueuesScreen(
                                 subscriberId: response['id'],
                               )));
                 } else if (response['msg'] == "Invalid Credential" ||
@@ -303,8 +387,8 @@ class SignUpButton extends StatelessWidget {
                       content: Text('Some unexpected error occurred')));
                 }
               } else {
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text('SignUp failed')));
+                Scaffold.of(context).showSnackBar(SnackBar(
+                    content: Text('SignUp failed:${response['msg']}')));
               }
               // Here there is no chance of invalid credentials because same password is used for signUp and sigIn
             }

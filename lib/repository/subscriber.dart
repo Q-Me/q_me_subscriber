@@ -145,11 +145,12 @@ class SubscriberRepository {
     final expiry = prefs.getString('expiry');
     final refreshToken = prefs.getString('refreshToken');
     final accessToken = prefs.getString('accessToken');
-
+    log('In storage:\nexpiry:$expiry\nrefreshToken:$refreshToken\naccessToken:$accessToken');
     if (expiry != null &&
         DateTime.now().isBefore(DateTime.parse(expiry)) &&
         accessToken != null) {
       // accessToken is valid
+      log('Token is valid');
       return true;
     } else {
       // invalid accessToken
@@ -157,6 +158,7 @@ class SubscriberRepository {
         // Get new accessToken from refreshToken
         final result =
             await getAccessToken(refreshToken: refreshToken, prefs: prefs);
+        log('new accessToken:$result');
         return result != '-1' ? true : false;
       } else {
         return false;

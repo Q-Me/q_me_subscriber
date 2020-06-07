@@ -11,7 +11,7 @@ import 'dart:developer';
 class PeopleBloc extends ChangeNotifier {
   UserRepository _peopleRepository;
 
-  String queueId, status, _accessToken;
+  String queueId, tokenStatus, _accessToken;
   List<User> peopleList;
   User person;
 
@@ -26,8 +26,8 @@ class PeopleBloc extends ChangeNotifier {
       _peopleListController.stream;
   Stream<ApiResponse<User>> get personStream => _personController.stream;
 
-  PeopleBloc({@required this.queueId, @required this.status}) {
-    log('PeopleBloc initializes with queueId:$queueId and status:$status');
+  PeopleBloc({@required this.queueId, @required this.tokenStatus}) {
+    log('PeopleBloc initializes with queueId:$queueId and status:$tokenStatus');
     _peopleListController = StreamController<ApiResponse<List<User>>>();
     _personController = StreamController<ApiResponse<User>>();
 
@@ -36,18 +36,20 @@ class PeopleBloc extends ChangeNotifier {
   }
 
   fetchPeopleList({String status}) async {
-    this.status = status != null ? status : this.status;
+    this.tokenStatus = status != null ? status : this.tokenStatus;
     peopleListSink.add(ApiResponse.loading('Fetching people\'s list'));
     personSink.add(ApiResponse.loading('Loading persons\'s details'));
     try {
-      log('Fetching users data for queue:$queueId and status:${this.status}');
+      log('Fetching users data for queue:$queueId and status:${this.tokenStatus}');
       _accessToken = _accessToken == null
           ? await SubscriberRepository().getAccessTokenFromStorage()
           : _accessToken;
 
       // call api repository with the status
       final response = await _peopleRepository.getQueueUser(
-          queueId: queueId, status: this.status, accessToken: _accessToken);
+          queueId: queueId,
+          status: this.tokenStatus,
+          accessToken: _accessToken);
       log('People Repository API response:' + response.toString());
       peopleList = Users.fromJson(response).user;
 
@@ -83,7 +85,7 @@ class PeopleBloc extends ChangeNotifier {
     }
 
     // fetch new people list
-    fetchPeopleList(status: status);
+    fetchPeopleList(status: tokenStatus);
   }
 
   nextToken() async {
@@ -102,7 +104,7 @@ class PeopleBloc extends ChangeNotifier {
     }
 
     // fetch new people list
-    fetchPeopleList(status: status);
+    fetchPeopleList(status: tokenStatus);
   }
 
   addPersonDetails(User user) {

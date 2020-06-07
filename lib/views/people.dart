@@ -12,11 +12,11 @@ import 'dart:developer';
 import 'package:provider/provider.dart';
 
 class PeopleScreen extends StatefulWidget {
-  static final id = 'people';
+  static const id = '/people';
 
-  final String status;
+  final String tokenStatus;
   final String queueId;
-  PeopleScreen({this.status = 'WAITING', this.queueId});
+  PeopleScreen({this.tokenStatus, @required this.queueId});
   @override
   _PeopleScreenState createState() => _PeopleScreenState();
 }
@@ -29,7 +29,10 @@ class _PeopleScreenState extends State<PeopleScreen> {
   void initState() {
     super.initState();
     log('Showing people of queueId:${widget.queueId}');
-    peopleBloc = PeopleBloc(queueId: widget.queueId, status: widget.status);
+    peopleBloc = PeopleBloc(
+      queueId: widget.queueId,
+      tokenStatus: widget.tokenStatus ?? 'WAITING',
+    );
     peopleBloc.fetchPeopleList();
   }
 
@@ -37,7 +40,10 @@ class _PeopleScreenState extends State<PeopleScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (peopleBloc == null) {
-      peopleBloc = PeopleBloc(queueId: widget.queueId, status: widget.status);
+      peopleBloc = PeopleBloc(
+        queueId: widget.queueId,
+        tokenStatus: widget.tokenStatus ?? 'WAITING',
+      );
     }
   }
 
@@ -47,12 +53,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
       appBar: AppBar(
         leading: GestureDetector(
             onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ViewQueueScreen(
-                            queueId: widget.queueId,
-                          )));
+              // Go to queue details screen
+              Navigator.pushReplacementNamed(
+                context,
+                ViewQueueScreen.id,
+                arguments: widget.queueId,
+              );
             },
             child: Icon(Icons.arrow_back_ios)),
         title: Text('Queue Tokens'),
@@ -81,7 +87,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                     case Status.COMPLETED:
                                       return TokenDetails(
                                           user: snapshot.data.data,
-                                          status: widget.status);
+                                          status: widget.tokenStatus);
                                       break;
                                     case Status.ERROR:
                                       return Error(
@@ -154,7 +160,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       ),
               ),
             ),
-            EndQueueButton(),
+            Visibility(
+                visible: peopleBloc.tokenStatus == 'WAITING',
+                child: EndQueueButton()),
           ],
         ),
       ),
@@ -192,12 +200,12 @@ class TokenDetails extends StatelessWidget {
                           : user.firstName,
                       style: kBigTextStyle.copyWith(fontSize: 20),
                     ),
+//                    Text(
+//                      user.email,
+//                      style: kBigTextStyle.copyWith(fontSize: 15),
+//                    ),
                     Text(
-                      user.email,
-                      style: kBigTextStyle.copyWith(fontSize: 15),
-                    ),
-                    Text(
-                      user.phone,
+                      '******' + user.phone.substring(6),
                       style: kBigTextStyle.copyWith(fontSize: 20),
                     ),
                   ],
@@ -362,7 +370,7 @@ class NextTokenButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Center(
               child: Text(
-                'Next Token',
+                'Next',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 16.0,
@@ -404,7 +412,7 @@ class EndQueueButton extends StatelessWidget {
                     children: <Widget>[
                       Text(
                           'You are about to end the queue. Users won\'t be able to join this queue after it is ended.'),
-                      Text('\nWould you like to end the queue?'),
+                      Text('\nHow would you like to end the queue?'),
                     ],
                   ),
                 ),
@@ -435,7 +443,7 @@ class EndQueueButton extends StatelessWidget {
           ));
 
           if (result == 'Queue ended successfully.') {
-            Navigator.pushNamed(context, QueuesPage.id);
+            Navigator.pushNamed(context, QueuesScreen.id);
           }
         },
         child: Padding(

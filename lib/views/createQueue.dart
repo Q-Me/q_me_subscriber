@@ -9,7 +9,7 @@ import '../utilities/time.dart';
 import '../widgets/text.dart';
 
 class CreateQueueScreen extends StatefulWidget {
-  static final id = 'createQueue';
+  static const id = '/createQueue';
   @override
   _CreateQueueScreenState createState() => _CreateQueueScreenState();
 }
@@ -343,14 +343,14 @@ class CreateQueueButton extends StatelessWidget {
                 ));
               } catch (e) {
                 log('Error in creating queue API: ' + e.toString());
+                // if queue creating failed show a message with the error
                 Scaffold.of(context).showSnackBar(SnackBar(
                   content: Text(e.toString()),
                 ));
                 return;
               }
               // If queue created successfully then
-              Navigator.pushNamed(context, QueuesPage.id);
-              // TODO if queue creating failed show a message with the error
+              Navigator.pushNamed(context, QueuesScreen.id);
             }
           },
           child: Padding(

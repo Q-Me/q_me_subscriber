@@ -14,15 +14,15 @@ import '../constants.dart';
 import '../model/queue.dart';
 import '../utilities/time.dart';
 
-class QueuesPage extends StatefulWidget {
+class QueuesScreen extends StatefulWidget {
+  static const id = '/queues';
   final subscriberId;
-  QueuesPage({this.subscriberId});
-  static final id = 'queues';
+  QueuesScreen({this.subscriberId});
   @override
-  _QueuesPageState createState() => _QueuesPageState();
+  _QueuesScreenState createState() => _QueuesScreenState();
 }
 
-class _QueuesPageState extends State<QueuesPage> {
+class _QueuesScreenState extends State<QueuesScreen> {
   QueuesBloc queuesBloc;
   String queueDisplayStatus = kQueueStatusList[0];
 
