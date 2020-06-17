@@ -1,19 +1,18 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:google_maps_place_picker/google_maps_place_picker.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
 import 'package:qme_subscriber/api/keys.dart';
-import '../constants.dart';
 import 'package:qme_subscriber/bloc/signup.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/views/queues.dart';
-import 'dart:developer';
 
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_place_picker/google_maps_place_picker.dart';
-
+import '../constants.dart';
 import '../widgets/button.dart';
-import '../widgets/text.dart';
 import '../widgets/formField.dart';
+import '../widgets/text.dart';
 
 class SignUpScreen extends StatefulWidget {
   static const id = '/signup';
@@ -40,12 +39,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     passwordVisible = false;
-    super.initState();
+    selectedCategory = subscriberCategory[0];
     signUpBloc = SignUpBloc();
     subscriber = Subscriber();
-    selectedCategory = "<Select Category>";
+    super.initState();
   }
 
   @override
