@@ -1,12 +1,14 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/repository/queue.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
-import '../repository/user.dart';
-import '../api/base_helper.dart';
+
 import '../api/app_exceptions.dart';
+import '../api/base_helper.dart';
 import '../model/user.dart';
-import 'dart:async';
-import 'dart:developer';
+import '../repository/user.dart';
 
 class PeopleBloc extends ChangeNotifier {
   UserRepository _peopleRepository;
@@ -72,7 +74,7 @@ class PeopleBloc extends ChangeNotifier {
 
   cancelToken() async {
     log('Canceling token');
-    // TODO Cancel the token of current person
+    // Cancel the token of current person
     try {
       final response = await QueueRepository().nextQueue(
           queueId: this.queueId,
@@ -81,6 +83,7 @@ class PeopleBloc extends ChangeNotifier {
       log('Cancel Queue Response: ' + response.toString());
       // TODO return the response on success
     } catch (e) {
+      // TODO Show the error on screen and retry button on snack bar
       log('Cancel API call failed:' + e.toString());
     }
 

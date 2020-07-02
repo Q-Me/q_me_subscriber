@@ -3,13 +3,13 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_maps_place_picker/google_maps_place_picker.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
-import 'package:qme_subscriber/api/keys.dart';
-import 'package:qme_subscriber/bloc/signup.dart';
-import 'package:qme_subscriber/model/subscriber.dart';
-import 'package:qme_subscriber/repository/subscriber.dart';
-import 'package:qme_subscriber/views/queues.dart';
 
+import '../api/keys.dart';
+import '../bloc/signup.dart';
 import '../constants.dart';
+import '../model/subscriber.dart';
+import '../repository/subscriber.dart';
+import '../views/queues.dart';
 import '../widgets/button.dart';
 import '../widgets/formField.dart';
 import '../widgets/text.dart';
@@ -29,6 +29,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   SignUpBloc signUpBloc;
   Subscriber subscriber;
   final List<String> subscriberCategory = [
+    // TODO Dynamically fetch this list from api
     "Saloon",
     "Grocery Store",
     "Supermarket",
