@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:qme_subscriber/views/appointments.dart';
 
+import 'views/appointments.dart';
 import 'views/createQueue.dart';
 import 'views/people.dart';
-import 'views/queues.dart';
-import 'views/viewQueue.dart';
-import 'views/signup.dart';
-import 'views/signin.dart';
 import 'views/profile.dart';
+import 'views/queues.dart';
+import 'views/signin.dart';
+import 'views/signup.dart';
 import 'views/unknown.dart';
+import 'views/viewQueue.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -56,6 +58,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => ProfileScreen(),
         settings: RouteSettings(name: ProfileScreen.id),
+      );
+
+    case AppointmentsScreen.id:
+      return MaterialPageRoute(
+        builder: (context) => AppointmentsScreen(),
+        settings: RouteSettings(name: AppointmentsScreen.id),
       );
 
     default:
