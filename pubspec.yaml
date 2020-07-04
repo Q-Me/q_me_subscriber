@@ -40,6 +40,7 @@ dependencies:
   firebase_analytics: ^5.0.14
   get: ^3.2.0
   calendar_strip: ^1.0.6
+  ordered_set: ^2.0.0
 
 dev_dependencies:
   flutter_test:
