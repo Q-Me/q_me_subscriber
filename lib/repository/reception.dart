@@ -1,15 +1,19 @@
 import 'package:meta/meta.dart';
+import 'package:qme_subscriber/controllers/slots.dart';
+import 'package:qme_subscriber/model/appointment.dart';
+import 'package:qme_subscriber/model/slot.dart';
 
 import '../api/base_helper.dart';
 import '../api/endpoints.dart';
+import '../model/reception.dart';
 
 class ReceptionRepository {
   ApiBaseHelper _helper = ApiBaseHelper();
 
-  Future<Map<String, dynamic>> createReception({
+  Future<dynamic> createReception({
     @required DateTime startTime,
     @required DateTime endTime,
-    @required int slotDuration,
+    @required int slotDurationInMinutes,
     @required int customerPerSlot,
     @required String accessToken,
   }) async {
@@ -18,15 +22,37 @@ class ReceptionRepository {
       req: {
         "starttime": startTime.toIso8601String(),
         "endtime": endTime.toIso8601String(),
-        "slot": slotDuration.toString(),
+        "slot": slotDurationInMinutes.toString(),
         "cust_per_slot": customerPerSlot.toString(),
       },
       headers: {'Authorization': 'Bearer $accessToken'},
     );
-    return response;
+
+    return response['msg'] == 'Counter Created Successfully'
+        ? true
+        : response["error"].toString();
   }
 
-  Future<Map<String, dynamic>> overrideSlot({
+  Future<List<Reception>> viewReceptionsByStatus({
+    @required List<String> status,
+    @required String accessToken,
+  }) async {
+    final response = await _helper.post(
+      kViewReceptions,
+      req: {
+        "status": status,
+      },
+      headers: {'Authorization': 'Bearer $accessToken'},
+    );
+
+    List<Reception> receptions = [];
+    for (var element in response['counters']) {
+      receptions.add(Reception.fromJson(Map<String, dynamic>.from(element)));
+    }
+    return receptions;
+  }
+
+  Future<Map<String, dynamic>> createOverrideSlot({
     @required String counterId,
     @required DateTime startTime,
     @required DateTime endTime,
@@ -34,7 +60,7 @@ class ReceptionRepository {
     @required String accessToken,
   }) async {
     final response = await _helper.post(
-      kOverrideSlot,
+      '/subscriber/slot/override',
       req: {
         "counter_id": counterId,
         "starttime": startTime.toIso8601String(),
@@ -62,39 +88,42 @@ class ReceptionRepository {
     return response;
   }
 
-  Future<Map<String, dynamic>> viewReception({
+  Future<Reception> viewReception({
     @required String counterId,
     @required accessToken,
   }) async {
     final response = await _helper.post(
-      kViewReception,
+      '/subscriber/slot/viewcounter',
       req: {"counter_id": counterId},
       headers: {'Authorization': 'Bearer $accessToken'},
     );
-    return response;
+    // todo test
+    return Reception.fromJson(response);
   }
 
-  Future<Map<String, dynamic>> viewOverrides({
+  Future<List<Slot>> viewOverrides({
     @required String counterId,
     @required accessToken,
   }) async {
     final response = await _helper.post(
-      kViewOverride,
+      '/subscriber/slot/viewOverride',
       req: {"counter_id": counterId},
       headers: {'Authorization': 'Bearer $accessToken'},
     );
-    return response;
+    // todo test
+    return createOverrideSlots(response);
   }
 
-  Future<Map<String, dynamic>> viewBookings({
+  Future<List<Slot>> viewBookings({
     @required String counterId,
     @required DateTime startTime,
     @required DateTime endTime,
     @required List<String> status,
+    @required int slotDurationInMinutes,
     @required String accessToken,
   }) async {
     final response = await _helper.post(
-      kSlotBookings,
+      '/subscriber/slot/bookings',
       req: {
         "counter_id": counterId,
         "starttime": startTime.toIso8601String(),
@@ -103,10 +132,27 @@ class ReceptionRepository {
       },
       headers: {'Authorization': 'Bearer $accessToken'},
     );
-    return response;
+
+    // make a list of slots containing number of appointments
+    List<Slot> slots = [];
+    for (var element in response["slot info"]) {
+      DateTime startTime = DateTime.parse(element["starttime"]).toLocal();
+      Slot slot = Slot(
+        booked: element["count"],
+        startTime: startTime,
+        endTime: startTime.add(Duration(
+          minutes: slotDurationInMinutes,
+        )),
+      );
+      slots.add(slot);
+    }
+    slots = orderSlotsByStartTime(slots);
+
+    // todo test
+    return slots;
   }
 
-  Future<Map<String, dynamic>> viewBookingsDetailed({
+  Future<List<Appointment>> viewBookingsDetailed({
     @required String counterId,
     @required DateTime startTime,
     @required DateTime endTime,
@@ -123,7 +169,16 @@ class ReceptionRepository {
       },
       headers: {'Authorization': 'Bearer $accessToken'},
     );
-    return response;
+
+    // make a list of  appointments
+    List<Appointment> appointments = [];
+    for (var appointmentElement in response["slots"]) {
+      appointments.add(
+        Appointment.fromJson(Map<String, dynamic>.from(appointmentElement)),
+      );
+    }
+    // TODO test
+    return appointments;
   }
 
   Future<Map<String, dynamic>> bookAppointment({
@@ -184,7 +239,7 @@ class ReceptionRepository {
     return response;
   }
 
-  Future<Map<String, dynamic>> viewReceptionDetailed({
+  Future<Reception> viewReceptionDetailed({
     @required String counterId,
     @required accessToken,
   }) async {
@@ -193,6 +248,18 @@ class ReceptionRepository {
       req: {"counter_id": counterId},
       headers: {'Authorization': 'Bearer $accessToken'},
     );
-    return response;
+    // Create Reception
+    Reception reception = Reception.fromJson(response["counter"]);
+
+    // create slots from reception duration
+    List<Slot> slots = createSlotsFromDuration(reception);
+
+    // apply overrides slots
+    slots = overrideSlots(slots, createOverrideSlots(response));
+
+    // update slots according to bookings
+    slots = modifyBookings(slots, response);
+    reception.addSlotList(slots);
+    return reception;
   }
 }
