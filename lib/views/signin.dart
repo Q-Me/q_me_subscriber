@@ -51,6 +51,8 @@ class _SignInScreenState extends State<SignInScreen>
         timeout: Duration(seconds: 60),
         verificationCompleted: (AuthCredential credential) async {
           AuthResult result = await _auth.signInWithCredential(credential);
+          print("printing the credential");
+          print(credential);
 
           FirebaseUser user = result.user;
 
@@ -93,6 +95,8 @@ class _SignInScreenState extends State<SignInScreen>
         verificationFailed: (AuthException exception) {
           print("here is exception error");
           print(exception.message);
+          Scaffold.of(context)
+              .showSnackBar(SnackBar(content: Text(exception.message.toString())));
         },
         codeSent: (String verificationId, [int forceResendingToken]) {
           _authVar = _auth;
@@ -338,24 +342,25 @@ class _SignInScreenState extends State<SignInScreen>
                                                     print("Error");
                                                   }
                                                 } on PlatformException catch (e) {
-                                                    print("Looking for Error code");
+                                                  print(
+                                                      "Looking for Error code");
                                                   print(e.message);
                                                   Scaffold.of(context)
                                                       .showSnackBar(SnackBar(
-                                                          content: Text(
-                                                              e.code.toString())));
+                                                          content: Text(e.code
+                                                              .toString())));
                                                   print(e.code);
                                                   setState(() {
                                                     showOtpTextfield = false;
                                                   });
-                                                  
                                                 } on Exception catch (e) {
-                                                    print("Looking for Error message");
-                                                    Scaffold.of(context)
+                                                  print(
+                                                      "Looking for Error message");
+                                                  Scaffold.of(context)
                                                       .showSnackBar(SnackBar(
                                                           content: Text(
                                                               e.toString())));
-                                                               setState(() {
+                                                  setState(() {
                                                     showOtpTextfield = false;
                                                   });
                                                   print(e);

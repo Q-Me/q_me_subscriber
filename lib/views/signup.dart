@@ -66,6 +66,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         },
         verificationFailed: (AuthException exception) {
           print(exception.message);
+          Scaffold.of(context)
+              .showSnackBar(SnackBar(content: Text(exception.message.toString())));
         },
         codeSent: (String verificationId, [int forceResendingToken]) {
           // _authVar = _auth;
@@ -235,7 +237,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           SizedBox(height: 10.0),
                           Container(
                             child: DropdownButtonFormField<String>(
-                               decoration: InputDecoration(labelText: 'Subscriber Category'),
+                              decoration: InputDecoration(
+                                  labelText: 'Subscriber Category'),
                               items: subscriberCategory.map((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
