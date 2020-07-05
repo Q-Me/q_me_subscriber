@@ -8,6 +8,59 @@ class AppointmentsScreen extends StatefulWidget {
   _AppointmentsScreenState createState() => _AppointmentsScreenState();
 }
 
+const names = <String>[
+  'Annie',
+  'Arianne',
+  'Bertie',
+  'Bettina',
+  'Bradly',
+  'Caridad',
+  'Carline',
+  'Cassie',
+  'Chloe',
+  'Christin',
+  'Clotilde',
+  'Dahlia',
+  'Dana',
+  'Dane',
+  'Darline',
+  'Deena',
+  'Delphia',
+  'Donny',
+  'Echo',
+  'Else',
+  'Ernesto',
+  'Fidel',
+  'Gayla',
+  'Grayce',
+  'Henriette',
+  'Hermila',
+  'Hugo',
+  'Irina',
+  'Ivette',
+  'Jeremiah',
+  'Jerica',
+  'Joan',
+  'Johnna',
+  'Jonah',
+  'Joseph',
+  'Junie',
+  'Linwood',
+  'Lore',
+  'Louis',
+  'Merry',
+  'Minna',
+  'Mitsue',
+  'Napoleon',
+  'Paris',
+  'Ryan',
+  'Salina',
+  'Shantae',
+  'Sonia',
+  'Taisha',
+  'Zula',
+];
+
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
   DateTime startDate = DateTime.now().subtract(Duration(days: 7));
   DateTime endDate = DateTime.now().add(Duration(days: 7));
@@ -112,11 +165,47 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               markedDates: markedDates,
               containerDecoration: BoxDecoration(color: Colors.black12),
             ),
-            SingleChildScrollView(
-              child: Column(
-                children: <Widget>[],
+            Expanded(
+              child: ListView.builder(
+                itemCount: (names.length / 5).floor(),
+                shrinkWrap: true,
+                physics: ClampingScrollPhysics(),
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    child: Row(
+                      children: <Widget>[
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width / 5,
+                          child: Opacity(
+                            opacity: index % 2 == 0 ? 1 : 0,
+                            child: Text(
+                              names[index],
+                              style: Theme.of(context).textTheme.headline5,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 4 / 5,
+                          child: Wrap(
+                            children: List.from(
+                              names.sublist(index, index + 5).map(
+                                    (e) => Text(
+                                      e,
+                                      style:
+                                          Theme.of(context).textTheme.headline5,
+                                    ),
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            )
+            ),
           ],
         ),
       ),

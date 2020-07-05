@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'router.dart' as router;
 import 'services/analytics.dart';
-import 'views/appointments.dart';
+import 'views/receptions.dart';
 import 'views/signin.dart';
 
 var analytics = AnalyticsService();

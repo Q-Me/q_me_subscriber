@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:qme_subscriber/views/appointments.dart';
 
-import 'views/appointments.dart';
 import 'views/createQueue.dart';
 import 'views/people.dart';
 import 'views/profile.dart';
 import 'views/queues.dart';
+import 'views/receptions.dart';
 import 'views/signin.dart';
 import 'views/signup.dart';
 import 'views/unknown.dart';
