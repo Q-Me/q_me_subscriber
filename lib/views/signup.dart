@@ -3,10 +3,10 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:google_maps_place_picker/google_maps_place_picker.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
-import 'package:qme_subscriber/views/profile.dart';
+import 'package:qme_subscriber/views/otpPage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../api/keys.dart';
 import '../bloc/signup.dart';
 import '../constants.dart';
@@ -24,6 +24,9 @@ class SignUpScreen extends StatefulWidget {
   _SignUpScreenState createState() => _SignUpScreenState();
 }
 
+var verificationIdOtp;
+var authOtp;
+
 class _SignUpScreenState extends State<SignUpScreen> {
   final _phoneController = TextEditingController();
   bool showSpinner = false;
@@ -35,144 +38,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _codeController = TextEditingController();
 
   var idToken;
-  // var verificationIdVar;
-  // var _authVar;
   bool showOtpTextfield = false;
 
   // otp verification with firebase
-  Future<bool> loginUser(String phone, BuildContext context) async {
-    FirebaseAuth _auth = FirebaseAuth.instance;
-
-    _auth.verifyPhoneNumber(
-        phoneNumber: phone,
-        timeout: Duration(seconds: 60),
-        verificationCompleted: (AuthCredential credential) async {
-          AuthResult result = await _auth.signInWithCredential(credential);
-
-          FirebaseUser user = result.user;
-
-          if (user != null) {
-            var token = await user.getIdToken().then((result) {
-              idToken = result.token;
-              formData['token'] = idToken;
-              print(" $idToken ");
-            });
-            Navigator.pop(context);
-          } else {
-            print("Error");
-          }
-
-          //This callback would gets called when verification is done auto maticlly
-        },
-        verificationFailed: (AuthException exception) {
-          print(exception.message);
-          Scaffold.of(context)
-              .showSnackBar(SnackBar(content: Text(exception.message.toString())));
-        },
-        codeSent: (String verificationId, [int forceResendingToken]) {
-          // _authVar = _auth;
-          // verificationIdVar = verificationId;
-
-          showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) {
-                return AlertDialog(
-                  title: Text("Give the code?"),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      TextField(
-                        controller: _codeController,
-                      ),
-                    ],
-                  ),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text("Confirm"),
-                      textColor: Colors.white,
-                      color: Theme.of(context).primaryColor,
-                      onPressed: () async {
-                        final code = _codeController.text.trim();
-                        try {
-                          AuthCredential credential =
-                              PhoneAuthProvider.getCredential(
-                                  verificationId: verificationId,
-                                  smsCode: code);
-
-                          AuthResult result =
-                              await _auth.signInWithCredential(credential);
-
-                          FirebaseUser user = result.user;
-
-                          if (user != null) {
-                            var token = await user.getIdToken().then((result) {
-                              idToken = result.token;
-                              formData['token'] = idToken;
-                              print("@@ $idToken @@");
-                            });
-                            Navigator.pop(context);
-                          } else {
-                            print("Error");
-                          }
-                        } on PlatformException catch (e) {
-                          print("Looking for Error code");
-                          print(e.message);
-                          Navigator.of(context).pop();
-
-                          showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Text("Verification Failed"),
-                                  content: Text(e.code.toString()),
-                                  actions: <Widget>[
-                                    FlatButton(
-                                      child: Text("OK"),
-                                      textColor: Colors.white,
-                                      color: Theme.of(context).primaryColor,
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    )
-                                  ],
-                                );
-                              });
-                          print(e.code);
-                        } on Exception catch (e) {
-                          Navigator.of(context).pop();
-
-                          showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Text("Verification Failed"),
-                                  content: Text(e.toString()),
-                                  actions: <Widget>[
-                                    FlatButton(
-                                      child: Text("OK"),
-                                      textColor: Colors.white,
-                                      color: Theme.of(context).primaryColor,
-                                      onPressed: () async {
-                                        Navigator.of(context).pop();
-                                      },
-                                    )
-                                  ],
-                                );
-                              });
-                          print("Looking for Error message");
-                          print(e);
-                        }
-                      },
-                    )
-                  ],
-                );
-              });
-        },
-        codeAutoRetrievalTimeout: null);
-  }
 
   final List<String> subscriberCategory = [
     "Choose Category",
@@ -257,59 +125,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                           SizedBox(height: 10.0),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Container(
-                                width: MediaQuery.of(context).size.width * 0.65,
-                                child: TextFormField(
-                                  keyboardType: TextInputType.phone,
-                                  controller: _phoneController,
-                                  validator: (value) {
-                                    if (value.isEmpty) {
-                                      return 'This field cannot be left blank';
-                                    } else {
-                                      setState(() {
-                                        formData['phone'] = value;
-                                      });
-                                      subscriber.phone = value;
-                                    }
-                                  },
-                                  decoration: kTextFieldDecoration.copyWith(
-                                      labelText: "PHONE"),
-                                ),
-                                //  MyFormField(
-                                //   keyboardType: TextInputType.phone,
-                                //   name: 'PHONE',
-                                //   required: true,
-                                //   callback: (value) {
-                                //     // formData['phone'] = value;
-                                //     setState(() {
-                                //     formData['phone'] = value;
-                                //     });
-                                //     subscriber.phone = value;
-                                //   },
-                                // ),
-                              ),
-                              RaisedButton(
-                                color: Theme.of(context).primaryColor,
-                                onPressed: () {
-                                  final phone = _phoneController.text.trim();
-                                  print("phone number: $phone");
-                                  loginUser(phone, context);
-                                  if (phone.length != 13) {
-                                    Scaffold.of(context).showSnackBar(SnackBar(
-                                        content: Text(
-                                            'Phone number must have 10 digits with Country code')));
-                                    return;
-                                  }
-                                },
-                                child: const Text(
-                                  'Verify',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              )
-                            ],
+                          Container(
+                            child: TextFormField(
+                              keyboardType: TextInputType.phone,
+                              controller: _phoneController,
+                              validator: (value) {
+                                if (value.isEmpty) {
+                                  return 'This field cannot be left blank';
+                                } else {
+                                  setState(() {
+                                    formData['phone'] = value;
+                                  });
+                                  subscriber.phone = value;
+                                }
+                              },
+                              decoration: kTextFieldDecoration.copyWith(
+                                  labelText: "PHONE"),
+                            ),
                           ),
                           SizedBox(height: 10.0),
                           MyFormField(
@@ -451,7 +283,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                           SizedBox(height: 50.0),
-                          SignUpButton(formKey: formKey, formData: formData),
+                          SignUpButton(
+                              formKey: formKey,
+                              formData: formData,
+                              phoneController: _phoneController),
                           SizedBox(height: 20.0),
                         ],
                       ),
@@ -467,15 +302,159 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 }
 
-class SignUpButton extends StatelessWidget {
+class SignUpButton extends StatefulWidget {
   const SignUpButton({
     Key key,
     @required this.formKey,
     @required this.formData,
+    @required this.phoneController,
   }) : super(key: key);
 
   final GlobalKey<FormState> formKey;
   final Map<String, String> formData;
+  final TextEditingController phoneController;
+
+  @override
+  _SignUpButtonState createState() => _SignUpButtonState();
+}
+
+class _SignUpButtonState extends State<SignUpButton> {
+  var idToken;
+
+  Future<bool> loginUser(String phone, BuildContext context) async {
+    FirebaseAuth _auth = FirebaseAuth.instance;
+
+    _auth.verifyPhoneNumber(
+        phoneNumber: phone,
+        timeout: Duration(seconds: 60),
+        verificationCompleted: (AuthCredential credential) async {
+          AuthResult result = await _auth.signInWithCredential(credential);
+
+          FirebaseUser user = result.user;
+
+          if (user != null) {
+            var token = await user.getIdToken().then((result) {
+              idToken = result.token;
+              widget.formData['token'] = idToken;
+              print(" $idToken ");
+            });
+            log('${widget.formData}');
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+
+            widget.formData['owner'] = prefs.getString('ownerSignup');
+            widget.formData['category'] = prefs.getString('categorySignup');
+
+            widget.formData['address'] = prefs.getString('addressSignup');
+
+            widget.formData['name'] = prefs.getString('nameSignup');
+
+            widget.formData['latitude'] = prefs.getString('latitudeSignup');
+
+            widget.formData['longitude'] = prefs.getString('longitudeSignup');
+            widget.formData['phone'] = prefs.getString('userPhoneSignup');
+            widget.formData['password'] = prefs.getString('userPasswordSignup');
+            widget.formData['cpassword'] =
+                prefs.getString('userCpasswordSignup');
+            widget.formData['email'] = prefs.getString(
+              'userEmailSignup',
+            );
+            Scaffold.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Processing Data'),
+              ),
+            );
+
+            // UserRepository user = UserRepository();
+            // Make SignUp API call
+
+            var response;
+            try {
+              response = await SubscriberRepository().signUp(widget.formData);
+              log(response.toString());
+            } catch (e) {
+              Scaffold.of(context)
+                  .showSnackBar(SnackBar(content: Text(e.toString())));
+              log('Error: ' + e.toString());
+
+              return;
+            }
+
+            print("@# $response#@");
+            print("@# ${response['msg']}#@");
+            if (response['msg'] == 'Registration successful') {
+              log('SignUp SUCCESSFUL');
+              try {
+                // SignIn the user
+                response = await SubscriberRepository().signInFirebaseotp({
+                  'token': widget.formData['token'],
+                });
+                log(response.toString());
+              } catch (e) {
+                Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text(e.toString())));
+                log('Error: ' + e.toString());
+                return;
+              }
+
+              if (response['isSubscriber'] != null &&
+                  response['isSubscriber'] == true) {
+                // SignIn success
+
+                // Store tokens into memory
+                widget.formData.putIfAbsent('id', () => response['id']);
+                widget.formData
+                    .putIfAbsent('accessToken', () => response['accessToken']);
+                widget.formData.putIfAbsent(
+                    'refreshToken', () => response['refreshToken']);
+                await SubscriberRepository().storeSubscriberData(
+                  Subscriber.fromJson(
+                    widget.formData,
+                  ),
+                );
+
+                // Store profile info in local DB
+
+                // Navigate to QueuesPage
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => QueuesScreen(
+                              subscriberId: response['id'],
+                            )));
+              } else if (response['msg'] == "Invalid Credential" ||
+                  response['error'] != null) {
+                Scaffold.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                  response['msg'] != null
+                      ? response['msg']
+                      : response['error'].toString(),
+                )));
+              } else {
+                Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text('Some unexpected error occurred')));
+              }
+            } else {
+              Scaffold.of(context).showSnackBar(
+                  SnackBar(content: Text('SignUp failed:${response['msg']}')));
+            }
+          } else {
+            print("Error");
+          }
+
+          //This callback would gets called when verification is done auto maticlly
+        },
+        verificationFailed: (AuthException exception) {
+          print(exception.message);
+          Scaffold.of(context).showSnackBar(
+              SnackBar(content: Text(exception.message.toString())));
+        },
+        codeSent: (String verificationId, [int forceResendingToken]) {
+          authOtp = _auth;
+          verificationIdOtp = verificationId;
+          Navigator.pushNamed(context, OtpPage.id);
+        },
+        codeAutoRetrievalTimeout: null);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -488,19 +467,19 @@ class SignUpButton extends StatelessWidget {
         elevation: 7.0,
         child: InkWell(
           onTap: () async {
-            log('$formData');
-            if (formKey.currentState.validate()) {
-              log('${formData is Map<String, String>}');
+            log('${widget.formData}');
+            if (widget.formKey.currentState.validate()) {
+              log('${widget.formData is Map<String, String>}');
 
               // check phone number length
-              if (formData['phone'].length != 13) {
+              if (widget.formData['phone'].length != 13) {
                 Scaffold.of(context).showSnackBar(SnackBar(
                     content: Text(
                         'Phone number must have 10 digits with Country code')));
                 return;
               }
 
-              if (formData['password'] != formData['cpassword']) {
+              if (widget.formData['password'] != widget.formData['cpassword']) {
                 Scaffold.of(context).showSnackBar(
                     SnackBar(content: Text('Passwords do not match')));
                 return null;
@@ -511,77 +490,23 @@ class SignUpButton extends StatelessWidget {
               Scaffold.of(context)
                   .showSnackBar(SnackBar(content: Text('Processing Data')));
 
-              // Make SignUp API call
-              var response;
-              try {
-                response = await SubscriberRepository().signUp(formData);
-                log(response.toString());
-              } catch (e) {
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text(e.toString())));
-                log('Error: ' + e.toString());
+              final phone = widget.phoneController.text.trim();
+              print("phone number: $phone");
+              SharedPreferences prefs = await SharedPreferences.getInstance();
 
-                return;
-              }
-
-              print("@# $response#@");
-              print("@# ${response['msg']}#@");
-              if (response['msg'] == 'Registration successful') {
-                log('SignUp SUCCESSFUL');
-                try {
-                  // SignIn the user
-                  response = await SubscriberRepository().signInFirebaseotp({
-                    'token': formData['token'],
-                  });
-                  log(response.toString());
-                } catch (e) {
-                  Scaffold.of(context)
-                      .showSnackBar(SnackBar(content: Text(e.toString())));
-                  log('Error: ' + e.toString());
-                  return;
-                }
-
-                if (response['isSubscriber'] != null &&
-                    response['isSubscriber'] == true) {
-                  // SignIn success
-
-                  // Store tokens into memory
-                  formData.putIfAbsent('id', () => response['id']);
-                  formData.putIfAbsent(
-                      'accessToken', () => response['accessToken']);
-                  formData.putIfAbsent(
-                      'refreshToken', () => response['refreshToken']);
-                  await SubscriberRepository().storeSubscriberData(
-                    Subscriber.fromJson(
-                      formData,
-                    ),
-                  );
-
-                  // Store profile info in local DB
-
-                  // Navigate to QueuesPage
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => QueuesScreen(
-                                subscriberId: response['id'],
-                              )));
-                } else if (response['msg'] == "Invalid Credential" ||
-                    response['error'] != null) {
-                  Scaffold.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                    response['msg'] != null
-                        ? response['msg']
-                        : response['error'].toString(),
-                  )));
-                } else {
-                  Scaffold.of(context).showSnackBar(SnackBar(
-                      content: Text('Some unexpected error occurred')));
-                }
-              } else {
-                Scaffold.of(context).showSnackBar(SnackBar(
-                    content: Text('SignUp failed:${response['msg']}')));
-              }
+              prefs.setString('ownerSignup', widget.formData['owner']);
+              prefs.setString('categorySignup', widget.formData['category']);
+              prefs.setString('nameSignup', widget.formData['name']);
+              prefs.setString('addressSignup', widget.formData['address']);
+              prefs.setString('latitudeSignup', widget.formData['latitude']);
+              prefs.setString('longitudeSignup', widget.formData['longitude']);
+              prefs.setString('userPhoneSignup', widget.formData['phone']);
+              prefs.setString(
+                  'userPasswordSignup', widget.formData['password']);
+              prefs.setString(
+                  'userCpasswordSignup', widget.formData['cpassword']);
+              prefs.setString('userEmailSignup', widget.formData['email']);
+              loginUser(phone, context);
               // Here there is no chance of invalid credentials because same password is used for signUp and sigIn
             }
           },

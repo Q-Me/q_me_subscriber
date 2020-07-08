@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/views/appointments.dart';
+import 'package:qme_subscriber/views/otpPage.dart';
 
 import 'views/appointments.dart';
 import 'views/createQueue.dart';
@@ -29,6 +30,11 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => QueuesScreen(),
         settings: RouteSettings(name: QueuesScreen.id),
+      );
+      case OtpPage.id:
+      return MaterialPageRoute(
+        builder: (context) => OtpPage(),
+        settings: RouteSettings(name: OtpPage.id),
       );
 
     case CreateQueueScreen.id:

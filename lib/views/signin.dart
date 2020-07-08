@@ -608,7 +608,8 @@ class _SignInScreenState extends State<SignInScreen>
                             ),
                           ],
                         ),
-                      )),
+                      )
+                      ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
