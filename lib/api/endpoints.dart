@@ -15,3 +15,5 @@ const String baseURL = 'https://dontwaitapp.co/api',
     kEndQueue = '/subscriber/endQueue',
     kGetUser = '/subscriber/getuser',
     kGetQueueUser = '/subscriber/getqueueuser';
+    const String fcmUrl = '/subscriber/fcm';
+    

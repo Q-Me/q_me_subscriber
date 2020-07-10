@@ -11,6 +11,8 @@ import 'dart:developer';
 import '../constants.dart';
 import '../repository/subscriber.dart';
 import '../views/queues.dart';
+import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class SignInScreen extends StatefulWidget {
   static const String id = '/signIn';
@@ -31,6 +33,8 @@ class _SignInScreenState extends State<SignInScreen>
   String countryCodeVal;
   String countryCodePassword;
   bool showOtpTextfield = false;
+  final FirebaseMessaging _messaging = FirebaseMessaging();
+  var _fcmToken;
   final formKey =
       GlobalKey<FormState>(); // Used in login button and forget password
   String phoneNumber;
@@ -75,7 +79,15 @@ class _SignInScreenState extends State<SignInScreen>
 
                 await SubscriberRepository()
                     .storeSubscriberData(Subscriber.fromJson(response));
-
+                    Scaffold.of(context)
+                                                    .showSnackBar(SnackBar(
+                                                        content: Text(
+                                                            'Processing Data')));
+                var responsefcm = await SubscriberRepository().fcmTokenSubmit({
+                  'token': _fcmToken,
+                }, response['accessToken']);
+                print("fcm token Api: $responsefcm");
+                print("fcm token  Apiresponse: ${responsefcm['status']}");
                 Navigator.pushNamed(context, QueuesScreen.id);
               } catch (e) {
                 print(" !!$e !!");
@@ -95,8 +107,8 @@ class _SignInScreenState extends State<SignInScreen>
         verificationFailed: (AuthException exception) {
           print("here is exception error");
           print(exception.message);
-          Scaffold.of(context)
-              .showSnackBar(SnackBar(content: Text(exception.message.toString())));
+          Scaffold.of(context).showSnackBar(
+              SnackBar(content: Text(exception.message.toString())));
         },
         codeSent: (String verificationId, [int forceResendingToken]) {
           _authVar = _auth;
@@ -113,6 +125,41 @@ class _SignInScreenState extends State<SignInScreen>
   void initState() {
     super.initState();
     _controller = new TabController(length: 2, vsync: this);
+    firebaseCloudMessagingListeners();
+    _messaging.getToken().then((token) {
+      print("fcmToken: $token");
+      _fcmToken = token;
+    });
+  }
+
+  void firebaseCloudMessagingListeners() {
+    if (Platform.isIOS) iosPermission();
+
+    _messaging.getToken().then((token) {
+      print(token);
+    });
+
+    _messaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        //showNotification(message['notification']);
+        print('on message $message');
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print('on resume $message');
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print('on launch $message');
+      },
+    );
+  }
+
+  void iosPermission() {
+    _messaging.requestNotificationPermissions(
+        IosNotificationSettings(sound: true, badge: true, alert: true));
+    _messaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings settings) {
+      print("Settings registered: $settings");
+    });
   }
 
   @override
@@ -383,6 +430,23 @@ class _SignInScreenState extends State<SignInScreen>
                                                       .storeSubscriberData(
                                                           Subscriber.fromJson(
                                                               response));
+                                                  await SubscriberRepository()
+                                                      .storeSubscriberData(
+                                                          Subscriber.fromJson(
+                                                              response));
+                                                              Scaffold.of(context)
+                                                    .showSnackBar(SnackBar(
+                                                        content: Text(
+                                                            'Processing Data')));
+                                                  var responsefcm =
+                                                      await SubscriberRepository()
+                                                          .fcmTokenSubmit({
+                                                    'token': _fcmToken,
+                                                  }, response['accessToken']);
+                                                  print(
+                                                      "fcm token Api: $responsefcm");
+                                                  print(
+                                                      "fcm token  Apiresponse: ${responsefcm['status']}");
 
                                                   Navigator.pushNamed(
                                                       context, QueuesScreen.id);
@@ -554,7 +618,7 @@ class _SignInScreenState extends State<SignInScreen>
                                                     .showSnackBar(SnackBar(
                                                         content: Text(
                                                             'Processing Data')));
-                                                // email and password both are available here
+                                                // phone and password both are available here
                                                 var response;
                                                 try {
                                                   response =
@@ -572,7 +636,23 @@ class _SignInScreenState extends State<SignInScreen>
                                                       .storeSubscriberData(
                                                           Subscriber.fromJson(
                                                               response));
-
+                                                  await SubscriberRepository()
+                                                      .storeSubscriberData(
+                                                          Subscriber.fromJson(
+                                                              response));
+                                                              Scaffold.of(context)
+                                                    .showSnackBar(SnackBar(
+                                                        content: Text(
+                                                            'Processing Data')));
+                                                  var responsefcm =
+                                                      await SubscriberRepository()
+                                                          .fcmTokenSubmit({
+                                                    'token': _fcmToken,
+                                                  }, response['accessToken']);
+                                                  print(
+                                                      "fcm token Api: $responsefcm");
+                                                  print(
+                                                      "fcm token  Apiresponse: ${responsefcm['status']}");
                                                   Navigator.pushNamed(
                                                       context, QueuesScreen.id);
                                                 } catch (e) {
@@ -608,8 +688,7 @@ class _SignInScreenState extends State<SignInScreen>
                             ),
                           ],
                         ),
-                      )
-                      ),
+                      )),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[

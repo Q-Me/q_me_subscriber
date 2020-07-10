@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +15,8 @@ import '../views/queues.dart';
 import '../widgets/button.dart';
 import '../widgets/formField.dart';
 import '../widgets/text.dart';
+import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class SignUpScreen extends StatefulWidget {
   static const id = '/signup';
@@ -36,7 +37,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   SignUpBloc signUpBloc;
   Subscriber subscriber;
   final _codeController = TextEditingController();
-
+  final FirebaseMessaging _messaging = FirebaseMessaging();
+  var _fcmToken;
   var idToken;
   bool showOtpTextfield = false;
 
@@ -59,6 +61,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
     signUpBloc = SignUpBloc();
     subscriber = Subscriber();
     super.initState();
+    firebaseCloudMessagingListeners();
+    _messaging.getToken().then((token) {
+      print("fcmToken: $token");
+      _fcmToken = token;
+    });
+  }
+
+  void firebaseCloudMessagingListeners() {
+    if (Platform.isIOS) iosPermission();
+
+    _messaging.getToken().then((token) {
+      print(token);
+    });
+
+    _messaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        //showNotification(message['notification']);
+        print('on message $message');
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print('on resume $message');
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print('on launch $message');
+      },
+    );
+  }
+
+  void iosPermission() {
+    _messaging.requestNotificationPermissions(
+        IosNotificationSettings(sound: true, badge: true, alert: true));
+    _messaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings settings) {
+      print("Settings registered: $settings");
+    });
   }
 
   @override
@@ -286,7 +323,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           SignUpButton(
                               formKey: formKey,
                               formData: formData,
-                              phoneController: _phoneController),
+                              phoneController: _phoneController,
+                              fcmToken: _fcmToken),
                           SizedBox(height: 20.0),
                         ],
                       ),
@@ -308,11 +346,13 @@ class SignUpButton extends StatefulWidget {
     @required this.formKey,
     @required this.formData,
     @required this.phoneController,
+    @required this.fcmToken,
   }) : super(key: key);
 
   final GlobalKey<FormState> formKey;
   final Map<String, String> formData;
   final TextEditingController phoneController;
+  final String fcmToken;
 
   @override
   _SignUpButtonState createState() => _SignUpButtonState();
@@ -358,6 +398,7 @@ class _SignUpButtonState extends State<SignUpButton> {
             widget.formData['email'] = prefs.getString(
               'userEmailSignup',
             );
+
             Scaffold.of(context).showSnackBar(
               SnackBar(
                 content: Text('Processing Data'),
@@ -388,6 +429,16 @@ class _SignUpButtonState extends State<SignUpButton> {
                 response = await SubscriberRepository().signInFirebaseotp({
                   'token': widget.formData['token'],
                 });
+                await SubscriberRepository()
+                    .storeSubscriberData(Subscriber.fromJson(response));
+                Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text('Processing Data')));
+                    
+                var responsefcm = await SubscriberRepository().fcmTokenSubmit({
+                  'token': widget.fcmToken,
+                }, response['accessToken']);
+                print("fcm token Api: $responsefcm");
+                print("fcm token  Apiresponse: ${responsefcm['status']}");
                 log(response.toString());
               } catch (e) {
                 Scaffold.of(context)
@@ -506,6 +557,7 @@ class _SignUpButtonState extends State<SignUpButton> {
               prefs.setString(
                   'userCpasswordSignup', widget.formData['cpassword']);
               prefs.setString('userEmailSignup', widget.formData['email']);
+              prefs.setString('fcmToken', widget.fcmToken);
               loginUser(phone, context);
               // Here there is no chance of invalid credentials because same password is used for signUp and sigIn
             }

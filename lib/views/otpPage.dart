@@ -23,6 +23,7 @@ class OtpPage extends StatefulWidget {
 class _OtpPageState extends State<OtpPage> {
   Map<String, String> formData = {};
   var idToken;
+  var _fcmToken;
   final formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
 
@@ -133,6 +134,9 @@ class _OtpPageState extends State<OtpPage> {
                                         formData['email'] = prefs.getString(
                                           'userEmailSignup',
                                         );
+                                        _fcmToken = prefs.getString(
+                                          'fcmToken',
+                                        );
                                         Scaffold.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text('Processing Data'),
@@ -199,7 +203,20 @@ class _OtpPageState extends State<OtpPage> {
                                               ),
                                             );
 
-                                            // Store profile info in local DB
+                                            // Store fcm info DB
+                                            Scaffold.of(context).showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Processing Data')));
+                                            var responsefcm =
+                                                await SubscriberRepository()
+                                                    .fcmTokenSubmit({
+                                              'token': _fcmToken,
+                                            }, response['accessToken']);
+                                            print(
+                                                "fcm token Api: $responsefcm");
+                                            print(
+                                                "fcm token  Apiresponse: ${responsefcm['status']}");
 
                                             // Navigate to QueuesPage
                                             Navigator.push(
