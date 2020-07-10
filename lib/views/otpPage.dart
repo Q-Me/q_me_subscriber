@@ -217,6 +217,11 @@ class _OtpPageState extends State<OtpPage> {
                                                 "fcm token Api: $responsefcm");
                                             print(
                                                 "fcm token  Apiresponse: ${responsefcm['status']}");
+                                            SharedPreferences prefs =
+                                                await SharedPreferences
+                                                    .getInstance();
+                                            prefs.setString(
+                                                'fcmToken', _fcmToken);
 
                                             // Navigate to QueuesPage
                                             Navigator.push(

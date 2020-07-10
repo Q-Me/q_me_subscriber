@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qme_subscriber/views/queues.dart';
 
 import 'router.dart' as router;
 import 'services/analytics.dart';
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light().copyWith(primaryColor: Colors.green),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: router.generateRoute,
-      initialRoute: SignInScreen.id,
+      initialRoute: QueuesScreen.id,
       navigatorObservers: [analytics.getAnalyticsObserver()],
     );
   }

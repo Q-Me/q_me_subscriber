@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/views/profile.dart';
 import 'package:qme_subscriber/views/signup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/text.dart';
 import '../widgets/formField.dart';
 import 'dart:developer';
@@ -79,13 +80,13 @@ class _SignInScreenState extends State<SignInScreen>
 
                 await SubscriberRepository()
                     .storeSubscriberData(Subscriber.fromJson(response));
-                    Scaffold.of(context)
-                                                    .showSnackBar(SnackBar(
-                                                        content: Text(
-                                                            'Processing Data')));
+                Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text('Processing Data')));
                 var responsefcm = await SubscriberRepository().fcmTokenSubmit({
                   'token': _fcmToken,
                 }, response['accessToken']);
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.setString('fcmToken',_fcmToken );
                 print("fcm token Api: $responsefcm");
                 print("fcm token  Apiresponse: ${responsefcm['status']}");
                 Navigator.pushNamed(context, QueuesScreen.id);
@@ -434,10 +435,10 @@ class _SignInScreenState extends State<SignInScreen>
                                                       .storeSubscriberData(
                                                           Subscriber.fromJson(
                                                               response));
-                                                              Scaffold.of(context)
-                                                    .showSnackBar(SnackBar(
-                                                        content: Text(
-                                                            'Processing Data')));
+                                                  Scaffold.of(context)
+                                                      .showSnackBar(SnackBar(
+                                                          content: Text(
+                                                              'Processing Data')));
                                                   var responsefcm =
                                                       await SubscriberRepository()
                                                           .fcmTokenSubmit({
@@ -447,7 +448,8 @@ class _SignInScreenState extends State<SignInScreen>
                                                       "fcm token Api: $responsefcm");
                                                   print(
                                                       "fcm token  Apiresponse: ${responsefcm['status']}");
-
+                                                       SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.setString('fcmToken',_fcmToken );
                                                   Navigator.pushNamed(
                                                       context, QueuesScreen.id);
                                                 } catch (e) {
@@ -640,10 +642,10 @@ class _SignInScreenState extends State<SignInScreen>
                                                       .storeSubscriberData(
                                                           Subscriber.fromJson(
                                                               response));
-                                                              Scaffold.of(context)
-                                                    .showSnackBar(SnackBar(
-                                                        content: Text(
-                                                            'Processing Data')));
+                                                  Scaffold.of(context)
+                                                      .showSnackBar(SnackBar(
+                                                          content: Text(
+                                                              'Processing Data')));
                                                   var responsefcm =
                                                       await SubscriberRepository()
                                                           .fcmTokenSubmit({
@@ -653,6 +655,11 @@ class _SignInScreenState extends State<SignInScreen>
                                                       "fcm token Api: $responsefcm");
                                                   print(
                                                       "fcm token  Apiresponse: ${responsefcm['status']}");
+                                                  SharedPreferences prefs =
+                                                      await SharedPreferences
+                                                          .getInstance();
+                                                  prefs.setString(
+                                                      'fcmToken', _fcmToken);
                                                   Navigator.pushNamed(
                                                       context, QueuesScreen.id);
                                                 } catch (e) {
