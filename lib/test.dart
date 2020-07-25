@@ -1,5 +1,6 @@
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/repository/reception.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 
 String accessToken =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InlzenY3OW5ucSIsIm5hbWUiOiJBbWFuZGVlcCdzIFNhbG9vbiIsImlzU3Vic2NyaWJlciI6dHJ1ZSwiaWF0IjoxNTkzODY4ODc1LCJleHAiOjE1OTM5NTUyNzV9.1B1NKAgQw_KuXvia5yFJ9cDa7sjiiHbeHK0tqJkc1oc';
@@ -245,7 +246,7 @@ void main() {
     print('Slot:${slot.toJson()}');
   }*/
   ReceptionRepository receptionRepository = ReceptionRepository();
-  testViewReceptions(receptionRepository);
+  testViewReceptionsByStatus(receptionRepository);
 //  testViewReception();
 //  ReceptionRepository receptionRepository = ReceptionRepository();
 //  receptionRepository.viewReception(counterId: null, accessToken: null)
@@ -285,10 +286,10 @@ void testViewReception(ReceptionRepository receptionRepository) async {
   print(reception.toJson());
 }
 
-void testViewReceptions(ReceptionRepository receptionRepository) async {
+void testViewReceptionsByStatus(ReceptionRepository receptionRepository) async {
   List<Reception> receptions = await receptionRepository
       .viewReceptionsByStatus(status: ['ALL'], accessToken: accessToken);
   for (Reception reception in receptions) {
-    print(reception.toJson());
+    logger.i(reception.toJson());
   }
 }

@@ -59,10 +59,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: ProfileScreen.id),
       );
 
-    case AppointmentsScreen.id:
+    case ReceptionsScreen.id:
       return MaterialPageRoute(
-        builder: (context) => AppointmentsScreen(),
-        settings: RouteSettings(name: AppointmentsScreen.id),
+        builder: (context) => ReceptionsScreen(),
+        settings: RouteSettings(name: ReceptionsScreen.id),
       );
 
     default:

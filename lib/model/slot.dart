@@ -7,11 +7,12 @@ import 'package:ordered_set/comparing.dart';
 
 import 'appointment.dart';
 
+// ignore: must_be_immutable
 class Slot extends Equatable {
   Slot({
     @required this.startTime,
     @required this.endTime,
-    this.booked = 0,
+    this.booked,
     this.customersInSlot,
   });
   List<Appointment> appointments = [];
@@ -22,7 +23,7 @@ class Slot extends Equatable {
 
   final DateTime startTime;
   final DateTime endTime;
-  int booked;
+  int booked; // null not set
   int customersInSlot;
 
   factory Slot.fromJson(Map<String, dynamic> json) => Slot(

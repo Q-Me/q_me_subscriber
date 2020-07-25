@@ -1,67 +1,23 @@
 import 'package:calendar_strip/calendar_strip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:qme_subscriber/bloc/receptions.dart';
+import 'package:qme_subscriber/model/reception.dart';
+import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
+import 'package:qme_subscriber/utilities/time.dart';
+import 'package:qme_subscriber/widgets/fabsHomeScreen.dart';
 
-class AppointmentsScreen extends StatefulWidget {
+import '../widgets/calenderItems.dart';
+
+class ReceptionsScreen extends StatefulWidget {
   static const String id = '/appointments';
   @override
-  _AppointmentsScreenState createState() => _AppointmentsScreenState();
+  _ReceptionsScreenState createState() => _ReceptionsScreenState();
 }
 
-const names = <String>[
-  'Annie',
-  'Arianne',
-  'Bertie',
-  'Bettina',
-  'Bradly',
-  'Caridad',
-  'Carline',
-  'Cassie',
-  'Chloe',
-  'Christin',
-  'Clotilde',
-  'Dahlia',
-  'Dana',
-  'Dane',
-  'Darline',
-  'Deena',
-  'Delphia',
-  'Donny',
-  'Echo',
-  'Else',
-  'Ernesto',
-  'Fidel',
-  'Gayla',
-  'Grayce',
-  'Henriette',
-  'Hermila',
-  'Hugo',
-  'Irina',
-  'Ivette',
-  'Jeremiah',
-  'Jerica',
-  'Joan',
-  'Johnna',
-  'Jonah',
-  'Joseph',
-  'Junie',
-  'Linwood',
-  'Lore',
-  'Louis',
-  'Merry',
-  'Minna',
-  'Mitsue',
-  'Napoleon',
-  'Paris',
-  'Ryan',
-  'Salina',
-  'Shantae',
-  'Sonia',
-  'Taisha',
-  'Zula',
-];
-
-class _AppointmentsScreenState extends State<AppointmentsScreen> {
+class _ReceptionsScreenState extends State<ReceptionsScreen> {
   DateTime startDate = DateTime.now().subtract(Duration(days: 7));
   DateTime endDate = DateTime.now().add(Duration(days: 7));
   DateTime selectedDate = DateTime.now();
@@ -71,142 +27,185 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   ];
 
   onSelect(data) {
-    print("Selected Date -> $data");
+    logger.d("Selected Date -> $data");
   }
 
-  _monthNameWidget(monthName) {
-    return Container(
-      child: Text(monthName,
-          style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-              fontStyle: FontStyle.italic)),
-      padding: EdgeInsets.only(top: 8, bottom: 4),
-    );
-  }
-
-  getMarkedIndicatorWidget() {
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Container(
-        margin: EdgeInsets.only(left: 1, right: 1),
-        width: 7,
-        height: 7,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.red),
-      ),
-      Container(
-        width: 7,
-        height: 7,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blue),
-      )
-    ]);
-  }
-
-  dateTileBuilder(
-    date,
-    selectedDate,
-    rowIndex,
-    dayName,
-    isDateMarked,
-    isDateOutOfRange,
-  ) {
-    bool isSelectedDate = date.compareTo(selectedDate) == 0;
-    Color fontColor = isDateOutOfRange ? Colors.black26 : Colors.black87;
-    TextStyle normalStyle =
-        TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: fontColor);
-    TextStyle selectedStyle = TextStyle(
-        fontSize: 17, fontWeight: FontWeight.w800, color: Colors.black87);
-    TextStyle dayNameStyle = TextStyle(fontSize: 14.5, color: fontColor);
-    List<Widget> _children = [
-      Text(dayName, style: dayNameStyle),
-      Text(date.day.toString(),
-          style: !isSelectedDate ? normalStyle : selectedStyle),
-    ];
-
-    if (isDateMarked == true) {
-      _children.add(getMarkedIndicatorWidget());
-    }
-
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 150),
-      alignment: Alignment.center,
-      padding: EdgeInsets.only(top: 8, left: 5, right: 5, bottom: 5),
-      decoration: BoxDecoration(
-        color: !isSelectedDate ? Colors.transparent : Colors.white70,
-        borderRadius: BorderRadius.all(Radius.circular(60)),
-      ),
-      child: Column(
-        children: _children,
-      ),
-    );
+  ReceptionsBloc receptionsBloc;
+  @override
+  void initState() {
+    receptionsBloc = ReceptionsBloc();
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: Column(
-          children: <Widget>[
-            Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(10, 30, 10, 20),
-              child: Icon(
-                Icons.menu,
-                size: 30,
-              ),
-            ),
-            CalendarStrip(
-              startDate: startDate,
-              endDate: endDate,
-              onDateSelected: onSelect,
-              dateTileBuilder: dateTileBuilder,
-              iconColor: Colors.black87,
-              monthNameWidget: _monthNameWidget,
-              markedDates: markedDates,
-              containerDecoration: BoxDecoration(color: Colors.black12),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: (names.length / 5).floor(),
-                shrinkWrap: true,
-                physics: ClampingScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20.0),
-                    child: Row(
-                      children: <Widget>[
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width / 5,
-                          child: Opacity(
-                            opacity: index % 2 == 0 ? 1 : 0,
-                            child: Text(
-                              names[index],
-                              style: Theme.of(context).textTheme.headline5,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 4 / 5,
-                          child: Wrap(
-                            children: List.from(
-                              names.sublist(index, index + 5).map(
-                                    (e) => Text(
-                                      e,
-                                      style:
-                                          Theme.of(context).textTheme.headline5,
-                                    ),
-                                  ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+        floatingActionButton: FancyFab(),
+        /*FloatingActionButton(
+          child: Stack(
+            children: <Widget>[
+              FloatingActionButton(
+                child: Text('Create appointment'),
+                onPressed: () {
+                  logger.d('appointment pressed');
                 },
               ),
-            ),
-          ],
+              FloatingActionButton(
+                child: Text('Create reception'),
+                onPressed: () {
+                  logger.d('reception pressed');
+                },
+              ),
+            ],
+          ),
+          onPressed: () {
+            logger.d('FAB pressed');
+          },
+        )*/
+        body: ChangeNotifierProvider.value(
+          value: receptionsBloc,
+          child: Column(
+            children: <Widget>[
+              /*Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(10, 30, 10, 20),
+                child: Icon(
+                  Icons.menu,
+                  size: 30,
+                ),
+              ),*/
+              CalendarStrip(
+                startDate: startDate,
+                endDate: endDate,
+                onDateSelected: onSelect,
+                dateTileBuilder: dateTileBuilder,
+                iconColor: Colors.black87,
+                monthNameWidget: monthNameWidget,
+                markedDates: markedDates,
+                containerDecoration: BoxDecoration(color: Colors.black12),
+              ),
+              Expanded(
+                child: receptionsBloc
+                            .getReceptionsByDate(selectedDate)
+                            .length !=
+                        0
+                    ? ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: receptionsBloc
+                            .getReceptionsByDate(selectedDate)
+                            .length,
+                        itemBuilder: (context, receptionsIndex) {
+                          Reception reception = receptionsBloc
+                              .getReceptionsByDate(selectedDate)
+                              .elementAt(receptionsIndex);
+                          return ListView.builder(
+                            itemCount: reception.slotList.length,
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              Slot slot = reception.slotList[index];
+
+                              List<Widget> bookedBoxes = List.generate(
+                                  slot.booked != null ? slot.booked : 0,
+                                  (index) => Container(
+                                        padding: EdgeInsets.all(20),
+                                        margin: EdgeInsets.all(1),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue,
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(10)),
+                                        ),
+                                        child: Text('booked'),
+                                      ));
+                              List<Widget> unBookedBoxes = List.generate(
+                                  slot.booked == null
+                                      ? slot.customersInSlot
+                                      : slot.customersInSlot - slot.booked,
+                                  (index) => Container(
+                                        padding: EdgeInsets.all(20),
+                                        margin: EdgeInsets.all(1),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey,
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(10)),
+                                        ),
+                                        child: Text('unbooked'),
+                                      ));
+
+                              final allBoxes = [
+                                ...bookedBoxes,
+                                ...unBookedBoxes,
+                                Container(
+                                  padding: EdgeInsets.all(20),
+                                  margin: EdgeInsets.all(1),
+                                  decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10)),
+                                    border: Border.all(),
+                                  ),
+                                  child: Icon(
+                                    Icons.add,
+                                  ),
+                                )
+                              ];
+
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10.0),
+                                child: Row(
+                                  children: <Widget>[
+                                    SizedBox(
+                                      width: 100,
+                                      child: Opacity(
+//                              opacity: index % 2 == 0 ? 1 : 0,
+                                        opacity: 1,
+                                        child: Column(
+                                          children: <Widget>[
+                                            Text(
+                                              getTime(slot.startTime),
+                                              style: TextStyle(fontSize: 20),
+                                              softWrap: true,
+                                            ),
+                                            Text(
+                                              'to',
+                                              style: TextStyle(fontSize: 20),
+                                              softWrap: true,
+                                            ),
+                                            Text(
+                                              getTime(slot.endTime),
+                                              style: TextStyle(fontSize: 20),
+                                              softWrap: true,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Wrap(
+                                        children: allBoxes,
+                                      ),
+                                    )
+                                    /*Wrap(
+
+                              children: slot.appointments
+                                  .map((e) => Container(
+                                        padding: EdgeInsets.all(20),
+                                        child: Icon(Icons.close),
+                                      ))
+                                  .toList(),
+                            ),*/
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      )
+                    : Text('sdg'),
+              ),
+            ],
+          ),
         ),
       ),
     );
