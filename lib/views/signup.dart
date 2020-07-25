@@ -27,9 +27,10 @@ class SignUpScreen extends StatefulWidget {
 
 var verificationIdOtp;
 var authOtp;
+String loginPage;
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _phoneController = TextEditingController();
+  final _phoneController = TextEditingController(text: "+91");
   bool showSpinner = false;
   final formKey = GlobalKey<FormState>();
   Map<String, String> formData = {};
@@ -439,6 +440,7 @@ class _SignUpButtonState extends State<SignUpButton> {
                 }, response['accessToken']);
                 print("fcm token Api: $responsefcm");
                 print("fcm token  Apiresponse: ${responsefcm['status']}");
+                 prefs.setString('fcmToken', widget.fcmToken);
                 log(response.toString());
               } catch (e) {
                 Scaffold.of(context)
@@ -502,6 +504,7 @@ class _SignUpButtonState extends State<SignUpButton> {
         codeSent: (String verificationId, [int forceResendingToken]) {
           authOtp = _auth;
           verificationIdOtp = verificationId;
+           loginPage = "SignUp";
           Navigator.pushNamed(context, OtpPage.id);
         },
         codeAutoRetrievalTimeout: null);

@@ -12,6 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../api/app_exceptions.dart';
 import '../repository/user.dart';
 import 'signup.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pin_entry_text_field/pin_entry_text_field.dart';
 
 class OtpPage extends StatefulWidget {
   static const id = '/otpPage';
@@ -43,8 +45,21 @@ class _OtpPageState extends State<OtpPage> {
                   children: <Widget>[
                     MyBackButton(),
                     Container(
-                        padding: EdgeInsets.only(left: 20),
-                        child: ThemedText(words: ['Hop', 'In'])),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            top: MediaQuery.of(context).size.height * 0.025),
+                        child: Center(
+                          child: Hero(
+                            tag: 'hero',
+                            child: new CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              radius: 60.0,
+                              child: SvgPicture.asset("assets/images/user.svg"),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     Container(
                         padding: EdgeInsets.symmetric(
                             horizontal: 20.0,
@@ -52,26 +67,25 @@ class _OtpPageState extends State<OtpPage> {
                                 MediaQuery.of(context).size.height * 0.15),
                         child: Column(
                           children: <Widget>[
-                            Card(
-                              child: new ListTile(
-                                title: TextFormField(
-                                  decoration: InputDecoration(
-                                      enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(8)),
-                                          borderSide: BorderSide(
-                                              color: Colors.grey[200])),
-                                      focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(8)),
-                                          borderSide: BorderSide(
-                                              color: Colors.grey[300])),
-                                      filled: true,
-                                      fillColor: Colors.grey[100],
-                                      hintText: "Enter OTP"),
-                                  controller: _codeController,
-                                ),
-                              ),
+                            Text(
+                              "OTP Verification",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 25.0),
+                            ),
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.03,
+                            ),
+                            Text("Enter OTP sent to mobile number"),
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.05,
+                            ),
+                            PinEntryTextField(
+                              fieldWidth:
+                                  MediaQuery.of(context).size.width * 0.1,
+                              fields: 6,
+                              onSubmit: (String pin) {
+                                _codeController.text = pin;
+                              }, // end onSubmit
                             ),
                             SizedBox(height: 50.0),
                             Container(
@@ -108,71 +122,50 @@ class _OtpPageState extends State<OtpPage> {
                                         SharedPreferences prefs =
                                             await SharedPreferences
                                                 .getInstance();
+                                        if (loginPage == "SignUp") {
+                                          formData['owner'] =
+                                              prefs.getString('ownerSignup');
+                                          formData['category'] =
+                                              prefs.getString('categorySignup');
 
-                                        formData['owner'] =
-                                            prefs.getString('ownerSignup');
-                                        formData['category'] =
-                                            prefs.getString('categorySignup');
+                                          formData['address'] =
+                                              prefs.getString('addressSignup');
 
-                                        formData['address'] =
-                                            prefs.getString('addressSignup');
+                                          formData['name'] =
+                                              prefs.getString('nameSignup');
 
-                                        formData['name'] =
-                                            prefs.getString('nameSignup');
+                                          formData['latitude'] =
+                                              prefs.getString('latitudeSignup');
 
-                                        formData['latitude'] =
-                                            prefs.getString('latitudeSignup');
-
-                                        formData['longitude'] =
-                                            prefs.getString('longitudeSignup');
-                                        formData['phone'] =
-                                            prefs.getString('userPhoneSignup');
-                                        formData['password'] = prefs
-                                            .getString('userPasswordSignup');
-                                        formData['cpassword'] = prefs
-                                            .getString('userCpasswordSignup');
-                                        formData['email'] = prefs.getString(
-                                          'userEmailSignup',
-                                        );
-                                        _fcmToken = prefs.getString(
-                                          'fcmToken',
-                                        );
-                                        Scaffold.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('Processing Data'),
-                                          ),
-                                        );
-
-                                        UserRepository user = UserRepository();
-                                        // Make SignUp API call
-
-                                        var response;
-                                        try {
-                                          response =
-                                              await SubscriberRepository()
-                                                  .signUp(formData);
-                                          log(response.toString());
-                                        } catch (e) {
+                                          formData['longitude'] = prefs
+                                              .getString('longitudeSignup');
+                                          formData['phone'] = prefs
+                                              .getString('userPhoneSignup');
+                                          formData['password'] = prefs
+                                              .getString('userPasswordSignup');
+                                          formData['cpassword'] = prefs
+                                              .getString('userCpasswordSignup');
+                                          formData['email'] = prefs.getString(
+                                            'userEmailSignup',
+                                          );
+                                          _fcmToken = prefs.getString(
+                                            'fcmToken',
+                                          );
                                           Scaffold.of(context).showSnackBar(
-                                              SnackBar(
-                                                  content: Text(e.toString())));
-                                          log('Error: ' + e.toString());
+                                            SnackBar(
+                                              content: Text('Processing Data'),
+                                            ),
+                                          );
 
-                                          return;
-                                        }
+                                          UserRepository user =
+                                              UserRepository();
+                                          // Make SignUp API call
 
-                                        print("@# $response#@");
-                                        print("@# ${response['msg']}#@");
-                                        if (response['msg'] ==
-                                            'Registration successful') {
-                                          log('SignUp SUCCESSFUL');
+                                          var response;
                                           try {
-                                            // SignIn the user
                                             response =
                                                 await SubscriberRepository()
-                                                    .signInFirebaseotp({
-                                              'token': formData['token'],
-                                            });
+                                                    .signUp(formData);
                                             log(response.toString());
                                           } catch (e) {
                                             Scaffold.of(context).showSnackBar(
@@ -180,30 +173,132 @@ class _OtpPageState extends State<OtpPage> {
                                                     content:
                                                         Text(e.toString())));
                                             log('Error: ' + e.toString());
+
                                             return;
                                           }
 
-                                          if (response['isSubscriber'] !=
-                                                  null &&
-                                              response['isSubscriber'] ==
-                                                  true) {
-                                            // SignIn success
+                                          print("@# $response#@");
+                                          print("@# ${response['msg']}#@");
+                                          if (response['msg'] ==
+                                              'Registration successful') {
+                                            log('SignUp SUCCESSFUL');
+                                            try {
+                                              // SignIn the user
+                                              response =
+                                                  await SubscriberRepository()
+                                                      .signInFirebaseotp({
+                                                'token': formData['token'],
+                                              });
+                                              log(response.toString());
+                                            } catch (e) {
+                                              Scaffold.of(context).showSnackBar(
+                                                  SnackBar(
+                                                      content:
+                                                          Text(e.toString())));
+                                              log('Error: ' + e.toString());
+                                              return;
+                                            }
 
-                                            // Store tokens into memory
-                                            formData.putIfAbsent(
-                                                'id', () => response['id']);
-                                            formData.putIfAbsent('accessToken',
-                                                () => response['accessToken']);
-                                            formData.putIfAbsent('refreshToken',
-                                                () => response['refreshToken']);
+                                            if (response['isSubscriber'] !=
+                                                    null &&
+                                                response['isSubscriber'] ==
+                                                    true) {
+                                              // SignIn success
+
+                                              // Store tokens into memory
+                                              formData.putIfAbsent(
+                                                  'id', () => response['id']);
+                                              formData.putIfAbsent(
+                                                  'accessToken',
+                                                  () =>
+                                                      response['accessToken']);
+                                              formData.putIfAbsent(
+                                                  'refreshToken',
+                                                  () =>
+                                                      response['refreshToken']);
+                                              await SubscriberRepository()
+                                                  .storeSubscriberData(
+                                                Subscriber.fromJson(
+                                                  formData,
+                                                ),
+                                              );
+
+                                              // Store fcm info DB
+                                              Scaffold.of(context).showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          'Processing Data')));
+                                              var responsefcm =
+                                                  await SubscriberRepository()
+                                                      .fcmTokenSubmit({
+                                                'token': _fcmToken,
+                                              }, response['accessToken']);
+                                              print(
+                                                  "fcm token Api: $responsefcm");
+                                              print(
+                                                  "fcm token  Apiresponse: ${responsefcm['status']}");
+                                              SharedPreferences prefs =
+                                                  await SharedPreferences
+                                                      .getInstance();
+                                              prefs.setString(
+                                                  'fcmToken', _fcmToken);
+
+                                              // Navigate to QueuesPage
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          QueuesScreen(
+                                                            subscriberId:
+                                                                response['id'],
+                                                          )));
+                                            } else if (response['msg'] ==
+                                                    "Invalid Credential" ||
+                                                response['error'] != null) {
+                                              Scaffold.of(context)
+                                                  .showSnackBar(SnackBar(
+                                                      content: Text(
+                                                response['msg'] != null
+                                                    ? response['msg']
+                                                    : response['error']
+                                                        .toString(),
+                                              )));
+                                            } else {
+                                              Scaffold.of(context).showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          'Some unexpected error occurred')));
+                                            }
+                                          } else {
+                                            Scaffold.of(context).showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'SignUp failed:${response['msg']}')));
+                                          }
+                                        } else {
+                                          print("login otp");
+                                          _fcmToken =
+                                              prefs.getString('fcmToken');
+                                          var response;
+                                          try {
+                                            response =
+                                                await SubscriberRepository()
+                                                    .signInFirebaseotp({
+                                              'token': idToken,
+                                            });
+                                            print("@@$response@@");
+
+                                            log('SIGNIN API RESPONSE: ' +
+                                                response.toString());
+
                                             await SubscriberRepository()
                                                 .storeSubscriberData(
-                                              Subscriber.fromJson(
-                                                formData,
-                                              ),
-                                            );
-
-                                            // Store fcm info DB
+                                                    Subscriber.fromJson(
+                                                        response));
+                                            await SubscriberRepository()
+                                                .storeSubscriberData(
+                                                    Subscriber.fromJson(
+                                                        response));
                                             Scaffold.of(context).showSnackBar(
                                                 SnackBar(
                                                     content: Text(
@@ -222,38 +317,18 @@ class _OtpPageState extends State<OtpPage> {
                                                     .getInstance();
                                             prefs.setString(
                                                 'fcmToken', _fcmToken);
-
-                                            // Navigate to QueuesPage
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        QueuesScreen(
-                                                          subscriberId:
-                                                              response['id'],
-                                                        )));
-                                          } else if (response['msg'] ==
-                                                  "Invalid Credential" ||
-                                              response['error'] != null) {
-                                            Scaffold.of(context)
-                                                .showSnackBar(SnackBar(
-                                                    content: Text(
-                                              response['msg'] != null
-                                                  ? response['msg']
-                                                  : response['error']
-                                                      .toString(),
-                                            )));
-                                          } else {
+                                            Navigator.pushNamed(
+                                                context, QueuesScreen.id);
+                                          } catch (e) {
                                             Scaffold.of(context).showSnackBar(
                                                 SnackBar(
-                                                    content: Text(
-                                                        'Some unexpected error occurred')));
+                                                    content:
+                                                        Text(e.toString())));
+                                            // _showSnackBar(e.toString());
+                                            log('Error in signIn API: ' +
+                                                e.toString());
+                                            return;
                                           }
-                                        } else {
-                                          Scaffold.of(context).showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      'SignUp failed:${response['msg']}')));
                                         }
                                       } else {
                                         print("SignUp failed");
