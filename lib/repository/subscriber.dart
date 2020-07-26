@@ -24,6 +24,10 @@ class SubscriberRepository {
     final response = await _helper.post(kSignIn, req: formData);
     return response; // Store access Token, refresh token and id
   }
+   Future<Map<String, dynamic>> signInFirebaseotp(Map<String, String> idToken) async {
+    final response = await _helper.post(signInotpUrl, req: idToken);
+    return response; // Store access Token, refresh token and id
+  }
 
   Future<Map<String, dynamic>> profile(String accessToken) async {
     final response = await _helper.post(
