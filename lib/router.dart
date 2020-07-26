@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/views/appointments.dart';
 import 'package:qme_subscriber/views/createReception.dart';
+import 'package:qme_subscriber/views/customer.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
 
 import 'views/appointments.dart';
@@ -32,7 +33,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         builder: (context) => QueuesScreen(),
         settings: RouteSettings(name: QueuesScreen.id),
       );
-      case OtpPage.id:
+    case OtpPage.id:
       return MaterialPageRoute(
         builder: (context) => OtpPage(),
         settings: RouteSettings(name: OtpPage.id),
@@ -72,10 +73,15 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         builder: (context) => AppointmentsScreen(),
         settings: RouteSettings(name: AppointmentsScreen.id),
       );
-       case CreateReceptionScreen.id:
+    case CreateReceptionScreen.id:
       return MaterialPageRoute(
         builder: (context) => CreateReceptionScreen(),
         settings: RouteSettings(name: CreateReceptionScreen.id),
+      );
+    case CustomerAppointment.id:
+      return MaterialPageRoute(
+        builder: (context) => CustomerAppointment(),
+        settings: RouteSettings(name: CustomerAppointment.id),
       );
 
     default:
