@@ -23,3 +23,5 @@ const String baseURL = 'https://dontwaitapp.co/api',
     kDoneAppointment = '/subscriber/slot/doneslot',
     kUpdateReceptionStatus = '/subscriber/slot/updatestatus',
     kViewDetailedCounter = '/subscriber/slot/viewcounterdetailed';
+
+const String fcmUrl = '/subscriber/fcm';

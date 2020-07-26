@@ -24,8 +24,23 @@ class SubscriberRepository {
     final response = await _helper.post(kSignIn, req: formData);
     return response; // Store access Token, refresh token and id
   }
-   Future<Map<String, dynamic>> signInFirebaseotp(Map<String, String> idToken) async {
+
+  Future<Map<String, dynamic>> signInFirebaseotp(
+      Map<String, String> idToken) async {
     final response = await _helper.post(signInotpUrl, req: idToken);
+    return response; // Store access Token, refresh token and id
+  }
+
+  Future<Map<String, dynamic>> fcmTokenSubmit(
+      Map<String, String> fcmToken , String accessToken) async {
+        print("accessToken : $accessToken");
+        print("accessToken : $accessToken");
+    final response = await _helper.post(
+      fcmUrl,
+      req: fcmToken,
+      headers: {'Authorization': 'Bearer $accessToken'},
+    );
+    print(response);
     return response; // Store access Token, refresh token and id
   }
 
