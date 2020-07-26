@@ -1,16 +1,25 @@
 import 'package:flutter/widgets.dart';
-import 'package:qme_subscriber/controllers/slots.dart';
 import 'package:qme_subscriber/model/reception.dart';
-import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/repository/reception.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
 
 class ReceptionsBloc extends ChangeNotifier {
   String _subscriberId;
+  DateTime _selectedDate;
+  ReceptionRepository _receptionRepository;
+  List<Reception> selectedDateReceptions;
+  set date(DateTime selected) {
+    _selectedDate = selected;
+    logger.d("Selected Date -> $_selectedDate");
+    notifyListeners();
+  }
+
   List<Reception> receptions = [];
-  Reception reception = Reception(
-    subscriberId: '',
-    customersInSlot: 4,
-    receptionId: '',
+  Reception reception1 = Reception(
+    subscriberId: '1',
+    customersInSlot: 2,
+    receptionId: '1',
     status: 'UPCOMING',
     startTime: DateTime(2020, 7, 25, 9),
     endTime: DateTime(2020, 7, 25, 18),
@@ -33,33 +42,49 @@ class ReceptionsBloc extends ChangeNotifier {
     ]
   };
 
-  ReceptionsBloc() {
+  ReceptionsBloc(this._selectedDate) {
+    _receptionRepository = ReceptionRepository();
+
     // create slots from reception duration
-    List<Slot> slots = createSlotsFromDuration(reception);
+//    List<Slot> slots = createSlotsFromDuration(reception1);
 
     // update slots according to bookings
-    slots = modifyBookings(slots, response);
-    reception.addSlotList(slots);
-    receptions.add(reception);
-    receptions.add(Reception(
+//    slots = modifyBookings(slots, response);
+
+//    reception1.addSlotList(slots);
+
+    receptions.add(reception1);
+    Reception reception2 = Reception(
       subscriberId: '',
       customersInSlot: 4,
-      receptionId: '',
+      receptionId: '2',
       status: 'UPCOMING',
       startTime: DateTime(2020, 7, 26, 9),
       endTime: DateTime(2020, 7, 26, 18),
       slotDuration: Duration(minutes: 30),
-    ));
+    );
+    receptions.add(reception2);
+    /*receptions.add(Reception(
+      subscriberId: '',
+      customersInSlot: 3,
+      receptionId: '2',
+      status: 'UPCOMING',
+      startTime: DateTime(2020, 7, 27, 11),
+      endTime: DateTime(2020, 7, 27, 12),
+      slotDuration: Duration(minutes: 30),
+    ));*/
   }
 
-  List<Reception> getReceptionsByDate(DateTime dateTime) {
+  List<Reception> getReceptionsByDate() {
     List<Reception> filteredReceptions = [];
     for (Reception reception in receptions) {
       DateTime start = reception.startTime;
       DateTime end = reception.endTime;
-      if (dateTime.isSameDate(start) || dateTime.isSameDate(end))
+      if (_selectedDate.isSameDate(start) || _selectedDate.isSameDate(end))
         filteredReceptions.add(reception);
     }
+    this.selectedDateReceptions = filteredReceptions;
+//    notifyListeners();
     return filteredReceptions;
   }
 }

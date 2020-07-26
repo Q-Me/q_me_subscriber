@@ -30,6 +30,8 @@ List<Slot> orderSlotsByStartTime(List<Slot> slots) {
 }
 
 List<Slot> createOverrideSlots(Map<String, dynamic> response) {
+  assert(response['overrides'] == null, 'invalid response');
+
   List<Slot> overrideList = [];
   for (var map in response['overrides']) {
     final Slot override = Slot(
@@ -88,9 +90,7 @@ List<Slot> modifyBookings(List<Slot> slots, Map<String, dynamic> response) {
           .startTime
           .isAtSameMomentAs(DateTime.parse(map['starttime']).toLocal())) {
         slots[i].booked = map['count'];
-        logger.d(
-            '${slots[i].startTime.toString()} - ${slots[i].endTime.toString()} has ${slots[i].booked} bookings');
-//        log('Booked:${slots[i].toJson()}');
+        logger.d('${slots[i].toJson()}');
       }
     }
   }

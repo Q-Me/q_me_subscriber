@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:meta/meta.dart';
 import 'package:ordered_set/comparing.dart';
+import 'package:qme_subscriber/controllers/slots.dart';
 import 'package:qme_subscriber/model/slot.dart';
 
 import '../model/slot.dart';
@@ -20,7 +21,9 @@ class Reception {
     @required this.slotDuration,
     @required this.customersInSlot,
     @required this.status,
-  });
+  }) {
+    this.addSlotList(createSlotsFromDuration(this));
+  }
 
   final String receptionId;
   final String subscriberId;
@@ -37,6 +40,8 @@ class Reception {
   addSlot(Slot slot) => _slots.add(slot);
 
   addSlotList(List<Slot> slots) => _slots.addAll(slots);
+
+  modifyBookings() {}
 
   factory Reception.fromJson(Map<String, dynamic> json) => Reception(
         receptionId: json["id"],
