@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/views/customer.dart';
+import 'package:qme_subscriber/views/customerRecurrence.dart';
 import 'router.dart' as router;
 import 'services/analytics.dart';
-import 'views/appointments.dart';
 import 'views/signin.dart';
 
 var analytics = AnalyticsService();
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light().copyWith(primaryColor: Colors.green),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: router.generateRoute,
-      initialRoute: CustomerAppointment.id,
+      initialRoute: CustomerRecurrence.id,
       navigatorObservers: [analytics.getAnalyticsObserver()],
     );
   }

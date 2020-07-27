@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qme_subscriber/views/appointments.dart';
 import 'package:qme_subscriber/views/createReception.dart';
 import 'package:qme_subscriber/views/customer.dart';
+import 'package:qme_subscriber/views/customerRecurrence.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
 
 import 'views/appointments.dart';
@@ -82,6 +83,11 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => CustomerAppointment(),
         settings: RouteSettings(name: CustomerAppointment.id),
+      );
+      case CustomerRecurrence.id:
+      return MaterialPageRoute(
+        builder: (context) => CustomerRecurrence(),
+        settings: RouteSettings(name: CustomerRecurrence.id),
       );
 
     default:
