@@ -63,3 +63,67 @@ class Reception {
         "status": status,
       };
 }
+
+Schedule scheduleFromMap(String str) => Schedule.fromMap(json.decode(str));
+
+String scheduleToMap(Schedule data) => json.encode(data.toMap());
+
+class Schedule {
+  Schedule({
+    @required this.starttime,
+    @required this.endtime,
+    @required this.slot,
+    @required this.custPerSlot,
+    @required this.daysOfWeek,
+    @required this.repeatTill,
+  });
+
+  final String starttime;
+  final String endtime;
+  final String slot;
+  final String custPerSlot;
+  final List<int> daysOfWeek;
+  final DateTime repeatTill;
+
+  Schedule copyWith({
+    String starttime,
+    String endtime,
+    String slot,
+    String custPerSlot,
+    List<int> daysOfWeek,
+    DateTime repeatTill,
+  }) =>
+      Schedule(
+        starttime: starttime ?? this.starttime,
+        endtime: endtime ?? this.endtime,
+        slot: slot ?? this.slot,
+        custPerSlot: custPerSlot ?? this.custPerSlot,
+        daysOfWeek: daysOfWeek ?? this.daysOfWeek,
+        repeatTill: repeatTill ?? this.repeatTill,
+      );
+
+  factory Schedule.fromMap(Map<String, dynamic> json) => Schedule(
+        starttime: json["starttime"] == null ? null : json["starttime"],
+        endtime: json["endtime"] == null ? null : json["endtime"],
+        slot: json["slot"] == null ? null : json["slot"],
+        custPerSlot:
+            json["cust_per_slot"] == null ? null : json["cust_per_slot"],
+        daysOfWeek: json["daysOfWeek"] == null
+            ? null
+            : List<int>.from(json["daysOfWeek"].map((x) => x)),
+        repeatTill: json["repeatTill"] == null
+            ? null
+            : DateTime.parse(json["repeatTill"]),
+      );
+
+  Map<String, dynamic> toMap() => {
+        "starttime": starttime == null ? null : starttime,
+        "endtime": endtime == null ? null : endtime,
+        "slot": slot == null ? null : slot,
+        "cust_per_slot": custPerSlot == null ? null : custPerSlot,
+        "daysOfWeek": daysOfWeek == null
+            ? null
+            : List<dynamic>.from(daysOfWeek.map((x) => x)),
+        "repeatTill": repeatTill == null ? null : repeatTill.toIso8601String(),
+      };
+}

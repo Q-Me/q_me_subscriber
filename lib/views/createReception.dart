@@ -1,15 +1,14 @@
 import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:qme_subscriber/repository/queue.dart';
-import 'package:qme_subscriber/repository/subscriber.dart';
-import '../views/queues.dart';
+
 import '../constants.dart';
 import '../utilities/time.dart';
 import '../widgets/text.dart';
 
 class CreateReceptionScreen extends StatefulWidget {
-  static const id = '/create';
+  static const id = '/createReception';
   @override
   _CreateReceptionScreenState createState() => _CreateReceptionScreenState();
 }
@@ -101,7 +100,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
           child: Column(
             children: <Widget>[
-              ThemedText(words: ['Create Reception'], fontSize: 50),
+              ThemedText(words: ['Create', 'Reception'], fontSize: 50),
               SizedBox(height: 20),
               Form(
                 key: formKey,
@@ -229,11 +228,41 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 15),
+                    SizedBox(height: 18),
+                    GestureDetector(
+                      onTap: () {
+                        // TODO Show following list of radio buttons in alert box
+                        /*
+                        Does not repeat
+                        Every day
+                        Every week
+                        Custom...
+                        */
+                        /*on custom selection show a new screen of schedule*/
+                      },
+                      child: Row(
+                        children: <Widget>[
+//                        SizedBox(width: 7),
+                          Icon(
+                            Icons.refresh,
+                            size: 25,
+                            color: Colors.black45,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Does not repeat',
+                            style:
+                                TextStyle(fontSize: 18, color: Colors.black45),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    // TODO Drop down of slot durations for 5 min, 10 min, 15, min, 20 min, 30 min,1 hr
                     TextFormField(
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'Average Time per token (in minutes)',
+                        labelText: 'Time per slot (in minutes)',
                         hintStyle: TextStyle(color: Colors.redAccent),
                         hoverColor: Colors.green,
                       ),
@@ -288,7 +317,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              CreateQueueButton(
+              CreateReceptionButton(
                 formKey: formKey,
                 formData: formData,
               ),
@@ -300,10 +329,10 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
   }
 }
 
-class CreateQueueButton extends StatelessWidget {
+class CreateReceptionButton extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final Map<String, dynamic> formData;
-  CreateQueueButton({@required this.formKey, @required this.formData});
+  CreateReceptionButton({@required this.formKey, @required this.formData});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -320,44 +349,14 @@ class CreateQueueButton extends StatelessWidget {
             log('${formData.toString()}');
             if (formKey.currentState.validate()) {
               log('Form Valid');
-
-              // Prepare the request
-              Map<String, String> newFormData = {
-                'start_date_time': getApiDateTime(formData['startDateTime']),
-                'end_date_time': getApiDateTime(formData['endDateTime']),
-                'avg_time_on_counter': formData['avgTime'].toString(),
-                'max_allowed': formData['max_allowed'].toString(),
-              };
-              log('Request:' + newFormData.toString());
-
-              final String accessToken =
-                  await SubscriberRepository().getAccessTokenFromStorage();
-
-              // Call api to create queue
-              var response;
-              try {
-                response = await QueueRepository().createQueue(
-                    queueDetails: newFormData, accessToken: accessToken);
-                Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text(response['msg']),
-                ));
-              } catch (e) {
-                log('Error in creating queue API: ' + e.toString());
-                // if queue creating failed show a message with the error
-                Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text(e.toString()),
-                ));
-                return;
-              }
-              // If queue created successfully then
-              Navigator.pushNamed(context, QueuesScreen.id);
+              return;
             }
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Center(
               child: Text(
-                'Create Queue',
+                'Create Reception',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 16.0,

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
+import 'package:qme_subscriber/views/createAppointment.dart';
+import 'package:qme_subscriber/views/createReception.dart';
 
 class FancyFab extends StatefulWidget {
   final Function() onPressed;
@@ -70,33 +73,29 @@ class _FancyFabState extends State<FancyFab>
     isOpened = !isOpened;
   }
 
-  Widget add() {
+  Widget createAppointmentBtn() {
     return Container(
       child: FloatingActionButton(
-        onPressed: null,
+        onPressed: () {
+          Navigator.pushNamed(context, CreateAppointment.id);
+        },
         elevation: 0,
-        tooltip: 'Add',
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-
-  Widget image() {
-    return Container(
-      child: FloatingActionButton(
-        onPressed: null,
-        elevation: 0,
+        heroTag: "Create Appointment",
         tooltip: 'Create Appointment',
         child: Icon(Icons.person_add),
       ),
     );
   }
 
-  Widget inbox() {
+  Widget createReceptionBtn() {
     return Container(
       child: FloatingActionButton(
         elevation: 0,
-        onPressed: null,
+        heroTag: "Create Reception",
+        onPressed: () {
+          logger.d('Create reception route');
+          Navigator.pushNamed(context, CreateReceptionScreen.id);
+        },
         tooltip: 'Create Reception',
         child: Icon(Icons.event),
       ),
@@ -129,7 +128,7 @@ class _FancyFabState extends State<FancyFab>
             _translateButton.value * 2.0,
             0.0,
           ),
-          child: image(),
+          child: createAppointmentBtn(),
         ),
         Transform(
           transform: Matrix4.translationValues(
@@ -137,7 +136,7 @@ class _FancyFabState extends State<FancyFab>
             _translateButton.value,
             0.0,
           ),
-          child: inbox(),
+          child: createReceptionBtn(),
         ),
         toggle(),
       ],

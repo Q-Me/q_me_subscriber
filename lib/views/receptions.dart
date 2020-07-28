@@ -31,6 +31,8 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
     });
   }
 
+  addedReception() {}
+
   ReceptionsBloc receptionsBloc;
   @override
   void initState() {
