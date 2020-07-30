@@ -14,6 +14,14 @@ const String baseURL = 'https://dontwaitapp.co/api',
     kNextQueue = '/subscriber/nextqueue',
     kEndQueue = '/subscriber/endQueue',
     kGetUser = '/subscriber/getuser',
-    kGetQueueUser = '/subscriber/getqueueuser';
-    const String fcmUrl = '/subscriber/fcm';
-    
+    kGetQueueUser = '/subscriber/getqueueuser',
+    kCreateReception = '/subscriber/slot/create',
+    kViewReceptions = '/subscriber/slot/counters',
+    kCancelAppointment = '/subscriber/slot/cancelslot',
+    kSlotBookingsDetailed = '/subscriber/slot/bookingsdetailed',
+    kBookAppointment = '/subscriber/slot/book',
+    kDoneAppointment = '/subscriber/slot/doneslot',
+    kUpdateReceptionStatus = '/subscriber/slot/updatestatus',
+    kViewDetailedCounter = '/subscriber/slot/viewcounterdetailed';
+
+const String fcmUrl = '/subscriber/fcm';

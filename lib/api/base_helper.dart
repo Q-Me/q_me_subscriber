@@ -1,7 +1,9 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'app_exceptions.dart';
 import 'dart:io';
+
+import 'package:http/http.dart' as http;
+
+import 'app_exceptions.dart';
 import 'endpoints.dart';
 //import 'dart:developer';
 
@@ -18,7 +20,7 @@ class ApiBaseHelper {
   }
 
   Future<dynamic> post(String url,
-      {Map<String, String> req, Map<String, String> headers}) async {
+      {Map<String, dynamic> req, Map<String, String> headers}) async {
     var responseJson;
     Map<String, String> myHeader = headers == null ? {} : headers;
 

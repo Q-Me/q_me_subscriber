@@ -15,7 +15,7 @@ var cur = DateTime.now();
 DateTime eDate = DateTime.now();
 DateTime sDate = eDate.subtract(Duration(days: 7));
 
-var data = [{},{}] ;
+var data = [{}, {}];
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
   DateTime _selectedDate = DateTime.now();
@@ -92,16 +92,15 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   @override
   Widget build(BuildContext context) {
     print(cur);
-   
+
     return SafeArea(
       child: Scaffold(
-         appBar: AppBar(
-        leading: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Icon(Icons.arrow_back_ios)),
-            title: Text("Appointments"),
-      ),
-        
+        appBar: AppBar(
+          leading: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Icon(Icons.arrow_back_ios)),
+          title: Text("Appointments"),
+        ),
         body: FutureBuilder(
           future: getData(),
           builder: (context, snapshot) {
@@ -109,10 +108,14 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.hasError)
                 return Container(
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Center(child: Text("Network Error"),)
-                  ],),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Center(
+                        child: Text("Network Error"),
+                      )
+                    ],
+                  ),
                 );
               else
                 return _transBuildList(
@@ -121,8 +124,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 );
             } else
               return Center(
-                child: CircularProgressIndicator(
-                ),
+                child: CircularProgressIndicator(),
               );
           },
         ),
@@ -134,7 +136,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     BuildContext context,
     dynamic data,
   ) {
-    
     var len = data == null ? 0 : data.length + 1;
 
     return Scrollbar(
@@ -185,7 +186,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                       size: cWidth * 0.085,
                     ),
                     title: Text(
-                         "Start date",
+                      "Start date",
                       style: TextStyle(
                         fontSize: cWidth * 0.04,
                         fontWeight: FontWeight.w400,
@@ -217,7 +218,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                       size: cWidth * 0.085,
                     ),
                     title: Text(
-                     "End date",
+                      "End date",
                       style: TextStyle(
                         fontSize: cWidth * 0.04,
                         fontWeight: FontWeight.w400,
@@ -246,7 +247,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                   ),
                   child: Center(
                     child: Text(
-                     "There are no Appoinments",
+                      "There are no Appoinments",
                       style: TextStyle(
                         fontSize: 20,
                       ),
@@ -264,8 +265,8 @@ Widget listElement(
   int index,
   dynamic data,
 ) {
-    var cHeight = MediaQuery.of(context).size.height;
-    var cWidth = MediaQuery.of(context).size.width;
+  var cHeight = MediaQuery.of(context).size.height;
+  var cWidth = MediaQuery.of(context).size.width;
 
   return Padding(
     padding: EdgeInsets.symmetric(
@@ -314,7 +315,6 @@ Widget listElement(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    
                     Padding(
                       padding: EdgeInsets.all(3),
                     ),

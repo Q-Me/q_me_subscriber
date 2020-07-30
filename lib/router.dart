@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:qme_subscriber/views/appointments.dart';
+import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
 import 'package:qme_subscriber/views/customer.dart';
 import 'package:qme_subscriber/views/customerRecurrence.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
 
-import 'views/appointments.dart';
 import 'views/createQueue.dart';
 import 'views/people.dart';
 import 'views/profile.dart';
 import 'views/queues.dart';
+import 'views/receptions.dart';
 import 'views/signin.dart';
 import 'views/signup.dart';
 import 'views/unknown.dart';
@@ -69,25 +69,34 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: ProfileScreen.id),
       );
 
-    case AppointmentsScreen.id:
+    case ReceptionsScreen.id:
       return MaterialPageRoute(
-        builder: (context) => AppointmentsScreen(),
-        settings: RouteSettings(name: AppointmentsScreen.id),
+        builder: (context) => ReceptionsScreen(),
+        settings: RouteSettings(name: ReceptionsScreen.id),
       );
+
     case CreateReceptionScreen.id:
       return MaterialPageRoute(
         builder: (context) => CreateReceptionScreen(),
         settings: RouteSettings(name: CreateReceptionScreen.id),
       );
+
     case CustomerAppointment.id:
       return MaterialPageRoute(
         builder: (context) => CustomerAppointment(),
         settings: RouteSettings(name: CustomerAppointment.id),
       );
-      case CustomerRecurrence.id:
+
+    case CustomerRecurrence.id:
       return MaterialPageRoute(
         builder: (context) => CustomerRecurrence(),
         settings: RouteSettings(name: CustomerRecurrence.id),
+      );
+
+    case CreateAppointment.id:
+      return MaterialPageRoute(
+        builder: (context) => CreateAppointment(),
+        settings: RouteSettings(name: CreateAppointment.id),
       );
 
     default:

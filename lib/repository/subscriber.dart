@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import 'dart:developer';
-import '../model/subscriber.dart';
+
+import 'package:flutter/material.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../api/endpoints.dart';
+
 import '../api/base_helper.dart';
-import 'dart:math' show Random;
+import '../api/endpoints.dart';
+import '../model/subscriber.dart';
 
 class SubscriberRepository {
   ApiBaseHelper _helper = ApiBaseHelper();
@@ -68,7 +69,7 @@ class SubscriberRepository {
   Future storeSubscriberData(Subscriber subscriberData) async {
     // Set the user id, and other details are stored in local storage of the app
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    log('STORING ${subscriberData.toJson()}');
+    logger.d('STORING ${subscriberData.toJson()}');
     if (subscriberData.id != null) prefs.setString('id', subscriberData.id);
     if (subscriberData.name != null)
       prefs.setString('name', subscriberData.name);
@@ -85,7 +86,7 @@ class SubscriberRepository {
     if (subscriberData.phone != null)
       prefs.setString('isUser', subscriberData.phone);
 
-    log('Storing user data success');
+    logger.d('Storing user data success');
 
     return;
   }
@@ -118,7 +119,7 @@ class SubscriberRepository {
     try {
       response = await accessToken(_refreshToken);
     } catch (e) {
-      log('Error in getting new accessToken API: ' + e.toString());
+      logger.d('Error in getting new accessToken API: ' + e.toString());
       return '-1';
     }
 //    log('Refresh Token API response: ' + response.toString());
@@ -164,12 +165,13 @@ class SubscriberRepository {
     final expiry = prefs.getString('expiry');
     final refreshToken = prefs.getString('refreshToken');
     final accessToken = prefs.getString('accessToken');
-    log('In storage:\nexpiry:$expiry\nrefreshToken:$refreshToken\naccessToken:$accessToken');
+    logger.d(
+        'In storage:\nexpiry:$expiry\nrefreshToken:$refreshToken\naccessToken:$accessToken');
     if (expiry != null &&
         DateTime.now().isBefore(DateTime.parse(expiry)) &&
         accessToken != null) {
       // accessToken is valid
-      log('Token is valid');
+      logger.d('Token is valid');
       return true;
     } else {
       // invalid accessToken
@@ -177,7 +179,7 @@ class SubscriberRepository {
         // Get new accessToken from refreshToken
         final result =
             await getAccessToken(refreshToken: refreshToken, prefs: prefs);
-        log('new accessToken:$result');
+        logger.d('new accessToken:$result');
         return result != '-1' ? true : false;
       } else {
         return false;
