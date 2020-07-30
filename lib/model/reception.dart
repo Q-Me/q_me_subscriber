@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 import 'package:ordered_set/comparing.dart';
 import 'package:qme_subscriber/controllers/slots.dart';
@@ -12,7 +13,7 @@ Reception receptionFromJson(String str) => Reception.fromJson(json.decode(str));
 
 String receptionToJson(Reception data) => json.encode(data.toJson());
 
-class Reception {
+class Reception with ChangeNotifier {
   Reception({
     @required this.receptionId,
     @required this.subscriberId,

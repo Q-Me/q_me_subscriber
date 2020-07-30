@@ -3,7 +3,6 @@ import 'dart:collection';
 import 'package:ordered_set/comparing.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
-import 'package:qme_subscriber/utilities/logger.dart';
 
 List<Slot> createSlotsFromDuration(Reception reception) {
   List<Slot> slots = [];
@@ -90,7 +89,7 @@ List<Slot> modifyBookings(List<Slot> slots, Map<String, dynamic> response) {
           .startTime
           .isAtSameMomentAs(DateTime.parse(map['starttime']).toLocal())) {
         slots[i].booked = map['count'];
-        logger.d('${slots[i].toJson()}');
+//        logger.d('${slots[i].toJson()}');
       }
     }
   }

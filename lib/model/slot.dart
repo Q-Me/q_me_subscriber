@@ -2,13 +2,14 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
 import 'package:ordered_set/comparing.dart';
 
 import 'appointment.dart';
 
 // ignore: must_be_immutable
-class Slot extends Equatable {
+class Slot extends Equatable with ChangeNotifier {
   Slot({
     @required this.startTime,
     @required this.endTime,
