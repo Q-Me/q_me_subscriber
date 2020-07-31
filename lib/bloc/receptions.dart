@@ -6,6 +6,7 @@ import 'package:qme_subscriber/controllers/slots.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/reception.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
 
 class ReceptionsBloc extends ChangeNotifier {
@@ -93,9 +94,10 @@ class ReceptionsBloc extends ChangeNotifier {
     getReceptionsByDate();
   }
 
+  fetchReceptionsByStatus() {}
+
   getReceptionsByDate() async {
     receptionsSink.add(ApiResponse.loading('Getting receptions data'));
-    await Future.delayed(Duration(seconds: 5));
     List<Reception> filteredReceptions = [];
     for (Reception reception in receptions) {
       DateTime start = reception.startTime;
@@ -108,6 +110,32 @@ class ReceptionsBloc extends ChangeNotifier {
     notifyListeners();
   }
 
+  createReception(Map<String, dynamic> formData) async {
+    // To be used in create reception screen
+    try {
+      Reception toBeReception = Reception(
+        startTime: formData['starttime'],
+        endTime: formData['endtime'],
+        slotDuration: Duration(minutes: formData['slot']),
+        customersInSlot: formData['cust_per_slot'],
+      );
+      final response = await _receptionRepository.createReception(
+        startTime: toBeReception.startTime,
+        endTime: toBeReception.endTime,
+        slotDurationInMinutes: toBeReception.slotDuration.inMinutes,
+        customerPerSlot: toBeReception.customersInSlot,
+        accessToken:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InlzenY3OW5ucSIsIm5hbWUiOiJBbWFuZGVlcCdzIFNhbG9vbiIsImlzU3Vic2NyaWJlciI6dHJ1ZSwiaWF0IjoxNTk2MTg4NDA4LCJleHAiOjE1OTYyNzQ4MDh9.JCEI0FCbrHtW2icmbpcAPJP10Yh1g1spTO6JkpjayPQ',
+      );
+      receptions.add(toBeReception);
+      return response;
+    } catch (e) {
+      logger.e(e.toString());
+      // Show persistent snack bar with error
+      return e.toString();
+    }
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -115,3 +143,5 @@ class ReceptionsBloc extends ChangeNotifier {
     super.dispose();
   }
 }
+
+class CreateReceptionsBloc {}

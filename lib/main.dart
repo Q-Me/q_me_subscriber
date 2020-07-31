@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData.light().copyWith(primaryColor: Colors.green),
+      theme: ThemeData.light().copyWith(primaryColor: Colors.blue),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: router.generateRoute,
       initialRoute: ReceptionsScreen.id,

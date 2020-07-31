@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:qme_subscriber/utilities/logger.dart';
 
 import 'app_exceptions.dart';
 import 'endpoints.dart';
-//import 'dart:developer';
 
 class ApiBaseHelper {
   Future<dynamic> get(String url) async {
@@ -29,7 +29,7 @@ class ApiBaseHelper {
         myHeader['Accept'] = 'application/json';
         myHeader['Content-type'] = 'application/json';
       }
-//      log('Posting to ${baseURL + url}\nRequest:$req\nHeader:$myHeader');
+      logger.d('Posting to ${baseURL + url}\nRequest:$req\nHeader:$myHeader');
       final response = await http.post(
         baseURL + url,
         headers: myHeader,
@@ -43,6 +43,7 @@ class ApiBaseHelper {
   }
 
   dynamic _returnResponse(http.Response response) {
+    logger.d('Response :' + response.body);
     switch (response.statusCode) {
       case 200:
         var responseJson = json.decode(response.body.toString());

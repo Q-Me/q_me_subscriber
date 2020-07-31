@@ -15,13 +15,13 @@ String receptionToJson(Reception data) => json.encode(data.toJson());
 
 class Reception with ChangeNotifier {
   Reception({
-    @required this.receptionId,
-    @required this.subscriberId,
+    this.receptionId,
+    this.subscriberId,
     @required this.startTime,
     @required this.endTime,
     @required this.slotDuration,
     @required this.customersInSlot,
-    @required this.status,
+    this.status,
   }) {
     this.addSlotList(createSlotsFromDuration(this));
   }
@@ -44,7 +44,8 @@ class Reception with ChangeNotifier {
 
   modifyBookings() {}
 
-  factory Reception.fromJson(Map<String, dynamic> json) => Reception(
+  factory Reception.fromJson(Map<String, dynamic> json, {bool local = false}) =>
+      Reception(
         receptionId: json["id"],
         subscriberId: json["subscriber_id"],
         startTime: DateTime.parse(json["starttime"]).toLocal(),

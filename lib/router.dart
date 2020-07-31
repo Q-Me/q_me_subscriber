@@ -76,8 +76,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
 
     case CreateReceptionScreen.id:
+      DateTime date =
+          settings.arguments == null ? DateTime.now() : settings.arguments;
       return MaterialPageRoute(
-        builder: (context) => CreateReceptionScreen(),
+        builder: (context) => CreateReceptionScreen(selectedDate: date),
         settings: RouteSettings(name: CreateReceptionScreen.id),
       );
 

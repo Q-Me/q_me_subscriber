@@ -1,7 +1,8 @@
-import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:qme_subscriber/repository/reception.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 
 import '../constants.dart';
 import '../utilities/time.dart';
@@ -9,6 +10,9 @@ import '../widgets/text.dart';
 
 class CreateReceptionScreen extends StatefulWidget {
   static const id = '/createReception';
+  final DateTime selectedDate;
+  CreateReceptionScreen({this.selectedDate});
+
   @override
   _CreateReceptionScreenState createState() => _CreateReceptionScreenState();
 }
@@ -16,7 +20,6 @@ class CreateReceptionScreen extends StatefulWidget {
 class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
   DateTime _startDateTime, _endDateTime;
   Map<String, dynamic> formData = {};
-  int avgTime, maxPeople;
   final formKey = GlobalKey<FormState>();
 
   Future<DateTime> _selectDate(DateTime oldDateTime) async {
@@ -43,7 +46,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
               dateTime.hour,
               dateTime.minute,
             );
-      log('DATE PICKED\n${picked.toString()}\nDate Selected: ${dateTime.toString()}');
+//      logger.d('DATE PICKED\n${picked.toString()}\nDate Selected: ${dateTime.toString()}');
       return dateTime;
     } else {
       return oldDateTime;
@@ -67,7 +70,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
         if (newDateTime != null) {
           newDateTime = DateTime(newDateTime.year, newDateTime.month,
               newDateTime.day, picked.hour, picked.minute);
-          log('Time added');
+          logger.d('Time added');
         } else {
           final now = DateTime.now();
           newDateTime = DateTime(
@@ -79,11 +82,20 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
           );
         }
       });
-      log('TIME PICKED\n${picked.toString()}\nDate Selected: ${newDateTime.toString()}');
+//      logger.d('TIME PICKED\n${picked.toString()}\nDate Selected: ${newDateTime.toString()}');
       return newDateTime;
     } else {
       return oldDateTime;
     }
+  }
+
+  @override
+  void initState() {
+    _startDateTime = widget.selectedDate;
+    _endDateTime = widget.selectedDate;
+    formData['starttime'] = _startDateTime;
+    formData['endtime'] = _endDateTime;
+    super.initState();
   }
 
   @override
@@ -116,9 +128,9 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                               DateTime picked =
                                   await _selectDate(_startDateTime);
                               setState(() {
-                                log('Date set state called');
+//                                logger.d('Date set state called');
                                 _startDateTime = picked;
-                                formData['startDateTime'] = picked;
+                                formData['startDateTime'] = _startDateTime;
                               });
                             },
                             child: IgnorePointer(
@@ -143,12 +155,12 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                               DateTime temp = await _selectTime(_startDateTime);
                               if (temp != null) {
                                 setState(() {
-                                  log('Time Set state called');
+                                  logger.d('Time Set state called');
                                   _startDateTime = temp;
                                   formData['startDateTime'] = _startDateTime;
                                 });
                               } else {
-                                log('no time selected');
+                                logger.d('no time selected');
                               }
                             },
                             child: IgnorePointer(
@@ -177,9 +189,9 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                             onTap: () async {
                               DateTime picked = await _selectDate(_endDateTime);
                               setState(() {
-                                log('Date set state called');
+                                logger.d('Date set state called');
                                 _endDateTime = picked;
-                                formData['endDateTime'] = _endDateTime;
+                                formData['endtime'] = _endDateTime;
                               });
                             },
                             child: IgnorePointer(
@@ -204,12 +216,12 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                               DateTime temp = await _selectTime(_endDateTime);
                               if (temp != null) {
                                 setState(() {
-                                  log('Time Set state called');
+                                  logger.d('Time Set state called');
                                   _endDateTime = temp;
-                                  formData['endDateTime'] = _endDateTime;
+                                  formData['endtime'] = _endDateTime;
                                 });
                               } else {
-                                log('no time selected');
+                                logger.d('no time selected');
                               }
                             },
                             child: IgnorePointer(
@@ -229,16 +241,16 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                       ],
                     ),
                     SizedBox(height: 18),
-                    GestureDetector(
+                    /*GestureDetector(
                       onTap: () {
                         // TODO Show following list of radio buttons in alert box
-                        /*
+                        */ /*
                         Does not repeat
                         Every day
                         Every week
                         Custom...
-                        */
-                        /*on custom selection show a new screen of schedule*/
+                        */ /*
+                        */ /*on custom selection show a new screen of schedule*/ /*
                       },
                       child: Row(
                         children: <Widget>[
@@ -256,7 +268,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                           ),
                         ],
                       ),
-                    ),
+                    ),*/
                     SizedBox(height: 5),
                     // TODO Drop down of slot durations for 5 min, 10 min, 15, min, 20 min, 30 min,1 hr
                     TextFormField(
@@ -267,21 +279,21 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                         hoverColor: Colors.green,
                       ),
                       onSaved: (value) {
-                        log(value);
+                        logger.d(value);
                       },
                       validator: (value) {
                         if (value.isEmpty)
                           return 'This field cannot be left empty';
                         else {
                           try {
-                            avgTime = int.parse(value);
-                            formData['avgTime'] = avgTime;
-                            log("Everything in avgTime is ok");
+                            formData['slot'] = int.parse(value);
                             return null;
                           } on FormatException catch (e) {
-                            log(e.toString());
+                            logger.d(e.toString());
                             return 'Please enter an integer value';
                           } catch (e) {
+                            logger.e(e.toString());
+
                             return e.toString();
                           }
                         }
@@ -291,7 +303,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                     TextFormField(
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'Maximum number of people allowed in queue',
+                        labelText: 'Customers served in 1 slot',
                         hintStyle: TextStyle(color: Colors.redAccent),
                         hoverColor: Colors.green,
                       ),
@@ -300,14 +312,13 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                           return 'This field cannot be left empty';
                         else {
                           try {
-                            maxPeople = int.parse(value);
-                            formData['max_allowed'] = value;
-                            log("Everything in maxPeople is ok");
+                            formData['cust_per_slot'] = int.parse(value);
                             return null;
                           } on FormatException catch (e) {
-                            log(e.toString());
+                            logger.d(e.toString());
                             return 'Please enter an integer value';
                           } catch (e) {
+                            logger.e(e.toString());
                             return e.toString();
                           }
                         }
@@ -317,10 +328,9 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              CreateReceptionButton(
-                formKey: formKey,
-                formData: formData,
-              ),
+              Provider.value(
+                  value: formData,
+                  child: CreateReceptionButton(formKey: formKey)),
             ],
           ),
         ),
@@ -331,10 +341,11 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
 
 class CreateReceptionButton extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final Map<String, dynamic> formData;
-  CreateReceptionButton({@required this.formKey, @required this.formData});
+  CreateReceptionButton({@required this.formKey});
+
   @override
   Widget build(BuildContext context) {
+    Map<String, dynamic> formData = Provider.of<Map<String, dynamic>>(context);
     return Container(
       height: 50.0,
       margin: EdgeInsets.all(20),
@@ -346,9 +357,42 @@ class CreateReceptionButton extends StatelessWidget {
         elevation: 7.0,
         child: InkWell(
           onTap: () async {
-            log('${formData.toString()}');
             if (formKey.currentState.validate()) {
-              log('Form Valid');
+              logger.d('Form Valid $formData');
+
+              Scaffold.of(context).showSnackBar(SnackBar(
+                content: Text('Creating reception...'),
+                duration: Duration(seconds: 1),
+              ));
+
+              String msgToShow;
+              try {
+                final response = await ReceptionRepository().createReception(
+                  startTime: formData['starttime'],
+                  endTime: formData['endtime'],
+                  slotDurationInMinutes: formData['slot'],
+                  customerPerSlot: formData['cust_per_slot'],
+                  accessToken:
+                      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InlzenY3OW5ucSIsIm5hbWUiOiJBbWFuZGVlcCdzIFNhbG9vbiIsImlzU3Vic2NyaWJlciI6dHJ1ZSwiaWF0IjoxNTk2MTg4NDA4LCJleHAiOjE1OTYyNzQ4MDh9.JCEI0FCbrHtW2icmbpcAPJP10Yh1g1spTO6JkpjayPQ',
+                );
+
+                msgToShow = response;
+              } catch (e) {
+                logger.e(e.toString());
+                // Show persistent snack bar with error
+                msgToShow = e.toString();
+                return;
+              }
+              Scaffold.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(msgToShow),
+                  duration: Duration(seconds: 5),
+                ),
+              );
+              // TODO add the reception to the list of all receptions in the receptions bloc
+              if (msgToShow == 'Counter Created Successfully') {
+                Navigator.pop(context);
+              }
               return;
             }
           },
