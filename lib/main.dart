@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light().copyWith(primaryColor: Colors.green),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: router.generateRoute,
-      initialRoute: ReceptionsScreen.id,
+      initialRoute: SignInScreen.id,
       navigatorObservers: [analytics.getAnalyticsObserver()],
     );
   }
