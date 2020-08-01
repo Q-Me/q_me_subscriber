@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 import 'package:qme_subscriber/controllers/slots.dart';
 import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 
 import '../api/base_helper.dart';
 import '../api/endpoints.dart';
@@ -15,8 +16,11 @@ class ReceptionRepository {
     @required DateTime endTime,
     @required int slotDurationInMinutes,
     @required int customerPerSlot,
-    @required String accessToken,
+    String accessToken,
   }) async {
+    accessToken = accessToken != null
+        ? accessToken
+        : await SubscriberRepository().getAccessTokenFromStorage();
     final response = await _helper.post(
       kCreateReception,
       req: {
@@ -29,7 +33,7 @@ class ReceptionRepository {
     );
 
     return response['msg'] == 'Counter Created Successfully'
-        ? true
+        ? response['msg']
         : response["error"].toString();
   }
 

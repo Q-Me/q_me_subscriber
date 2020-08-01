@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
@@ -93,8 +94,13 @@ class _FancyFabState extends State<FancyFab>
         elevation: 0,
         heroTag: "Create Reception",
         onPressed: () {
-          logger.d('Create reception route');
-          Navigator.pushNamed(context, CreateReceptionScreen.id);
+          DateTime selectedDate = Provider.of<DateTime>(context, listen: false);
+          logger.d('Create reception route on date $selectedDate');
+          Navigator.pushNamed(
+            context,
+            CreateReceptionScreen.id,
+            arguments: selectedDate,
+          );
         },
         tooltip: 'Create Reception',
         child: Icon(Icons.event),

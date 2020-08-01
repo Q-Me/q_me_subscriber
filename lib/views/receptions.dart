@@ -45,11 +45,12 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(
-        floatingActionButton: FancyFab(),
-        body: ChangeNotifierProvider.value(
-          value: receptionsBloc,
-          child: Column(
+      child: ChangeNotifierProvider.value(
+        value: receptionsBloc,
+        child: Scaffold(
+          floatingActionButton:
+              Provider.value(value: selectedDate, child: FancyFab()),
+          body: Column(
             children: <Widget>[
               /*Container(
                 alignment: Alignment.centerLeft,

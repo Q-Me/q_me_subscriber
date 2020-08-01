@@ -24,7 +24,7 @@ class _CustomerRecurrenceState extends State<CustomerRecurrence> {
   Iterable<DateTime> selectedWeeksDays;
   String displayMonth;
 
-  DateTime _selectedDate1 = cur.subtract(
+  DateTime _selectedDate1 = cur.add(
     Duration(days: 30),
   );
   String displayMonth1 = "Jan";
@@ -70,95 +70,99 @@ class _CustomerRecurrenceState extends State<CustomerRecurrence> {
     );
 
     return SafeArea(
-        child: Scaffold(
-            appBar: AppBar(
-              title: Text("Customer Recurrence"),
-              elevation: 0,
-            ),
-            body: Padding(
-                padding: _pad,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.only(
-                            left: cWidth * 0.035, bottom: cHeight * 0.02),
-                        child: Container(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            "REPEATS ON",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      Container(
-                          child: WeekdaySelector(
-                        fillColor: Colors.grey,
-                        selectedFillColor: Colors.green,
-                        color: Colors.black87,
-                        onChanged: (int day) {
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Customer Recurrence"),
+          elevation: 0,
+        ),
+        body: Padding(
+          padding: _pad,
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(
+                      left: cWidth * 0.035, bottom: cHeight * 0.02),
+                  child: Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "REPEATS ON",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                Container(
+                    child: WeekdaySelector(
+                  fillColor: Colors.transparent,
+                  elevation: 0.1,
+                  selectedFillColor: Theme.of(context).primaryColor,
+                  color: Colors.black87,
+                  onChanged: (int day) {
+                    setState(() {
+                      final index = day % 7;
+                      values[index] = !values[index];
+                    });
+                  },
+                  values: values,
+                )),
+                Container(
+                  height: 1,
+                  color: Colors.grey,
+                  margin: const EdgeInsets.only(top: 20.0, bottom: 10.0),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: cWidth * 0.035,
+                    bottom: cHeight * 0.02,
+                    top: cHeight * 0.05,
+                  ),
+                  child: Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "ENDS On",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                Column(
+                  children: <Widget>[
+                    ListTile(
+                      title: const Text('NEVER'),
+                      leading: Radio(
+                        value: SingingCharacter.lafayette,
+                        groupValue: _character,
+                        onChanged: (SingingCharacter value) {
                           setState(() {
-                            final index = day % 7;
-                            values[index] = !values[index];
+                            _character = value;
                           });
                         },
-                        values: values,
-                      )),
-                      Container(
-                        height: 1,
-                        color: Colors.grey,
-                        margin: const EdgeInsets.only(top: 20.0, bottom: 10.0),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          left: cWidth * 0.035,
-                          bottom: cHeight * 0.02,
-                          top: cHeight * 0.05,
-                        ),
-                        child: Container(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            "ENDS On",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                    ),
+                    ListTile(
+                      title: Text(
+                        "ON  " +
+                            '${_selectedDate1.day} ${DateFormat.MMM().format(_selectedDate1)} ${_selectedDate1.year}',
                       ),
-                      Column(
-                        children: <Widget>[
-                          ListTile(
-                            title: const Text('NEVER'),
-                            leading: Radio(
-                              value: SingingCharacter.lafayette,
-                              groupValue: _character,
-                              onChanged: (SingingCharacter value) {
-                                setState(() {
-                                  _character = value;
-                                });
-                              },
-                            ),
-                          ),
-                          ListTile(
-                            title: Text(
-                              "ON  " +
-                                  '${_selectedDate1.day} ${DateFormat.MMM().format(_selectedDate1)} ${_selectedDate1.year}',
-                            ),
-                            onTap: () {
-                              _launchStartDate();
-                            },
-                            leading: Radio(
-                              value: SingingCharacter.jefferson,
-                              groupValue: _character,
-                              onChanged: (SingingCharacter value) {
-                                setState(() {
-                                  _character = value;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                ))));
+                      onTap: () {
+                        _launchStartDate();
+                      },
+                      leading: Radio(
+                        value: SingingCharacter.jefferson,
+                        groupValue: _character,
+                        onChanged: (SingingCharacter value) {
+                          setState(() {
+                            _character = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
