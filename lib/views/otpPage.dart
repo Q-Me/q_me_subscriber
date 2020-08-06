@@ -96,6 +96,11 @@ class _OtpPageState extends State<OtpPage> {
                                 elevation: 7.0,
                                 child: InkWell(
                                   onTap: () async {
+                                    Scaffold.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Processing Data'),
+                                            ),
+                                          );
                                     final code = _codeController.text.trim();
                                     try {
                                       AuthCredential credential =
@@ -150,11 +155,7 @@ class _OtpPageState extends State<OtpPage> {
                                           _fcmToken = prefs.getString(
                                             'fcmToken',
                                           );
-                                          Scaffold.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Processing Data'),
-                                            ),
-                                          );
+                                          
 
                                           UserRepository user =
                                               UserRepository();
@@ -275,6 +276,10 @@ class _OtpPageState extends State<OtpPage> {
                                                         'SignUp failed:${response['msg']}')));
                                           }
                                         } else {
+                                           Scaffold.of(context).showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Processing Data')));
                                           print("login otp");
                                           _fcmToken =
                                               prefs.getString('fcmToken');
@@ -298,10 +303,7 @@ class _OtpPageState extends State<OtpPage> {
                                                 .storeSubscriberData(
                                                     Subscriber.fromJson(
                                                         response));
-                                            Scaffold.of(context).showSnackBar(
-                                                SnackBar(
-                                                    content: Text(
-                                                        'Processing Data')));
+                                           
                                             var responsefcm =
                                                 await SubscriberRepository()
                                                     .fcmTokenSubmit({
@@ -390,7 +392,7 @@ class _OtpPageState extends State<OtpPage> {
                                   },
                                   child: Center(
                                     child: Text(
-                                      'SIGNUP',
+                                      'VERIFY',
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16.0,
