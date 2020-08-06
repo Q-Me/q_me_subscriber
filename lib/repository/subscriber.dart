@@ -32,9 +32,9 @@ class SubscriberRepository {
   }
 
   Future<Map<String, dynamic>> fcmTokenSubmit(
-      Map<String, String> fcmToken , String accessToken) async {
-        print("accessToken : $accessToken");
-        print("accessToken : $accessToken");
+      Map<String, String> fcmToken, String accessToken) async {
+    print("accessToken : $accessToken");
+    print("accessToken : $accessToken");
     final response = await _helper.post(
       fcmUrl,
       req: fcmToken,

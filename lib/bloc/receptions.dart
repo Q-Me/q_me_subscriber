@@ -6,6 +6,7 @@ import 'package:qme_subscriber/controllers/slots.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/reception.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
 
@@ -91,12 +92,27 @@ class ReceptionsBloc extends ChangeNotifier {
       slotDuration: Duration(minutes: 30),
     ));
 
-    getReceptionsByDate();
+    fetchReceptionsByStatus();
   }
 
-  fetchReceptionsByStatus() {}
+  fetchReceptionsByStatus() async {
+    receptionsSink.add(ApiResponse.loading('Getting receptions data'));
 
-  getReceptionsByDate() async {
+    try {
+      final String accessToken =
+          await SubscriberRepository().getAccessTokenFromStorage();
+      receptions = await _receptionRepository.viewReceptionsByStatus(
+        status: ['UPCOMING', 'ACTIVE', 'DONE', 'CANCELLED'],
+        accessToken: accessToken,
+      );
+      receptionsSink.add(ApiResponse.completed(getReceptionsByDate()));
+    } catch (e) {
+      logger.e(e.toString());
+      receptionsSink.add(ApiResponse.error(e.toString()));
+    }
+  }
+
+  getReceptionsByDate() {
     receptionsSink.add(ApiResponse.loading('Getting receptions data'));
     List<Reception> filteredReceptions = [];
     for (Reception reception in receptions) {
@@ -108,6 +124,7 @@ class ReceptionsBloc extends ChangeNotifier {
     this.selectedDateReceptions = filteredReceptions;
     receptionsSink.add(ApiResponse.completed(filteredReceptions));
     notifyListeners();
+    return filteredReceptions;
   }
 
   createReception(Map<String, dynamic> formData) async {
@@ -138,7 +155,6 @@ class ReceptionsBloc extends ChangeNotifier {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     _receptionListController?.close();
     super.dispose();
   }

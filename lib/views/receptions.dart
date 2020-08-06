@@ -48,6 +48,10 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
       child: ChangeNotifierProvider.value(
         value: receptionsBloc,
         child: Scaffold(
+          appBar: AppBar(
+            title: Text('Your Receptions'),
+            automaticallyImplyLeading: false,
+          ),
           floatingActionButton:
               Provider.value(value: selectedDate, child: FancyFab()),
           body: Column(
@@ -79,7 +83,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                           case Status.COMPLETED:
                             if (snapshot.data.data.length == 0) {
                               return Text(
-                                  'No reception found on ${Provider.of<ReceptionsBloc>(context).selectedDate.toString()}');
+                                  'No reception found on ${getDate(Provider.of<ReceptionsBloc>(context).selectedDate).toString()}');
                             }
                             return ReceptionsListView(
                                 receptions: snapshot.data.data);
