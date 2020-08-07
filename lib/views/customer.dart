@@ -130,16 +130,16 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                       child: SingleChildScrollView(
                         child: Column(
                           children: <Widget>[
-                            // ListTile(
-                            //   title: Text(
-                            //     '${DateFormat('d MMMM y').format(widget.reception.startTime)} at ${DateFormat.jm().format(widget.reception.startTime)}',
-                            //     style: TextStyle(
-                            //         fontWeight: FontWeight.bold, fontSize: 24),
-                            //   ),
-                            //   subtitle: Text(
-                            //     '${widget.reception.endTime.difference(widget.reception.startTime).inMinutes} min, ends at ${DateFormat.jm().format(widget.reception.endTime)}',
-                            //   ),
-                            // ),
+                            ListTile(
+                              title: Text(
+                                '${DateFormat('d MMMM y').format(widget.reception.startTime)} at ${DateFormat.jm().format(widget.reception.startTime)}',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 24),
+                              ),
+                              subtitle: Text(
+                                '${widget.reception.endTime.difference(widget.reception.startTime).inMinutes} min, ends at ${DateFormat.jm().format(widget.reception.endTime)}',
+                              ),
+                            ),
                             Container(
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
