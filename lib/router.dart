@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/views/appointments.dart';
 import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
 import 'package:qme_subscriber/views/customer.dart';
@@ -83,6 +85,13 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: CreateReceptionScreen.id),
       );
 
+    case AppointmentsScreen.id:
+      return MaterialPageRoute(
+        builder: (context) => AppointmentsScreen(),
+        settings: RouteSettings(name: AppointmentsScreen.id),
+      );
+      break;
+
     case CustomerAppointment.id:
       return MaterialPageRoute(
         builder: (context) => CustomerAppointment(),
@@ -96,8 +105,16 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
 
     case CreateAppointment.id:
+      final args = settings.arguments as List;
+
+      final String receptionId = args[0];
+      final Slot slot = args[1];
+
       return MaterialPageRoute(
-        builder: (context) => CreateAppointment(),
+        builder: (context) => CreateAppointment(
+          slot: slot,
+          receptionId: receptionId,
+        ),
         settings: RouteSettings(name: CreateAppointment.id),
       );
 
