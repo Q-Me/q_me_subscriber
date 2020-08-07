@@ -12,7 +12,7 @@ const kTextFieldDecoration = InputDecoration(
 );
 
 const kLinkTextStyle = TextStyle(
-    color: Colors.green,
+    color: Colors.blue,
     fontWeight: FontWeight.bold,
     fontFamily: 'Montserrat',
     decoration: TextDecoration.underline);
