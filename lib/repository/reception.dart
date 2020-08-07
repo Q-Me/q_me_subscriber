@@ -233,7 +233,7 @@ class ReceptionRepository {
     @required accessToken,
   }) async {
     final response = await _helper.post(
-      kViewDetailedCounter,
+      kUpdateReceptionStatus,
       req: {
         "counter_id": counterId,
         "status": status,
