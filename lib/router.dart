@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qme_subscriber/views/appointments.dart';
 import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
 import 'package:qme_subscriber/views/customer.dart';
@@ -101,6 +102,11 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: CreateAppointment.id),
       );
 
+ case AppointmentsScreen.id:
+      return MaterialPageRoute(
+        builder: (context) => AppointmentsScreen(),
+        settings: RouteSettings(name: AppointmentsScreen.id),
+      );
     default:
       return MaterialPageRoute(
         builder: (context) => UndefinedView(name: settings.name),

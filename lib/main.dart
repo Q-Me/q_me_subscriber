@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
+import 'package:qme_subscriber/views/appointments.dart';
 import 'package:qme_subscriber/views/queues.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 
@@ -13,7 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (await SubscriberRepository().isSessionReady()) {
-    initialHome = QueuesScreen.id;
+    initialHome = ReceptionsScreen.id;
   }
 
   runApp(MyApp());
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light().copyWith(primaryColor: Colors.blue),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: router.generateRoute,
-      initialRoute: SignInScreen.id,
+      initialRoute: AppointmentsScreen.id,
       navigatorObservers: [analytics.getAnalyticsObserver()],
     );
   }
