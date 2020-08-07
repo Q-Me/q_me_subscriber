@@ -14,14 +14,9 @@ class CreateAppointment extends StatefulWidget {
   final String receptionId;
 
   CreateAppointment({
-    this.slot,
+    @required this.slot,
     this.receptionId,
-  }) {
-//    slot ??= Slot(
-//        startTime: DateTime.now(),
-//        endTime: DateTime.now().add(Duration(minutes: 30)));
-// TODO Remove this
-  }
+  });
 
   @override
   _CreateAppointmentState createState() => _CreateAppointmentState();
@@ -45,6 +40,12 @@ class _CreateAppointmentState extends State<CreateAppointment> {
         SnackBar(
           content: Text(text),
           duration: Duration(seconds: seconds),
+          action: SnackBarAction(
+            label: 'Dismiss',
+            onPressed: () {
+              Scaffold.of(context).hideCurrentSnackBar();
+            },
+          ),
         ),
       );
     }
@@ -134,79 +135,69 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                            */
                         ),
                       ),
-                      RaisedButton(
-                        child: Text('Book'),
-                        onPressed: () async {
-                          if (formKey.currentState.validate()) {
-                            // Dismiss the keyboard
-                            FocusScope.of(context).requestFocus(FocusNode());
+                      Builder(
+                        builder: (BuildContext context) => RaisedButton(
+                          child: Text('Book'),
+                          onPressed: () async {
+                            if (formKey.currentState.validate()) {
+                              // Dismiss the keyboard
+                              FocusScope.of(context).requestFocus(FocusNode());
 
-                            final String name = _nameController.text;
-                            final String phone = _phoneController.text;
-                            final String note = _noteController.text;
-                            logger.d(
-                                'Name:$name\nPhone:$phone\nNote:$note\n${slot.toJson()}');
-                            try {
-                              final String accessToken =
-                                  await SubscriberRepository()
-                                      .getAccessTokenFromStorage();
-                              final response =
-                                  await ReceptionRepository().bookAppointment(
-                                receptionId: receptionId,
-                                startTime: slot.startTime,
-                                endTime: slot.endTime,
-                                customerName: name,
-                                phone: phone,
-                                note: note,
-                                accessToken: accessToken,
-                              );
-                              if (response["msg"] ==
-                                  "Slot Booked Successfully") {
-                                showSnackBar(context,
-                                    "Appointment booked successfully", 5);
-
-                                final Appointment appointment =
-                                    Appointment.fromJson(response["slot"]);
-                                return showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text('Booking Details'),
-                                    content: SingleChildScrollView(
-                                      child: ListBody(
-                                        children: [
-                                          Text(
-                                            'Appointment Booked for:',
-                                            style: TextStyle(fontSize: 20),
-                                          ),
-                                          Text(
-                                              'Starts at ${appointment.startTime} for ${appointment.endTime.difference(appointment.endTime).inMinutes} minutes'),
-                                          Text(appointment.customerName),
-                                          Text(appointment.customerPhone),
-                                          Text(
-                                              'OTP for appointment is ${appointment.otp}'),
-                                        ],
-                                      ),
-                                    ),
-                                    actions: [
-                                      FlatButton(
-                                        child: Text('Go to Home'),
-                                        onPressed: () {
-                                          Navigator.popUntil(
-                                              context,
-                                              ModalRoute.withName(
-                                                  ReceptionsScreen.id));
-                                        },
-                                      )
-                                    ],
-                                  ),
+                              final String name = _nameController.text;
+                              final String phone = _phoneController.text;
+                              final String note = _noteController.text;
+                              logger.d(
+                                  'Name:$name\nPhone:$phone\nNote:$note\n${slot.toJson()}');
+                              try {
+                                final String accessToken =
+                                    await SubscriberRepository()
+                                        .getAccessTokenFromStorage();
+                                final response =
+                                    await ReceptionRepository().bookAppointment(
+                                  receptionId: receptionId,
+                                  startTime: slot.startTime,
+                                  endTime: slot.endTime,
+                                  customerName: name,
+                                  phone: phone,
+                                  note: note,
+                                  accessToken: accessToken,
                                 );
+                                if (response["msg"] ==
+                                    "Slot Booked Successfully") {
+                                  showSnackBar(context,
+                                      "Appointment booked successfully", 5);
+
+                                  final Appointment appointment =
+                                      Appointment.fromJson(response["slot"]);
+                                  return showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text('Booking Details'),
+                                      content: SingleChildScrollView(
+                                        child: AppointmentDetails(
+                                            appointment: appointment),
+                                      ),
+                                      actions: [
+                                        FlatButton(
+                                          child: Text('Go to Home'),
+                                          onPressed: () {
+                                            Navigator.popUntil(
+                                                context,
+                                                ModalRoute.withName(
+                                                    ReceptionsScreen.id));
+                                          },
+                                        )
+                                      ],
+                                    ),
+                                  );
+                                }
+                              } on Exception catch (e) {
+                                logger.e(e.toString());
+                                showSnackBar(context, e.toString(), 5);
                               }
-                            } on Exception catch (e) {
-                              logger.e(e.toString());
-                              showSnackBar(context, e.toString(), 5);
                             }
-                          }
-                        },
+                          },
+                        ),
                       )
                     ],
                   ),
@@ -226,5 +217,42 @@ class _CreateAppointmentState extends State<CreateAppointment> {
     _phoneController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+}
+
+class AppointmentDetails extends StatelessWidget {
+  const AppointmentDetails({
+    Key key,
+    @required this.appointment,
+  }) : super(key: key);
+
+  final Appointment appointment;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListBody(
+      children: [
+        Text('Appointment Booked for:'),
+        Text(
+          '${appointment.customerName}\n${appointment.customerPhone}\n',
+          style: Theme.of(context).textTheme.headline6,
+        ),
+        Text('Starts'),
+        Text(
+          '${DateFormat('d MMMM y').format(appointment.startTime)}\n${DateFormat.jm().format(appointment.startTime)}\nfor ${appointment.endTime.difference(appointment.startTime).inMinutes} min',
+          style: Theme.of(context).textTheme.headline6,
+        ),
+        Text('till'),
+        Text(
+          '${DateFormat.jm().format(appointment.endTime)}\n',
+          style: Theme.of(context).textTheme.headline6,
+        ),
+        Text('OTP for appointment is '),
+        Text(
+          appointment.otp.toString(),
+          style: Theme.of(context).textTheme.headline6,
+        ),
+      ],
+    );
   }
 }
