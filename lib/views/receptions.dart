@@ -8,9 +8,10 @@ import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
+import 'package:qme_subscriber/views/createAppointment.dart';
+import 'package:qme_subscriber/views/createReception.dart';
 import 'package:qme_subscriber/widgets/calenderItems.dart';
 import 'package:qme_subscriber/widgets/error.dart';
-import 'package:qme_subscriber/widgets/fabsHomeScreen.dart';
 import 'package:qme_subscriber/widgets/loader.dart';
 
 class ReceptionsScreen extends StatefulWidget {
@@ -27,6 +28,9 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
 
   onSelect(DateTime select) {
 //    logger.d('Select functions: $select');
+    setState(() {
+      selectedDate = select;
+    });
     receptionsBloc.date = select;
   }
 
@@ -52,8 +56,20 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
             title: Text('Your Receptions'),
             automaticallyImplyLeading: false,
           ),
-          floatingActionButton:
-              Provider.value(value: selectedDate, child: FancyFab()),
+          floatingActionButton: FloatingActionButton(
+            elevation: 0,
+            heroTag: "Create Reception",
+            onPressed: () {
+              logger.d('Create reception route on date $selectedDate');
+              Navigator.pushNamed(
+                context,
+                CreateReceptionScreen.id,
+                arguments: selectedDate,
+              );
+            },
+            tooltip: 'Create Reception',
+            child: Icon(Icons.event),
+          ),
           body: Column(
             children: <Widget>[
               /*Container(
@@ -270,6 +286,8 @@ class UnbookedSeat extends StatelessWidget {
         final Slot slot = context.read<Slot>();
         logger.i(
             'Selected reception: ${receptionToJson(reception)}\nSlot selected:${slot.toJson()}');
+        Navigator.pushNamed(context, CreateAppointment.id,
+            arguments: [reception.receptionId, slot]);
       },
       child: Container(
         height: 50,

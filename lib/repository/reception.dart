@@ -186,7 +186,7 @@ class ReceptionRepository {
   }
 
   Future<Map<String, dynamic>> bookAppointment({
-    @required String counterId,
+    @required String receptionId,
     @required DateTime startTime,
     @required DateTime endTime,
     @required String customerName,
@@ -197,7 +197,7 @@ class ReceptionRepository {
     final response = await _helper.post(
       kBookAppointment,
       req: {
-        "counter_id": counterId,
+        "counter_id": receptionId,
         "starttime": startTime.toIso8601String(),
         "endtime": endTime.toIso8601String(),
         "cust_name": customerName,
@@ -256,7 +256,7 @@ class ReceptionRepository {
     Reception reception = Reception.fromJson(response["counter"]);
 
     // create slots from reception duration
-    List<Slot> slots = createSlotsFromDuration(reception);
+    List<Slot> slots = reception.slotList;
 
     // apply overrides slots
     slots = overrideSlots(slots, createOverrideSlots(response));

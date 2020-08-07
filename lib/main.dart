@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
+import 'package:qme_subscriber/views/appointments.dart';
+import 'package:qme_subscriber/views/queues.dart';
 import 'package:qme_subscriber/utilities/session.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 

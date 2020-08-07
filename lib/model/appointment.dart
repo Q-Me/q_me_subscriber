@@ -5,15 +5,15 @@
 import 'package:meta/meta.dart';
 
 class Appointment {
-  Appointment({
-    @required this.startTime,
-    @required this.endTime,
-    @required this.status,
-    this.note,
-    @required this.bookedBy,
-    @required this.customerName,
-    @required this.customerPhone,
-  });
+  Appointment(
+      {@required this.startTime,
+      @required this.endTime,
+      @required this.status,
+      this.note,
+      @required this.bookedBy,
+      @required this.customerName,
+      @required this.customerPhone,
+      this.otp});
 
   final DateTime startTime;
   final DateTime endTime;
@@ -22,6 +22,7 @@ class Appointment {
   final String bookedBy;
   final String customerName;
   final String customerPhone;
+  int otp;
 
   factory Appointment.fromJson(Map<String, dynamic> json) => Appointment(
         startTime: DateTime.parse(json["starttime"]).toLocal(),
@@ -31,6 +32,7 @@ class Appointment {
         bookedBy: json["booked_by"],
         customerName: json["cust_name"],
         customerPhone: json["cust_phone"],
+        otp: json["otp"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -41,5 +43,6 @@ class Appointment {
         "booked_by": bookedBy,
         "cust_name": customerName,
         "cust_phone": customerPhone,
+        "otp": otp
       };
 }
