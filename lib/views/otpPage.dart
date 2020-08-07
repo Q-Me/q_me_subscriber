@@ -1,19 +1,18 @@
 import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
+import 'package:pin_entry_text_field/pin_entry_text_field.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/views/queues.dart';
 import 'package:qme_subscriber/widgets/button.dart';
-import 'package:qme_subscriber/widgets/text.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../api/app_exceptions.dart';
+
 import '../repository/user.dart';
 import 'signup.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:pin_entry_text_field/pin_entry_text_field.dart';
 
 class OtpPage extends StatefulWidget {
   static const id = '/otpPage';
@@ -54,7 +53,7 @@ class _OtpPageState extends State<OtpPage> {
                             child: new CircleAvatar(
                               backgroundColor: Colors.transparent,
                               radius: 60.0,
-                              child: SvgPicture.asset("assets/images/user.svg"),
+                              child: Image.asset("assets/images/user.svg"),
                             ),
                           ),
                         ),

@@ -16,15 +16,17 @@ class Slot extends Equatable with ChangeNotifier {
     this.booked,
     this.customersInSlot,
   });
+
   List<Appointment> appointments = [];
   Duration get duration => endTime.difference(startTime);
+
   void addAppointment(Appointment appointment) {
     appointments.add(appointment);
   }
 
   final DateTime startTime;
   final DateTime endTime;
-  int booked; // null not set
+  int booked; // null means not set
   int customersInSlot;
 
   factory Slot.fromJson(Map<String, dynamic> json) => Slot(
@@ -39,7 +41,8 @@ class Slot extends Equatable with ChangeNotifier {
         "booked": booked,
       };
 
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  @override
+  List<Object> get props => [startTime, endTime, customersInSlot, booked];
 }
 
 List<Slot> appointmentSlots(Map<String, List<Map<String, String>>> thisJson) {

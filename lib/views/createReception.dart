@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qme_subscriber/repository/reception.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 
 import '../constants.dart';
@@ -130,6 +131,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                               setState(() {
 //                                logger.d('Date set state called');
                                 _startDateTime = picked;
+                                _endDateTime = picked;
                                 formData['startDateTime'] = _startDateTime;
                               });
                             },
@@ -367,13 +369,14 @@ class CreateReceptionButton extends StatelessWidget {
 
               String msgToShow;
               try {
+                final String accessToken =
+                    await SubscriberRepository().getAccessTokenFromStorage();
                 final response = await ReceptionRepository().createReception(
                   startTime: formData['starttime'],
                   endTime: formData['endtime'],
                   slotDurationInMinutes: formData['slot'],
                   customerPerSlot: formData['cust_per_slot'],
-                  accessToken:
-                      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InlzenY3OW5ucSIsIm5hbWUiOiJBbWFuZGVlcCdzIFNhbG9vbiIsImlzU3Vic2NyaWJlciI6dHJ1ZSwiaWF0IjoxNTk2MTg4NDA4LCJleHAiOjE1OTYyNzQ4MDh9.JCEI0FCbrHtW2icmbpcAPJP10Yh1g1spTO6JkpjayPQ',
+                  accessToken: accessToken,
                 );
 
                 msgToShow = response;
