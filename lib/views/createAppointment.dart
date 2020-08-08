@@ -252,6 +252,13 @@ class AppointmentDetails extends StatelessWidget {
           appointment.otp.toString(),
           style: Theme.of(context).textTheme.headline6,
         ),
+        Text(
+          '\nPlease make a note of this Name and OTP and communicate it OTP to the customer',
+          style: TextStyle(
+            color: Colors.red,
+            decoration: TextDecoration.underline,
+          ),
+        ),
       ],
     );
   }
