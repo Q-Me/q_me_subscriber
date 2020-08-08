@@ -16,7 +16,7 @@ class CustomerAppointment extends StatefulWidget {
   static const id = '/customerAppointment';
   final Reception reception;
 
-  const CustomerAppointment({Key key, this.reception}) : super(key: key);
+  const CustomerAppointment({Key key,@required this.reception}) : super(key: key);
   @override
   _CustomerAppointmentState createState() => _CustomerAppointmentState();
 }
@@ -32,7 +32,6 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
   ReceptionRepository repository = ReceptionRepository();
   String title = "Appointment";
   MaterialColor color = Colors.blue;
-  Icon icon = Icon(Icons.group);
   BuildContext parentContext;
 
   Future<void> _makePhoneCall(String url) async {
@@ -62,7 +61,6 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                 setState(() {
                   title = "Appointment";
                   color = Colors.blue;
-                  icon = Icon(Icons.group);
                 });
                 Navigator.pop(context);
               },
@@ -111,7 +109,6 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                 title: Text(title),
                 elevation: 0,
                 backgroundColor: color,
-                leading: IconButton(icon: icon, onPressed: null),
               ),
               body: BlocConsumer<AppointmentBloc, AppointmentState>(
                   builder: (context, state) {
@@ -306,7 +303,6 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                                                 setState(() {
                                                   title = "Cancel Appointment";
                                                   color = Colors.red;
-                                                  icon = Icon(Icons.cancel);
                                                 });
                                                 dialogBox(context, "Confirm",
                                                     "Do you really want to cancel");

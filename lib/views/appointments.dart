@@ -1,6 +1,7 @@
 import 'package:date_utils/date_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:qme_subscriber/views/customer.dart';
 
 class AppointmentsScreen extends StatefulWidget {
   static const String id = '/appointments';
@@ -18,8 +19,6 @@ DateTime sDate = eDate.subtract(Duration(days: 7));
 var data = [{}, {}];
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
-
-
   Future<void> getData() async {
     // data = await apicall
   }
@@ -163,7 +162,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onTap:null,
+                    onTap: null,
                   ),
                 ),
               ),
@@ -197,84 +196,84 @@ Widget listElement(
 ) {
   var cHeight = MediaQuery.of(context).size.height;
   var cWidth = MediaQuery.of(context).size.width;
-final item = data[index].toString();
+  final item = data[index].toString();
   return Padding(
     padding: EdgeInsets.symmetric(
       horizontal: cWidth * 0.04,
       vertical: cHeight * 0.005,
     ),
     child: InkWell(
-      onTap: null,
-      child: Dismissible(
-              // Each Dismissible must contain a Key. Keys allow Flutter to
-              // uniquely identify widgets.
-              key: Key(item),
-              // Provide a function that tells the app
-              // what to do after an item has been swiped away.
-              onDismissed: (tap) {
-                // Remove the item from the data source.
-                //setState(() {
-                  data.removeAt(index);
-                //});
+        onTap: () {
+          Navigator.pushNamed(context, CustomerAppointment.id, arguments: {"reception": null});
+        },
+        child: Dismissible(
+          // Each Dismissible must contain a Key. Keys allow Flutter to
+          // uniquely identify widgets.
+          key: Key(item),
+          // Provide a function that tells the app
+          // what to do after an item has been swiped away.
+          onDismissed: (tap) {
+            // Remove the item from the data source.
+            //setState(() {
+            data.removeAt(index);
+            //});
 
-                // Then show a snackbar.
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text("$item dismissed")));
-              },
-              // Show a red background as the item is swiped away.
-              background: Container(color: Colors.red),
-              child: Card(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            vertical: cHeight * 0.005,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              Expanded(
-                child: ListTile(
-                  trailing: Text(
-                    "Booked",
-                  ),
-                  leading: Container(
-                    child: CircleAvatar(
-                      child: Icon(
-                        Icons.account_circle,
+            // Then show a snackbar.
+            Scaffold.of(context)
+                .showSnackBar(SnackBar(content: Text("$item dismissed")));
+          },
+          // Show a red background as the item is swiped away.
+          background: Container(color: Colors.red),
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: cHeight * 0.005,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Expanded(
+                    child: ListTile(
+                      trailing: Text(
+                        "Booked",
+                      ),
+                      leading: Container(
+                        child: CircleAvatar(
+                          child: Icon(
+                            Icons.account_circle,
+                          ),
+                        ),
+                        width: 32.0,
+                        height: 32.0,
+                        padding: EdgeInsets.all(2), // borde width
+                        decoration: BoxDecoration(
+                          // color: color, // border color
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      title: Text(
+                        "Person" + " " + "Name",
+                      ),
+                      subtitle: Text(
+                        "Phone",
                       ),
                     ),
-                    width: 32.0,
-                    height: 32.0,
-                    padding: EdgeInsets.all(2), // borde width
-                    decoration: BoxDecoration(
-                      // color: color, // border color
-                      shape: BoxShape.circle,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.all(3),
+                        ),
+                      ],
                     ),
                   ),
-                  title: Text(
-                    "Person" + " " + "Name",
-                  ),
-                  subtitle: Text(
-                    "Phone",
-                  ),
-                ),
+                ],
               ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.all(3),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-            )
-      
-    ),
+        )),
   );
 }

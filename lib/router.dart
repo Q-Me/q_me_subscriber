@@ -7,6 +7,7 @@ import 'package:qme_subscriber/views/customer.dart';
 import 'package:qme_subscriber/views/customerRecurrence.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
 
+import 'model/reception.dart';
 import 'views/createQueue.dart';
 import 'views/people.dart';
 import 'views/profile.dart';
@@ -93,8 +94,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       break;
 
     case CustomerAppointment.id:
+      Map args = settings.arguments as Map;
+      Reception reception = args["reception"];
       return MaterialPageRoute(
-        builder: (context) => CustomerAppointment(),
+        builder: (context) => CustomerAppointment(reception: reception),
         settings: RouteSettings(name: CustomerAppointment.id),
       );
 
@@ -118,7 +121,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: CreateAppointment.id),
       );
 
- case AppointmentsScreen.id:
+    case AppointmentsScreen.id:
       return MaterialPageRoute(
         builder: (context) => AppointmentsScreen(),
         settings: RouteSettings(name: AppointmentsScreen.id),
