@@ -1,12 +1,21 @@
-import 'package:date_utils/date_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:qme_subscriber/views/customer.dart';
+import 'package:qme_subscriber/model/reception.dart';
+import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
+import 'package:qme_subscriber/views/appointment.dart';
 
-class AppointmentsScreen extends StatefulWidget {
-  static const String id = '/appointments';
+class SlotView extends StatefulWidget {
+  static const String id = '/slot';
+  final Reception reception;
+  final Slot slot;
+
+  SlotView({this.reception, this.slot}) {
+    logger.d('Reception:${reception.toJson()}\nSlot:\n${slot.toJson()}');
+  }
+
   @override
-  _AppointmentsScreenState createState() => _AppointmentsScreenState();
+  _SlotViewState createState() => _SlotViewState();
 }
 
 bool display = false;
@@ -18,7 +27,10 @@ DateTime sDate = eDate.subtract(Duration(days: 7));
 
 var data = [{}, {}];
 
-class _AppointmentsScreenState extends State<AppointmentsScreen> {
+class _SlotViewState extends State<SlotView> {
+  Reception get reception => widget.reception;
+  Slot get slot => widget.slot;
+
   Future<void> getData() async {
     // data = await apicall
   }
@@ -52,10 +64,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                   ),
                 );
               else
-                return _transBuildList(
-                  context,
-                  data,
-                );
+                return _transBuildList(context, data);
             } else
               return Center(
                 child: CircularProgressIndicator(),
@@ -105,66 +114,25 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       padding: _pad,
       child: Column(
         children: <Widget>[
+          Text(
+            "${DateFormat('d MMMM y').format(reception.startTime)}",
+            style: TextStyle(
+              fontSize: cWidth * 0.04,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
           Row(
             children: <Widget>[
               Expanded(
-                child: Card(
-                  elevation: 3.0,
-                  child: ListTile(
-                    contentPadding: EdgeInsets.only(
-                      left: 10,
-                      // top: 10,
-                    ),
-                    leading: Icon(
-                      Icons.calendar_today,
-                      size: cWidth * 0.085,
-                    ),
-                    title: Text(
-                      "Start date",
-                      style: TextStyle(
-                        fontSize: cWidth * 0.04,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '08 Aug 2020',
-                      style: TextStyle(
-                        fontSize: cWidth * 0.043,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                child: TimeCard(
+                  text: 'Start',
+                  dateTime: DateTime.now(),
                 ),
               ),
               Expanded(
-                child: Card(
-                  elevation: 3.0,
-                  child: ListTile(
-                    contentPadding: EdgeInsets.only(
-                      left: 10,
-                    ),
-                    leading: Icon(
-                      Icons.calendar_today,
-                      // color: Theme.Colors.yellow700Color,
-                      size: cWidth * 0.085,
-                    ),
-                    title: Text(
-                      "End date",
-                      style: TextStyle(
-                        fontSize: cWidth * 0.04,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '08 Aug 2020',
-                      style: TextStyle(
-                        fontSize: cWidth * 0.043,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onTap: null,
-                  ),
-                ),
+                child: TimeCard(
+                    text: 'End',
+                    dateTime: DateTime.now().add(Duration(minutes: 90))),
               ),
             ],
           ),
@@ -189,6 +157,50 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   }
 }
 
+class TimeCard extends StatelessWidget {
+  final String text;
+  final DateTime dateTime;
+
+  TimeCard({@required this.text, @required this.dateTime});
+
+  @override
+  Widget build(BuildContext context) {
+    String _addLeadingZeroIfNeeded(int value) {
+      if (value < 10) return '0$value';
+      return value.toString();
+    }
+
+    final String hourLabel = _addLeadingZeroIfNeeded(dateTime.hour);
+    final String minuteLabel = _addLeadingZeroIfNeeded(dateTime.minute);
+
+    return Card(
+      elevation: 3.0,
+      child: ListTile(
+        contentPadding: EdgeInsets.only(
+          left: 10,
+          // top: 10,
+        ),
+        leading: Icon(
+          Icons.access_time,
+          size: 36,
+        ),
+        title: Text(
+          text,
+          style: TextStyle(
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        subtitle: Text(
+          '$hourLabel:$minuteLabel',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 Widget listElement(
   BuildContext context,
   int index,
@@ -204,7 +216,8 @@ Widget listElement(
     ),
     child: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, CustomerAppointment.id, arguments: {"reception": null});
+          Navigator.pushNamed(context, AppointmentView.id,
+              arguments: {"reception": null});
         },
         child: Dismissible(
           // Each Dismissible must contain a Key. Keys allow Flutter to
@@ -215,7 +228,7 @@ Widget listElement(
           onDismissed: (tap) {
             // Remove the item from the data source.
             //setState(() {
-            data.removeAt(index);
+//            data.removeAt(index);
             //});
 
             // Then show a snackbar.

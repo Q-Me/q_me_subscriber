@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/slot.dart';
-import 'package:qme_subscriber/views/appointments.dart';
+import 'package:qme_subscriber/views/appointment.dart';
 import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
-import 'package:qme_subscriber/views/customer.dart';
 import 'package:qme_subscriber/views/customerRecurrence.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
+import 'package:qme_subscriber/views/slot.dart';
 
 import 'model/reception.dart';
 import 'views/createQueue.dart';
@@ -86,19 +87,26 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: CreateReceptionScreen.id),
       );
 
-    case AppointmentsScreen.id:
+    case SlotView.id:
+      final List args = settings.arguments as List;
+
       return MaterialPageRoute(
-        builder: (context) => AppointmentsScreen(),
-        settings: RouteSettings(name: AppointmentsScreen.id),
+        builder: (context) => SlotView(
+          reception: args[0],
+          slot: args[1],
+        ),
+        settings: RouteSettings(name: SlotView.id),
       );
       break;
 
-    case CustomerAppointment.id:
-      Map args = settings.arguments as Map;
-      Reception reception = args["reception"];
+    case AppointmentView.id:
+      List args = settings.arguments as List;
+      final Reception reception = args[0];
+      final Appointment appointment = args[1];
+
       return MaterialPageRoute(
-        builder: (context) => CustomerAppointment(reception: reception),
-        settings: RouteSettings(name: CustomerAppointment.id),
+        builder: (context) => AppointmentView(reception: reception),
+        settings: RouteSettings(name: AppointmentView.id),
       );
 
     case CustomerRecurrence.id:
@@ -121,11 +129,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: CreateAppointment.id),
       );
 
-    case AppointmentsScreen.id:
-      return MaterialPageRoute(
-        builder: (context) => AppointmentsScreen(),
-        settings: RouteSettings(name: AppointmentsScreen.id),
-      );
     default:
       return MaterialPageRoute(
         builder: (context) => UndefinedView(name: settings.name),
