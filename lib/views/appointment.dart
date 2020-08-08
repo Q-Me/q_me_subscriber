@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:pin_entry_text_field/pin_entry_text_field.dart';
 import 'package:qme_subscriber/bloc/appointment_bloc.dart';
+import 'package:qme_subscriber/model/appointment.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../model/reception.dart';
@@ -12,26 +13,32 @@ import '../repository/reception.dart';
 import '../repository/subscriber.dart';
 import '../utilities/logger.dart';
 
-class CustomerAppointment extends StatefulWidget {
-  static const id = '/customerAppointment';
+class AppointmentView extends StatefulWidget {
+  static const id = '/appointment';
   final Reception reception;
+  final Appointment appointment;
 
-  const CustomerAppointment({Key key,@required this.reception}) : super(key: key);
+  const AppointmentView({
+    Key key,
+    @required this.reception,
+    @required this.appointment,
+  }) : super(key: key);
+
   @override
-  _CustomerAppointmentState createState() => _CustomerAppointmentState();
+  _AppointmentViewState createState() => _AppointmentViewState();
 }
 
-class _CustomerAppointmentState extends State<CustomerAppointment> {
+class _AppointmentViewState extends State<AppointmentView> {
   final formKey = GlobalKey<FormState>();
   Future<void> _launched;
-  String otpPin = "";
-  String userName = 'abc xyz';
-  String userPhoneNumber = '123456789';
-  String userEmail = "abc@gmail.com";
   bool buttonEnabled = false;
+  String otpPin = "";
+  Reception get reception => widget.reception;
+  Appointment get appointment => widget.appointment;
+  String get userName => appointment.customerName;
+  String get userPhoneNumber => appointment.customerPhone;
+  String userEmail = "abc@gmail.com";
   ReceptionRepository repository = ReceptionRepository();
-  String title = "Appointment";
-  MaterialColor color = Colors.blue;
   BuildContext parentContext;
 
   Future<void> _makePhoneCall(String url) async {
@@ -58,10 +65,6 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
             FlatButton(
               child: new Text("No"),
               onPressed: () {
-                setState(() {
-                  title = "Appointment";
-                  color = Colors.blue;
-                });
                 Navigator.pop(context);
               },
             ),
@@ -70,7 +73,7 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
               onPressed: () async {
                 BlocProvider.of<AppointmentBloc>(parentContext).add(
                     AppointmentCancelRequested(
-                        widget.reception.receptionId,
+                        reception.receptionId,
                         userPhoneNumber,
                         await SubscriberRepository()
                             .getAccessTokenFromStorage()));
@@ -90,8 +93,8 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
       buttonEnabled = true;
     }
     EdgeInsets _pad;
-    var cHeight = MediaQuery.of(context).size.height;
-    var cWidth = MediaQuery.of(context).size.width;
+    double cHeight = MediaQuery.of(context).size.height;
+    double cWidth = MediaQuery.of(context).size.width;
     _pad = EdgeInsets.only(
       top: cHeight * 0.01,
       bottom: cHeight * 0.01,
@@ -106,9 +109,9 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
       child: SafeArea(
           child: Scaffold(
               appBar: AppBar(
-                title: Text(title),
+                title: Text("Appointment"),
                 elevation: 0,
-                backgroundColor: color,
+                backgroundColor: Theme.of(context).primaryColor,
               ),
               body: BlocConsumer<AppointmentBloc, AppointmentState>(
                   builder: (context, state) {
@@ -129,12 +132,12 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                           children: <Widget>[
                             ListTile(
                               title: Text(
-                                '${DateFormat('d MMMM y').format(widget.reception.startTime)} at ${DateFormat.jm().format(widget.reception.startTime)}',
+                                '${DateFormat('d MMMM y').format(reception.startTime)} at ${DateFormat.jm().format(reception.startTime)}',
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold, fontSize: 24),
                               ),
                               subtitle: Text(
-                                '${widget.reception.endTime.difference(widget.reception.startTime).inMinutes} min, ends at ${DateFormat.jm().format(widget.reception.endTime)}',
+                                '${reception.endTime.difference(reception.startTime).inMinutes} min, ends at ${DateFormat.jm().format(reception.endTime)}',
                               ),
                             ),
                             Container(
@@ -252,10 +255,7 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                             ]),
                             Container(
                                 padding: EdgeInsets.symmetric(
-                                    horizontal: 20.0,
-                                    vertical:
-                                        MediaQuery.of(context).size.height *
-                                            0.05),
+                                    horizontal: 20.0, vertical: cHeight * 0.05),
                                 child: Column(
                                   children: <Widget>[
                                     Text(
@@ -265,21 +265,15 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                                           fontSize: 25.0),
                                     ),
                                     SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                              0.03,
+                                      height: cHeight * 0.03,
                                     ),
                                     Text("Enter OTP sent to mobile number"),
                                     SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                              0.05,
+                                      height: cHeight * 0.05,
                                     ),
                                     PinEntryTextField(
                                       showFieldAsBox: true,
-                                      fieldWidth:
-                                          MediaQuery.of(context).size.width *
-                                              0.1,
+                                      fieldWidth: cWidth * 0.1,
                                       fields: 4,
                                       onSubmit: (String pin) {
                                         setState(() {
@@ -300,13 +294,9 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                                               0.3,
                                           child: FlatButton(
                                             onPressed: () async {
-                                                setState(() {
-                                                  title = "Cancel Appointment";
-                                                  color = Colors.red;
-                                                });
-                                                dialogBox(context, "Confirm",
-                                                    "Do you really want to cancel");
-                                              },
+                                              dialogBox(context, "Confirm",
+                                                  "Do you really want to cancel");
+                                            },
                                             child: Text(
                                               "Cancel",
                                               style: TextStyle(
@@ -347,7 +337,7 @@ class _CustomerAppointmentState extends State<CustomerAppointment> {
                                                                   AppointmentBloc>(
                                                               context)
                                                           .add(AppointmentFinished(
-                                                              widget.reception
+                                                              reception
                                                                   .receptionId,
                                                               userPhoneNumber,
                                                               await SubscriberRepository()
