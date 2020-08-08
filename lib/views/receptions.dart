@@ -8,9 +8,9 @@ import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
-import 'package:qme_subscriber/views/appointments.dart';
 import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
+import 'package:qme_subscriber/views/slot.dart';
 import 'package:qme_subscriber/widgets/calenderItems.dart';
 import 'package:qme_subscriber/widgets/error.dart';
 import 'package:qme_subscriber/widgets/loader.dart';
@@ -182,8 +182,11 @@ class ReceptionAppointmentListView extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 GestureDetector(
-                    onTap: () =>
-                        Navigator.pushNamed(context, AppointmentsScreen.id),
+                    onTap: () => Navigator.pushNamed(
+                          context,
+                          SlotView.id,
+                          arguments: reception,
+                        ),
                     child: SlotTiming()),
                 Expanded(
                   child: Wrap(
@@ -257,7 +260,12 @@ class BookedSeat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, AppointmentsScreen.id),
+      // TODO Test provider
+      onTap: () => Navigator.pushNamed(
+        context,
+        SlotView.id,
+        arguments: Provider.of<Reception>(context),
+      ),
       child: Container(
         height: 50,
         alignment: Alignment.center,

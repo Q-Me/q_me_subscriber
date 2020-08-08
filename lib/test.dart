@@ -282,7 +282,7 @@ void testCreateReception(ReceptionRepository receptionRepository) async {
 
 void testViewReception(ReceptionRepository receptionRepository) async {
   Reception reception = await receptionRepository.viewReception(
-      counterId: 'f55cNXCtP', accessToken: accessToken);
+      receptionId: 'f55cNXCtP', accessToken: accessToken);
   print(reception.toJson());
 }
 

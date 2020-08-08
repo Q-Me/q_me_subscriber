@@ -363,6 +363,7 @@ class CreateReceptionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void showSnackBar(String msgToShow) {
+      Scaffold.of(context).hideCurrentSnackBar();
       Scaffold.of(context).showSnackBar(
         SnackBar(
           content: Text(msgToShow),
