@@ -61,7 +61,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
             heroTag: "Create Reception",
             onPressed: () {
               logger.d('Create reception route on date $selectedDate');
-              Navigator.pushNamed(
+              Navigator.pushReplacementNamed(
                 context,
                 CreateReceptionScreen.id,
                 arguments: selectedDate,
@@ -137,16 +137,16 @@ class ReceptionsListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-        itemCount: receptions.length,
-        shrinkWrap: true,
-        itemBuilder: (context, receptionsIndex) {
-          Reception reception = receptions[receptionsIndex];
-//          logger.i('Showing reception: ${reception.toJson()}');
-          return ChangeNotifierProvider.value(
-            value: reception,
-            child: ReceptionAppointmentListView(),
-          );
-        });
+      itemCount: receptions.length,
+      shrinkWrap: true,
+      itemBuilder: (context, receptionsIndex) {
+        Reception reception = receptions[receptionsIndex];
+        return ChangeNotifierProvider.value(
+          value: reception,
+          child: ReceptionAppointmentListView(),
+        );
+      },
+    );
   }
 }
 
@@ -206,6 +206,7 @@ class AddOverride extends StatelessWidget {
       onTap: () {
         final Reception reception = context.read<Reception>();
         final Slot slot = context.read<Slot>();
+        logger.d('Reception:${reception.toJson()}\nSlot:${slot.toJson()}');
         // TODO add an override to this slot
         // TODO show dialog box to add an override
       },
@@ -236,17 +237,6 @@ class SlotTiming extends StatelessWidget {
             style: TextStyle(fontSize: 18),
             softWrap: true,
           ),
-          /*
-          Text(
-            'to',
-            style: TextStyle(fontSize: 20),
-            softWrap: true,
-          ),
-          Text(
-            getTime(slot.endTime),
-            style: TextStyle(fontSize: 20),
-            softWrap: true,
-          ),*/
         ],
       ),
     );

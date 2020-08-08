@@ -24,8 +24,8 @@ class ReceptionRepository {
     final response = await _helper.post(
       kCreateReception,
       req: {
-        "starttime": startTime.toIso8601String(),
-        "endtime": endTime.toIso8601String(),
+        "starttime": startTime.toUtc().toIso8601String(),
+        "endtime": endTime.toUtc().toIso8601String(),
         "slot": slotDurationInMinutes.toString(),
         "cust_per_slot": customerPerSlot.toString(),
       },
@@ -93,12 +93,12 @@ class ReceptionRepository {
   }
 
   Future<Reception> viewReception({
-    @required String counterId,
+    @required String receptionId,
     @required accessToken,
   }) async {
     final response = await _helper.post(
       '/subscriber/slot/viewcounter',
-      req: {"counter_id": counterId},
+      req: {"counter_id": receptionId},
       headers: {'Authorization': 'Bearer $accessToken'},
     );
     // todo test
@@ -258,12 +258,23 @@ class ReceptionRepository {
     // create slots from reception duration
     List<Slot> slots = reception.slotList;
 
-    // apply overrides slots
-    slots = overrideSlots(slots, createOverrideSlots(response));
+    final List overrideResponse = response['overrides'];
+    if (overrideResponse != null &&
+        overrideResponse is List &&
+        overrideResponse.length != 0) {
+      // apply overrides slots
+      slots = overrideSlots(slots, createOverrideSlots(response));
+    }
 
-    // update slots according to bookings
-    slots = modifyBookings(slots, response);
-    reception.addSlotList(slots);
+    final List bookedSlots = response['slots'];
+    if (bookedSlots != null &&
+        bookedSlots is List &&
+        bookedSlots.length != null) {
+      // update slots according to bookings
+      slots = modifyBookings(slots, bookedSlots);
+    }
+
+    reception.replaceSlots(slots);
     return reception;
   }
 }
