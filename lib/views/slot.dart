@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:qme_subscriber/bloc/booking_bloc.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/appointment.dart';
 
@@ -9,6 +12,7 @@ class SlotView extends StatefulWidget {
   static const String id = '/slot';
   final Reception reception;
   final Slot slot;
+  final ReceptionRepository repository = ReceptionRepository();
 
   SlotView({this.reception, this.slot}) {
     logger.d('Reception:${reception.toJson()}\nSlot:\n${slot.toJson()}');
@@ -47,29 +51,32 @@ class _SlotViewState extends State<SlotView> {
               child: Icon(Icons.arrow_back_ios)),
           title: Text("Slots"),
         ),
-        body: FutureBuilder(
-          future: getData(),
-          builder: (context, snapshot) {
-            print(data);
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError)
-                return Container(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Center(
-                        child: Text("Network Error"),
-                      )
-                    ],
-                  ),
+        body: BlocProvider(
+          create: (context) => BookingBloc(widget.repository),
+          child: FutureBuilder(
+            future: getData(),
+            builder: (context, snapshot) {
+              print(data);
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasError)
+                  return Container(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Center(
+                          child: Text("Network Error"),
+                        )
+                      ],
+                    ),
+                  );
+                else
+                  return _transBuildList(context, data);
+              } else
+                return Center(
+                  child: CircularProgressIndicator(),
                 );
-              else
-                return _transBuildList(context, data);
-            } else
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-          },
+            },
+          ),
         ),
       ),
     );
