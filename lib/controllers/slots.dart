@@ -29,7 +29,7 @@ List<Slot> orderSlotsByStartTime(List<Slot> slots) {
 }
 
 List<Slot> createOverrideSlots(Map<String, dynamic> response) {
-  assert(response['overrides'] == null, 'invalid response');
+  assert(response['overrides'] == null, 'No override in response');
 
   List<Slot> overrideList = [];
   for (var map in response['overrides']) {
@@ -79,8 +79,10 @@ List<Slot> overrideSlots(List<Slot> slots, List<Slot> overrideList) {
   return slots;
 }
 
-List<Slot> modifyBookings(List<Slot> slots, Map<String, dynamic> response) {
-  List bookings = response['slots'];
+List<Slot> modifyBookings(List<Slot> slots, List bookings) {
+  assert(bookings != null, "bookings list cannot be null");
+//  assert(response['slots'] == null, 'no slot bookings');
+//  List bookings = response['slots'];
 //  bookings.sort((a, b) => a['starttime'].compareTo(b)['starttime']);
   // Go through the booked appointments and add them in the slot's appointment list
   for (var map in bookings) {
