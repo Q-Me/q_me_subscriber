@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
@@ -361,6 +362,15 @@ class CreateReceptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    void showSnackBar(String msgToShow) {
+      Scaffold.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msgToShow),
+          duration: Duration(seconds: 5),
+        ),
+      );
+    }
+
     Map<String, dynamic> formData = Provider.of<Map<String, dynamic>>(context);
     return Container(
       height: 50.0,
@@ -381,40 +391,55 @@ class CreateReceptionButton extends StatelessWidget {
                 duration: Duration(seconds: 1),
               ));
 
-              String msgToShow;
               try {
+                final Reception reception = Reception(
+                    startTime: formData["starttime"],
+                    endTime: formData["endtime"],
+                    slotDuration: Duration(minutes: formData["slot"]),
+                    customersInSlot: formData["cust_per_slot"]);
+                final now = DateTime.now();
+
+                // Time Checks
+                if (reception.startTime.isBefore(now) ||
+                    reception.endTime.isBefore(now)) {
+                  showSnackBar(
+                      'Please select a future date and time for both start and end of the reception');
+                  return;
+                }
+                if (reception.endTime.isBefore(reception.startTime)) {
+                  showSnackBar(
+                      'The end date and time should be after the start date and time');
+                  return;
+                }
+
                 final String accessToken =
                     await SubscriberRepository().getAccessTokenFromStorage();
                 final response = await ReceptionRepository().createReception(
-                  startTime: formData['starttime'],
-                  endTime: formData['endtime'],
-                  slotDurationInMinutes: formData['slot'],
-                  customerPerSlot: formData['cust_per_slot'],
+                  startTime: reception.startTime,
+                  endTime: reception.endTime,
+                  slotDurationInMinutes: reception.slotDuration.inMinutes,
+                  customerPerSlot: reception.customersInSlot,
                   accessToken: accessToken,
                 );
+                logger.d(response);
 
-                msgToShow = response;
+                showSnackBar(response);
+
+                logger.d('Timer start');
+                await Future.delayed(Duration(seconds: 3));
+                logger.d('Timer end');
+
+                // TODO add the reception to the list of all receptions in the receptions bloc
+                if (response == 'Counter Created Successfully') {
+                  Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
+                }
               } catch (e) {
                 logger.e(e.toString());
                 // Show persistent snack bar with error
-                msgToShow = e.toString();
+                showSnackBar(e.toString());
                 return;
               }
 
-              Scaffold.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(msgToShow),
-                  duration: Duration(seconds: 5),
-                ),
-              );
-              logger.d('Timer start');
-              await Future.delayed(Duration(seconds: 3));
-              logger.d('Timer end');
-
-              // TODO add the reception to the list of all receptions in the receptions bloc
-              if (msgToShow == 'Counter Created Successfully') {
-                Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
-              }
               return;
             }
           },

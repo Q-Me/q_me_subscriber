@@ -8,6 +8,7 @@ import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
+import 'package:qme_subscriber/views/appointments.dart';
 import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
 import 'package:qme_subscriber/widgets/calenderItems.dart';
@@ -25,6 +26,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
   DateTime endDate = DateTime.now().add(Duration(days: 7));
   DateTime selectedDate = DateTime.now();
   List<DateTime> markedDates = [];
+  ReceptionsBloc receptionsBloc;
 
   onSelect(DateTime select) {
 //    logger.d('Select functions: $select');
@@ -38,7 +40,6 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
     /*When coming back from Create Reception page*/
   }
 
-  ReceptionsBloc receptionsBloc;
   @override
   void initState() {
     receptionsBloc = ReceptionsBloc(selectedDate);
@@ -98,8 +99,10 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                         switch (snapshot.data.status) {
                           case Status.COMPLETED:
                             if (snapshot.data.data.length == 0) {
-                              return Text(
-                                  'No reception found on ${getDate(Provider.of<ReceptionsBloc>(context).selectedDate).toString()}');
+                              return Center(
+                                child: Text(
+                                    'No reception found on ${getDate(Provider.of<ReceptionsBloc>(context).selectedDate).toString()}'),
+                              );
                             }
                             return ReceptionsListView(
                                 receptions: snapshot.data.data);
@@ -170,7 +173,7 @@ class ReceptionAppointmentListView extends StatelessWidget {
                 : slot.customersInSlot - slot.booked,
             (index) => UnbookedSeat());
 
-        final allBoxes = [...bookedBoxes, ...unBookedBoxes, AddOverride()];
+        final allBoxes = [...bookedBoxes, ...unBookedBoxes];
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -178,7 +181,10 @@ class ReceptionAppointmentListView extends StatelessWidget {
             value: slot,
             child: Row(
               children: <Widget>[
-                SlotTiming(),
+                GestureDetector(
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppointmentsScreen.id),
+                    child: SlotTiming()),
                 Expanded(
                   child: Wrap(
                     runSpacing: 3,
@@ -250,15 +256,18 @@ class BookedSeat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 50,
-      alignment: Alignment.center,
-      width: 80,
-      decoration: BoxDecoration(
-        color: Colors.blue,
-        borderRadius: BorderRadius.all(Radius.circular(10)),
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, AppointmentsScreen.id),
+      child: Container(
+        height: 50,
+        alignment: Alignment.center,
+        width: 80,
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        child: Text('booked'),
       ),
-      child: Text('booked'),
     );
   }
 }

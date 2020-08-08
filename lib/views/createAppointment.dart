@@ -36,15 +36,14 @@ class _CreateAppointmentState extends State<CreateAppointment> {
   @override
   Widget build(BuildContext context) {
     void showSnackBar(BuildContext context, String text, int seconds) {
+      Scaffold.of(context).hideCurrentSnackBar();
       Scaffold.of(context).showSnackBar(
         SnackBar(
           content: Text(text),
           duration: Duration(seconds: seconds),
           action: SnackBarAction(
             label: 'Dismiss',
-            onPressed: () {
-              Scaffold.of(context).hideCurrentSnackBar();
-            },
+            onPressed: () => Scaffold.of(context).hideCurrentSnackBar(),
           ),
         ),
       );
