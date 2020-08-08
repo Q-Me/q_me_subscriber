@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
 import 'package:pin_entry_text_field/pin_entry_text_field.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
@@ -53,7 +54,7 @@ class _OtpPageState extends State<OtpPage> {
                             child: new CircleAvatar(
                               backgroundColor: Colors.transparent,
                               radius: 60.0,
-                              child: Image.asset("assets/images/user.svg"),
+                              child: SvgPicture.asset("assets/images/user.svg"),
                             ),
                           ),
                         ),
@@ -91,8 +92,8 @@ class _OtpPageState extends State<OtpPage> {
                               height: 50.0,
                               child: Material(
                                 borderRadius: BorderRadius.circular(20.0),
-                                shadowColor: Colors.greenAccent,
-                                color: Colors.green,
+                                shadowColor: Colors.blueAccent,
+                                color: Theme.of(context).primaryColor,
                                 elevation: 7.0,
                                 child: InkWell(
                                   onTap: () async {

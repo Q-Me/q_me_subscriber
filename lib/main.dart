@@ -15,7 +15,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await setSession();
   if (await SubscriberRepository().isSessionReady()) {
-    initialHome = ReceptionsScreen.id;
+    initialHome = AppointmentsScreen.id;
   }
 
   runApp(MyApp());

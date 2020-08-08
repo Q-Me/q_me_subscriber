@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_place_picker/google_maps_place_picker.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
+import 'package:qme_subscriber/views/signin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/keys.dart';
 import '../bloc/signup.dart';
@@ -17,7 +18,8 @@ import '../widgets/formField.dart';
 import '../widgets/text.dart';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
+import 'package:url_launcher/url_launcher.dart';
+import 'package:checkbox_formfield/checkbox_formfield.dart';
 class SignUpScreen extends StatefulWidget {
   static const id = '/signup';
 
@@ -41,7 +43,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final FirebaseMessaging _messaging = FirebaseMessaging();
   var _fcmToken;
   var idToken;
+  bool checkedValue = false;
   bool showOtpTextfield = false;
+  Future<void> _launched;
 
   // otp verification with firebase
 
@@ -53,7 +57,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     "Medical Store",
     "Airport"
   ];
-  String selectedCategory;
+  String selectedCategory; Future<void> _launchInBrowser(String url) async {
+    if (await canLaunch(url)) {
+      await launch(
+        url,
+        forceSafariVC: false,
+        forceWebView: false,
+        headers: <String, String>{'my_header_key': 'my_header_value'},
+      );
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
 
   @override
   void initState() {
@@ -135,6 +150,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           SizedBox(height: 10.0),
                           MyFormField(
                             name: 'BUSINESS NAME',
+                            required: true,
                             callback: (value) {
                               formData['name'] = value;
                               subscriber.name = value;
@@ -184,18 +200,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           SizedBox(height: 10.0),
                           MyFormField(
                             name: 'ADDRESS',
+                            required: true,
                             callback: (value) {
                               formData['address'] = value;
                               subscriber.address = value;
                             },
                           ),
                           TextFormField(
+                            
                             onChanged: (value) {
                               formData['address'] = value;
                             },
                             controller: _mapLocationController,
                             showCursor: false,
                             readOnly: true,
+                             validator: (value) {
+                                if (value.isEmpty) {
+                                  return 'This field cannot be left blank';
+                                }
+                             },
                             onTap: () {
                               log('Address field tapped');
                               Navigator.push(
@@ -227,6 +250,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ),
                               );
                             },
+                            
                             decoration: InputDecoration(
                               labelText: 'MAP LOCATION',
                               labelStyle: kLabelStyle,
@@ -243,7 +267,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           MyFormField(
                             keyboardType: TextInputType.emailAddress,
                             name: 'EMAIL',
-                            required: true,
+                            required: false,
                             callback: (value) {
                               formData['email'] = value;
                               subscriber.email = value;
@@ -254,9 +278,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             // Password
                             obscureText: passwordVisible,
                             validator: (value) {
-                              if (value.length < 6)
-                                return 'Password should be not be less than 6 characters';
-                              else {
+                             Pattern pattern =
+                                    r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])';
+                                RegExp regex = new RegExp(pattern);
+                                if (value.length < 6 || value.length > 20)
+                                  return 'Password should be not be less than 6 characters';
+                                else if (!regex.hasMatch(value)) {
+                                  return 'Password must contain one numeric ,one upper and one lower case letter';
+                                } {
                                 formData['password'] = value;
                                 return null;
                               }
@@ -320,6 +349,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                             ),
                           ),
+                          CheckboxListTileFormField(
+                              title: FlatButton(
+                                color: Colors.transparent,
+                                onPressed: () => setState(() {
+                                  _launched = _launchInBrowser(
+                                      "https://q-me.flycricket.io/privacy.html");
+                                }),
+                                child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'I Agree to Privacy Policy',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    )),
+                              ),
+                              onSaved: (newValue) {
+                                setState(() {
+                                  checkedValue = newValue;
+                                });
+                              },
+                              validator: (bool value) {
+                                if (value) {
+                                  return null;
+                                } else {
+                                  return 'You need to accept terms!';
+                                }
+                              },
+                            ),
                           SizedBox(height: 50.0),
                           SignUpButton(
                               formKey: formKey,
@@ -364,138 +421,138 @@ class _SignUpButtonState extends State<SignUpButton> {
 
   Future<bool> loginUser(String phone, BuildContext context) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
-
+          Navigator.pushNamed(context, OtpPage.id);
     _auth.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: Duration(seconds: 60),
-        verificationCompleted: (AuthCredential credential) async {
-          AuthResult result = await _auth.signInWithCredential(credential);
+        // verificationCompleted: (AuthCredential credential) async {
+        //   AuthResult result = await _auth.signInWithCredential(credential);
 
-          FirebaseUser user = result.user;
+        //   FirebaseUser user = result.user;
 
-          if (user != null) {
-            var token = await user.getIdToken().then((result) {
-              idToken = result.token;
-              widget.formData['token'] = idToken;
-              print(" $idToken ");
-            });
-            log('${widget.formData}');
-            SharedPreferences prefs = await SharedPreferences.getInstance();
+        //   if (user != null) {
+        //     var token = await user.getIdToken().then((result) {
+        //       idToken = result.token;
+        //       widget.formData['token'] = idToken;
+        //       print(" $idToken ");
+        //     });
+        //     log('${widget.formData}');
+        //     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-            widget.formData['owner'] = prefs.getString('ownerSignup');
-            widget.formData['category'] = prefs.getString('categorySignup');
+        //     widget.formData['owner'] = prefs.getString('ownerSignup');
+        //     widget.formData['category'] = prefs.getString('categorySignup');
 
-            widget.formData['address'] = prefs.getString('addressSignup');
+        //     widget.formData['address'] = prefs.getString('addressSignup');
 
-            widget.formData['name'] = prefs.getString('nameSignup');
+        //     widget.formData['name'] = prefs.getString('nameSignup');
 
-            widget.formData['latitude'] = prefs.getString('latitudeSignup');
+        //     widget.formData['latitude'] = prefs.getString('latitudeSignup');
 
-            widget.formData['longitude'] = prefs.getString('longitudeSignup');
-            widget.formData['phone'] = prefs.getString('userPhoneSignup');
-            widget.formData['password'] = prefs.getString('userPasswordSignup');
-            widget.formData['cpassword'] =
-                prefs.getString('userCpasswordSignup');
-            widget.formData['email'] = prefs.getString(
-              'userEmailSignup',
-            );
+        //     widget.formData['longitude'] = prefs.getString('longitudeSignup');
+        //     widget.formData['phone'] = prefs.getString('userPhoneSignup');
+        //     widget.formData['password'] = prefs.getString('userPasswordSignup');
+        //     widget.formData['cpassword'] =
+        //         prefs.getString('userCpasswordSignup');
+        //     widget.formData['email'] = prefs.getString(
+        //       'userEmailSignup',
+        //     );
 
-            Scaffold.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Processing Data'),
-              ),
-            );
+        //     Scaffold.of(context).showSnackBar(
+        //       SnackBar(
+        //         content: Text('Processing Data'),
+        //       ),
+        //     );
 
-            // UserRepository user = UserRepository();
-            // Make SignUp API call
+        //     // UserRepository user = UserRepository();
+        //     // Make SignUp API call
 
-            var response;
-            try {
-              response = await SubscriberRepository().signUp(widget.formData);
-              log(response.toString());
-            } catch (e) {
-              Scaffold.of(context)
-                  .showSnackBar(SnackBar(content: Text(e.toString())));
-              log('Error: ' + e.toString());
+        //     var response;
+        //     try {
+        //       response = await SubscriberRepository().signUp(widget.formData);
+        //       log(response.toString());
+        //     } catch (e) {
+        //       Scaffold.of(context)
+        //           .showSnackBar(SnackBar(content: Text(e.toString())));
+        //       log('Error: ' + e.toString());
 
-              return;
-            }
+        //       return;
+        //     }
 
-            print("@# $response#@");
-            print("@# ${response['msg']}#@");
-            if (response['msg'] == 'Registration successful') {
-              log('SignUp SUCCESSFUL');
-              try {
-                // SignIn the user
-                response = await SubscriberRepository().signInFirebaseotp({
-                  'token': widget.formData['token'],
-                });
-                await SubscriberRepository()
-                    .storeSubscriberData(Subscriber.fromJson(response));
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text('Processing Data')));
-                    
-                var responsefcm = await SubscriberRepository().fcmTokenSubmit({
-                  'token': widget.fcmToken,
-                }, response['accessToken']);
-                print("fcm token Api: $responsefcm");
-                print("fcm token  Apiresponse: ${responsefcm['status']}");
-                 prefs.setString('fcmToken', widget.fcmToken);
-                log(response.toString());
-              } catch (e) {
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text(e.toString())));
-                log('Error: ' + e.toString());
-                return;
-              }
+        //     print("@# $response#@");
+        //     print("@# ${response['msg']}#@");
+        //     if (response['msg'] == 'Registration successful') {
+        //       log('SignUp SUCCESSFUL');
+        //       try {
+        //         // SignIn the user
+        //         response = await SubscriberRepository().signInFirebaseotp({
+        //           'token': widget.formData['token'],
+        //         });
+        //         await SubscriberRepository()
+        //             .storeSubscriberData(Subscriber.fromJson(response));
+        //         Scaffold.of(context)
+        //             .showSnackBar(SnackBar(content: Text('Processing Data')));
 
-              if (response['isSubscriber'] != null &&
-                  response['isSubscriber'] == true) {
-                // SignIn success
+        //         var responsefcm = await SubscriberRepository().fcmTokenSubmit({
+        //           'token': widget.fcmToken,
+        //         }, response['accessToken']);
+        //         print("fcm token Api: $responsefcm");
+        //         print("fcm token  Apiresponse: ${responsefcm['status']}");
+        //          prefs.setString('fcmToken', widget.fcmToken);
+        //         log(response.toString());
+        //       } catch (e) {
+        //         Scaffold.of(context)
+        //             .showSnackBar(SnackBar(content: Text(e.toString())));
+        //         log('Error: ' + e.toString());
+        //         return;
+        //       }
 
-                // Store tokens into memory
-                widget.formData.putIfAbsent('id', () => response['id']);
-                widget.formData
-                    .putIfAbsent('accessToken', () => response['accessToken']);
-                widget.formData.putIfAbsent(
-                    'refreshToken', () => response['refreshToken']);
-                await SubscriberRepository().storeSubscriberData(
-                  Subscriber.fromJson(
-                    widget.formData,
-                  ),
-                );
+        //       if (response['isSubscriber'] != null &&
+        //           response['isSubscriber'] == true) {
+        //         // SignIn success
 
-                // Store profile info in local DB
+        //         // Store tokens into memory
+        //         widget.formData.putIfAbsent('id', () => response['id']);
+        //         widget.formData
+        //             .putIfAbsent('accessToken', () => response['accessToken']);
+        //         widget.formData.putIfAbsent(
+        //             'refreshToken', () => response['refreshToken']);
+        //         await SubscriberRepository().storeSubscriberData(
+        //           Subscriber.fromJson(
+        //             widget.formData,
+        //           ),
+        //         );
 
-                // Navigate to QueuesPage
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => QueuesScreen(
-                              subscriberId: response['id'],
-                            )));
-              } else if (response['msg'] == "Invalid Credential" ||
-                  response['error'] != null) {
-                Scaffold.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                  response['msg'] != null
-                      ? response['msg']
-                      : response['error'].toString(),
-                )));
-              } else {
-                Scaffold.of(context).showSnackBar(
-                    SnackBar(content: Text('Some unexpected error occurred')));
-              }
-            } else {
-              Scaffold.of(context).showSnackBar(
-                  SnackBar(content: Text('SignUp failed:${response['msg']}')));
-            }
-          } else {
-            print("Error");
-          }
+        //         // Store profile info in local DB
 
-          //This callback would gets called when verification is done auto maticlly
-        },
+        //         // Navigate to QueuesPage
+        //         Navigator.push(
+        //             context,
+        //             MaterialPageRoute(
+        //                 builder: (context) => QueuesScreen(
+        //                       subscriberId: response['id'],
+        //                     )));
+        //       } else if (response['msg'] == "Invalid Credential" ||
+        //           response['error'] != null) {
+        //         Scaffold.of(context).showSnackBar(SnackBar(
+        //             content: Text(
+        //           response['msg'] != null
+        //               ? response['msg']
+        //               : response['error'].toString(),
+        //         )));
+        //       } else {
+        //         Scaffold.of(context).showSnackBar(
+        //             SnackBar(content: Text('Some unexpected error occurred')));
+        //       }
+        //     } else {
+        //       Scaffold.of(context).showSnackBar(
+        //           SnackBar(content: Text('SignUp failed:${response['msg']}')));
+        //     }
+        //   } else {
+        //     print("Error");
+        //   }
+
+        //   //This callback would gets called when verification is done auto maticlly
+        // },
         verificationFailed: (AuthException exception) {
           print(exception.message);
           Scaffold.of(context).showSnackBar(
@@ -504,8 +561,7 @@ class _SignUpButtonState extends State<SignUpButton> {
         codeSent: (String verificationId, [int forceResendingToken]) {
           authOtp = _auth;
           verificationIdOtp = verificationId;
-           loginPage = "SignUp";
-          Navigator.pushNamed(context, OtpPage.id);
+          loginPage = "SignUp";
         },
         codeAutoRetrievalTimeout: null);
   }
@@ -546,6 +602,40 @@ class _SignUpButtonState extends State<SignUpButton> {
 
               final phone = widget.phoneController.text.trim();
               print("phone number: $phone");
+              showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text("Alert!"),
+                      content: Text(
+                          "You might receive an SMS message for verification and standard rates apply."),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text("Disagree"),
+                          textColor: Colors.white,
+                          color: Theme.of(context).primaryColor,
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SignInScreen(),
+                                ),
+                                (route) => false);
+                          },
+                        ),
+                        FlatButton(
+                          child: Text("Agree"),
+                          textColor: Colors.white,
+                          color: Theme.of(context).primaryColor,
+                          onPressed: () async {
+                            Navigator.of(context).pop();
+                            loginUser(phone, context);
+                          },
+                        ),
+                      ],
+                    );
+                  });
               SharedPreferences prefs = await SharedPreferences.getInstance();
 
               prefs.setString('ownerSignup', widget.formData['owner']);
@@ -561,8 +651,8 @@ class _SignUpButtonState extends State<SignUpButton> {
                   'userCpasswordSignup', widget.formData['cpassword']);
               prefs.setString('userEmailSignup', widget.formData['email']);
               prefs.setString('fcmToken', widget.fcmToken);
-              loginUser(phone, context);
-              // Here there is no chance of invalid credentials because same password is used for signUp and sigIn
+
+              
             }
           },
           child: Center(
