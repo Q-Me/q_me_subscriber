@@ -24,8 +24,8 @@ class ReceptionRepository {
     final response = await _helper.post(
       kCreateReception,
       req: {
-        "starttime": startTime.toUtc().toIso8601String(),
-        "endtime": endTime.toUtc().toIso8601String(),
+        "starttime": startTime.toIso8601String(),
+        "endtime": endTime.toIso8601String(),
         "slot": slotDurationInMinutes.toString(),
         "cust_per_slot": customerPerSlot.toString(),
       },
