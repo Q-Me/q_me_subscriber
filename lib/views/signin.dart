@@ -55,58 +55,58 @@ class _SignInScreenState extends State<SignInScreen>
     _auth.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: Duration(seconds: 60),
-        verificationCompleted: (AuthCredential credential) async {
-          AuthResult result = await _auth.signInWithCredential(credential);
-          print("printing the credential");
-          print(credential);
+        // verificationCompleted: (AuthCredential credential) async {
+        //   AuthResult result = await _auth.signInWithCredential(credential);
+        //   print("printing the credential");
+        //   print(credential);
 
-          FirebaseUser user = result.user;
+        //   FirebaseUser user = result.user;
 
-          if (user != null) {
-            var token = await user.getIdToken().then((result) async {
-              idToken = result.token;
-              print(" $idToken ");
-              FocusScope.of(context)
-                  .requestFocus(FocusNode()); // dismiss the keyboard
-              Scaffold.of(context)
-                  .showSnackBar(SnackBar(content: Text('Processing Data')));
-              var response;
-              try {
-                 SharedPreferences prefs = await SharedPreferences.getInstance();
-                prefs.setString('fcmToken', _fcmToken);
-                response = await SubscriberRepository().signInFirebaseotp({
-                  'token': idToken,
-                });
-                print("@@$response@@");
+        //   if (user != null) {
+        //     var token = await user.getIdToken().then((result) async {
+        //       idToken = result.token;
+        //       print(" $idToken ");
+        //       FocusScope.of(context)
+        //           .requestFocus(FocusNode()); // dismiss the keyboard
+        //       Scaffold.of(context)
+        //           .showSnackBar(SnackBar(content: Text('Processing Data')));
+        //       var response;
+        //       try {
+        //          SharedPreferences prefs = await SharedPreferences.getInstance();
+        //         prefs.setString('fcmToken', _fcmToken);
+        //         response = await SubscriberRepository().signInFirebaseotp({
+        //           'token': idToken,
+        //         });
+        //         print("@@$response@@");
 
-                log('SIGNIN API RESPONSE: ' + response.toString());
+        //         log('SIGNIN API RESPONSE: ' + response.toString());
 
-                await SubscriberRepository()
-                    .storeSubscriberData(Subscriber.fromJson(response));
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text('Processing Data')));
-                var responsefcm = await SubscriberRepository().fcmTokenSubmit({
-                  'token': _fcmToken,
-                }, response['accessToken']);
-              prefs.setString('fcmToken',_fcmToken );
-                print("fcm token Api: $responsefcm");
-                print("fcm token  Apiresponse: ${responsefcm['status']}");
-                Navigator.pushNamed(context, QueuesScreen.id);
-              } catch (e) {
-                print(" !!$e !!");
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text(e.toString())));
-                // _showSnackBar(e.toString());
-                log('Error in signIn API: ' + e.toString());
-                return;
-              }
-            });
-          } else {
-            print("Error");
-          }
+        //         await SubscriberRepository()
+        //             .storeSubscriberData(Subscriber.fromJson(response));
+        //         Scaffold.of(context)
+        //             .showSnackBar(SnackBar(content: Text('Processing Data')));
+        //         var responsefcm = await SubscriberRepository().fcmTokenSubmit({
+        //           'token': _fcmToken,
+        //         }, response['accessToken']);
+        //       prefs.setString('fcmToken',_fcmToken );
+        //         print("fcm token Api: $responsefcm");
+        //         print("fcm token  Apiresponse: ${responsefcm['status']}");
+        //         Navigator.pushNamed(context, QueuesScreen.id);
+        //       } catch (e) {
+        //         print(" !!$e !!");
+        //         Scaffold.of(context)
+        //             .showSnackBar(SnackBar(content: Text(e.toString())));
+        //         // _showSnackBar(e.toString());
+        //         log('Error in signIn API: ' + e.toString());
+        //         return;
+        //       }
+        //     });
+        //   } else {
+        //     print("Error");
+        //   }
 
-          //This callback would gets called when verification is done auto maticlly
-        },
+        //   //This callback would gets called when verification is done auto maticlly
+        // },
         verificationFailed: (AuthException exception) {
           print("here is exception error");
           print(exception.message);
@@ -120,9 +120,9 @@ class _SignInScreenState extends State<SignInScreen>
           verificationIdOtp = verificationId;
           authOtp = _auth;
           loginPage = "SignIn";
-                SharedPreferences prefs = await SharedPreferences.getInstance();
+          SharedPreferences prefs = await SharedPreferences.getInstance();
 
-           prefs.setString('fcmToken',_fcmToken );
+          prefs.setString('fcmToken', _fcmToken);
 
           setState(() {
             showOtpTextfield = true;
@@ -296,55 +296,6 @@ class _SignInScreenState extends State<SignInScreen>
                                                   .size
                                                   .height *
                                               0.02),
-                                      // showOtpTextfield
-                                      //     ? Card(
-                                      //         child: new ListTile(
-                                      //           title: TextFormField(
-                                      //             decoration: InputDecoration(
-                                      //                 enabledBorder: OutlineInputBorder(
-                                      //                     borderRadius:
-                                      //                         BorderRadius.all(
-                                      //                             Radius.circular(
-                                      //                                 8)),
-                                      //                     borderSide: BorderSide(
-                                      //                         color: Colors
-                                      //                             .grey[200])),
-                                      //                 focusedBorder: OutlineInputBorder(
-                                      //                     borderRadius:
-                                      //                         BorderRadius.all(
-                                      //                             Radius.circular(
-                                      //                                 8)),
-                                      //                     borderSide: BorderSide(
-                                      //                         color: Colors
-                                      //                             .grey[300])),
-                                      //                 filled: true,
-                                      //                 fillColor: Colors.grey[100],
-                                      //                 hintText: "Enter OTP"),
-                                      //             controller: _codeController,
-                                      //           ),
-                                      //         ),
-                                      //       )
-                                      //     : Container(),
-                                      // !showOtpTextfield
-                                      //     ? RaisedButton(
-                                      //         color: Theme.of(context)
-                                      //             .primaryColor,
-                                      //         onPressed: () {
-                                      //           final phone = _phoneController
-                                      //               .text
-                                      //               .trim();
-                                      //           print("phone number: $phone");
-                                      //           loginUser(
-                                      //               countryCodeVal + phone,
-                                      //               context);
-                                      //         },
-                                      //         child: const Text(
-                                      //           'GET OTP',
-                                      //           style: const TextStyle(
-                                      //               color: Colors.white),
-                                      //         ),
-                                      //       )
-                                      //     : Container(),
                                       SizedBox(
                                           height: MediaQuery.of(context)
                                                   .size
@@ -357,8 +308,8 @@ class _SignInScreenState extends State<SignInScreen>
                                         child: Material(
                                           borderRadius:
                                               BorderRadius.circular(20.0),
-                                          shadowColor: Colors.greenAccent,
-                                          color: Colors.green,
+                                          shadowColor: Colors.blueAccent,
+                                          color: Theme.of(context).primaryColor,
                                           elevation: 7.0,
                                           child: InkWell(
                                             onTap: () async {
@@ -370,116 +321,67 @@ class _SignInScreenState extends State<SignInScreen>
                                                     .showSnackBar(SnackBar(
                                                         content: Text(
                                                             'Processing Data')));
-                                                             final phone = _phoneController
+                                                final phone = _phoneController
                                                     .text
                                                     .trim();
                                                 print("phone number: $phone");
-                                                loginUser(
-                                                    countryCodeVal + phone,
-                                                    context);
-                                                  Navigator.pushNamed(context, OtpPage.id);
-
-              //                                   final code =
-              //                                       _codeController.text.trim();
-              //                                   try {
-              //                                     AuthCredential credential =
-              //                                         PhoneAuthProvider
-              //                                             .getCredential(
-              //                                                 verificationId:
-              //                                                     verificationIdVar,
-              //                                                 smsCode: code);
-
-              //                                     AuthResult result =
-              //                                         await _authVar
-              //                                             .signInWithCredential(
-              //                                                 credential);
-
-              //                                     FirebaseUser user =
-              //                                         result.user;
-
-              //                                     if (user != null) {
-              //                                       var token = await user
-              //                                           .getIdToken()
-              //                                           .then((result) {
-              //                                         idToken = result.token;
-              //                                         print("@@ $idToken @@");
-              //                                       });
-              //                                     } else {
-              //                                       print("Error");
-              //                                     }
-              //                                   } on PlatformException catch (e) {
-              //                                     print(
-              //                                         "Looking for Error code");
-              //                                     print(e.message);
-              //                                     Scaffold.of(context)
-              //                                         .showSnackBar(SnackBar(
-              //                                             content: Text(e.code
-              //                                                 .toString())));
-              //                                     print(e.code);
-              //                                     setState(() {
-              //                                       showOtpTextfield = false;
-              //                                     });
-              //                                   } on Exception catch (e) {
-              //                                     print(
-              //                                         "Looking for Error message");
-              //                                     Scaffold.of(context)
-              //                                         .showSnackBar(SnackBar(
-              //                                             content: Text(
-              //                                                 e.toString())));
-              //                                     setState(() {
-              //                                       showOtpTextfield = false;
-              //                                     });
-              //                                     print(e);
-              //                                   }
-
-              //                                   // email and password both are available here
-              //                                   var response;
-              //                                   try {
-              //                                     response =
-              //                                         await SubscriberRepository()
-              //                                             .signInFirebaseotp({
-              //                                       'token': idToken,
-              //                                     });
-              //                                     print("@@$response@@");
-
-              //                                     log('SIGNIN API RESPONSE: ' +
-              //                                         response.toString());
-
-              //                                     await SubscriberRepository()
-              //                                         .storeSubscriberData(
-              //                                             Subscriber.fromJson(
-              //                                                 response));
-              //                                     await SubscriberRepository()
-              //                                         .storeSubscriberData(
-              //                                             Subscriber.fromJson(
-              //                                                 response));
-              //                                     Scaffold.of(context)
-              //                                         .showSnackBar(SnackBar(
-              //                                             content: Text(
-              //                                                 'Processing Data')));
-              //                                     var responsefcm =
-              //                                         await SubscriberRepository()
-              //                                             .fcmTokenSubmit({
-              //                                       'token': _fcmToken,
-              //                                     }, response['accessToken']);
-              //                                     print(
-              //                                         "fcm token Api: $responsefcm");
-              //                                     print(
-              //                                         "fcm token  Apiresponse: ${responsefcm['status']}");
-              //                                          SharedPreferences prefs = await SharedPreferences.getInstance();
-              // prefs.setString('fcmToken',_fcmToken );
-              //                                     Navigator.pushNamed(
-              //                                         context, QueuesScreen.id);
-              //                                   } catch (e) {
-              //                                     Scaffold.of(context)
-              //                                         .showSnackBar(SnackBar(
-              //                                             content: Text(
-              //                                                 e.toString())));
-              //                                     // _showSnackBar(e.toString());
-              //                                     log('Error in signIn API: ' +
-              //                                         e.toString());
-              //                                     return;
-              //                                   }
+                                                showDialog(
+                                                    context: context,
+                                                    barrierDismissible: false,
+                                                    builder: (context) {
+                                                      return AlertDialog(
+                                                        title: Text("Alert!"),
+                                                        content: Text(
+                                                            "You might receive an SMS message for verification and standard rates apply."),
+                                                        actions: <Widget>[
+                                                          FlatButton(
+                                                            child: Text(
+                                                                "Disagree"),
+                                                            textColor:
+                                                                Colors.white,
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .primaryColor,
+                                                            onPressed: () {
+                                                              Navigator
+                                                                  .pushAndRemoveUntil(
+                                                                      context,
+                                                                      MaterialPageRoute(
+                                                                        builder:
+                                                                            (context) =>
+                                                                                SignInScreen(),
+                                                                      ),
+                                                                      (route) =>
+                                                                          false);
+                                                            },
+                                                          ),
+                                                          FlatButton(
+                                                            child:
+                                                                Text("Agree"),
+                                                            textColor:
+                                                                Colors.white,
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .primaryColor,
+                                                            onPressed:
+                                                                () async {
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                              loginUser(
+                                                                  countryCodeVal +
+                                                                      phone,
+                                                                  context);
+                                                              Navigator
+                                                                  .pushNamed(
+                                                                      context,
+                                                                      OtpPage
+                                                                          .id);
+                                                            },
+                                                          ),
+                                                        ],
+                                                      );
+                                                    });
                                               }
                                             },
                                             child: Center(
@@ -625,8 +527,8 @@ class _SignInScreenState extends State<SignInScreen>
                                         child: Material(
                                           borderRadius:
                                               BorderRadius.circular(20.0),
-                                          shadowColor: Colors.greenAccent,
-                                          color: Colors.green,
+                                          shadowColor: Colors.blueAccent,
+                                          color: Theme.of(context).primaryColor,
                                           elevation: 7.0,
                                           child: InkWell(
                                             onTap: () async {
@@ -741,21 +643,3 @@ class _SignInScreenState extends State<SignInScreen>
     );
   }
 }
-//
-//class SignInButton extends StatelessWidget {
-//  const SignInButton({
-//    Key key,
-//    @required this.formKey,
-//    @required this.email,
-//    @required this.password,
-//  }) : super(key: key);
-//
-//  final GlobalKey<FormState> formKey;
-//  final String email;
-//  final String password;
-//
-//  @override
-//  Widget build(BuildContext context) {
-//    return ;
-//  }
-//}

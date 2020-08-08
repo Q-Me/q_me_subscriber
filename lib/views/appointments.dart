@@ -18,74 +18,9 @@ DateTime sDate = eDate.subtract(Duration(days: 7));
 var data = [{}, {}];
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
-  DateTime _selectedDate = DateTime.now();
-  List<DateTime> selectedMonthsDays;
-  Iterable<DateTime> selectedWeeksDays;
-  String displayMonth;
 
-  DateTime _selectedDate1 = cur.subtract(
-    Duration(days: 30),
-  );
-  String displayMonth1 = "Jan";
-  DateTime _selectedDate2 = DateTime.now();
-  String displayMonth2 = "Jan";
-
-  void _launchStartDate() async {
-    display = false;
-    _selectedDate = _selectedDate1;
-    displayMonth1 = await selectDateFromPicker();
-    setState(() {
-      _selectedDate1 = _selectedDate;
-    });
-  }
-
-  void _launchEndDate() async {
-    display = true;
-    _selectedDate = _selectedDate2;
-    displayMonth2 = await selectDateFromPicker();
-    setState(() {
-      _selectedDate2 = _selectedDate;
-    });
-  }
-
-  Future<String> selectDateFromPicker() async {
-    DateTime _date = DateTime.now();
-    DateTime d = DateTime(1960);
-    if (display) {
-      d = DateTime(
-        _selectedDate1.year,
-        _selectedDate1.month,
-        _selectedDate1.day,
-        00,
-      );
-    } else
-      _date = DateTime(
-        _selectedDate2.year,
-        _selectedDate2.month,
-        _selectedDate2.day,
-        23,
-      );
-
-    DateTime selected = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: d,
-      lastDate: _date,
-    );
-
-    if (selected != null) {
-      _selectedDate = selected;
-      displayMonth = Utils.formatMonth(selected);
-    }
-    return displayMonth;
-  }
 
   Future<void> getData() async {
-    sDate = _selectedDate1;
-    eDate = DateTime(_selectedDate2.year, _selectedDate2.month,
-        _selectedDate2.day, 23, 59, 59);
-    print("Starting date: $sDate");
-    print("End date: $eDate");
     // data = await apicall
   }
 
@@ -99,7 +34,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           leading: GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Icon(Icons.arrow_back_ios)),
-          title: Text("Appointments"),
+          title: Text("Slots"),
         ),
         body: FutureBuilder(
           future: getData(),
@@ -193,15 +128,12 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      '${_selectedDate1.day} ${DateFormat.MMM().format(_selectedDate1)} ${_selectedDate1.year}',
+                      '08 Aug 2020',
                       style: TextStyle(
                         fontSize: cWidth * 0.043,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onTap: () {
-                      _launchStartDate();
-                    },
                   ),
                 ),
               ),
@@ -225,15 +157,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      '${_selectedDate2.day} ${DateFormat.MMM().format(_selectedDate2)} ${_selectedDate2.year}',
+                      '08 Aug 2020',
                       style: TextStyle(
                         fontSize: cWidth * 0.043,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onTap: () {
-                      _launchEndDate();
-                    },
+                    onTap:null,
                   ),
                 ),
               ),
@@ -267,7 +197,7 @@ Widget listElement(
 ) {
   var cHeight = MediaQuery.of(context).size.height;
   var cWidth = MediaQuery.of(context).size.width;
-
+final item = data[index].toString();
   return Padding(
     padding: EdgeInsets.symmetric(
       horizontal: cWidth * 0.04,
@@ -275,7 +205,25 @@ Widget listElement(
     ),
     child: InkWell(
       onTap: null,
-      child: Card(
+      child: Dismissible(
+              // Each Dismissible must contain a Key. Keys allow Flutter to
+              // uniquely identify widgets.
+              key: Key(item),
+              // Provide a function that tells the app
+              // what to do after an item has been swiped away.
+              onDismissed: (tap) {
+                // Remove the item from the data source.
+                //setState(() {
+                  data.removeAt(index);
+                //});
+
+                // Then show a snackbar.
+                Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text("$item dismissed")));
+              },
+              // Show a red background as the item is swiped away.
+              background: Container(color: Colors.red),
+              child: Card(
         child: Padding(
           padding: EdgeInsets.symmetric(
             vertical: cHeight * 0.005,
@@ -291,7 +239,7 @@ Widget listElement(
                   leading: Container(
                     child: CircleAvatar(
                       child: Icon(
-                        Icons.border_color,
+                        Icons.account_circle,
                       ),
                     ),
                     width: 32.0,
@@ -325,6 +273,8 @@ Widget listElement(
           ),
         ),
       ),
+            )
+      
     ),
   );
 }
