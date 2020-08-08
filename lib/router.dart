@@ -88,19 +88,13 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
 
     case SlotView.id:
-//      final Reception reception = settings.arguments as Reception;
-      final now = DateTime.now();
-      final Duration duration = Duration(minutes: 30);
-      final Reception reception = Reception(
-        receptionId: 'RID',
-        startTime: now,
-        endTime: now.add(Duration(minutes: duration.inMinutes * 6)),
-        customersInSlot: 3,
-        slotDuration: duration,
-      );
+      final List args = settings.arguments as List;
 
       return MaterialPageRoute(
-        builder: (context) => SlotView(reception),
+        builder: (context) => SlotView(
+          reception: args[0],
+          slot: args[1],
+        ),
         settings: RouteSettings(name: SlotView.id),
       );
       break;

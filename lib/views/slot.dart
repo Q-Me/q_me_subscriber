@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:qme_subscriber/model/reception.dart';
+import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/appointment.dart';
 
 class SlotView extends StatefulWidget {
   static const String id = '/slot';
   final Reception reception;
+  final Slot slot;
 
-  SlotView(this.reception);
+  SlotView({this.reception, this.slot}) {
+    logger.d('Reception:${reception.toJson()}\nSlot:\n${slot.toJson()}');
+  }
 
   @override
   _SlotViewState createState() => _SlotViewState();
@@ -24,6 +29,7 @@ var data = [{}, {}];
 
 class _SlotViewState extends State<SlotView> {
   Reception get reception => widget.reception;
+  Slot get slot => widget.slot;
 
   Future<void> getData() async {
     // data = await apicall

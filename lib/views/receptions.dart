@@ -37,7 +37,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
   }
 
   addedReception() {
-    /*When coming back from Create Reception page*/
+    /*TODO When coming back from Create Reception page*/
   }
 
   @override
@@ -47,81 +47,103 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
     super.initState();
   }
 
+  Future<bool> _onBackPressed() {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Do you really want to exit the app?'),
+        actions: [
+          FlatButton(
+            child: Text('No'),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          FlatButton(
+            child: Text('Yes'),
+            onPressed: () => Navigator.pop(context, true),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ChangeNotifierProvider.value(
-        value: receptionsBloc,
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text('Your Receptions'),
-            automaticallyImplyLeading: false,
-          ),
-          floatingActionButton: FloatingActionButton(
-            elevation: 0,
-            heroTag: "Create Reception",
-            onPressed: () {
-              logger.d('Create reception route on date $selectedDate');
-              Navigator.pushReplacementNamed(
-                context,
-                CreateReceptionScreen.id,
-                arguments: selectedDate,
-              );
-            },
-            tooltip: 'Create Reception',
-            child: Icon(Icons.event),
-          ),
-          body: Column(
-            children: <Widget>[
-              /*Container(
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.fromLTRB(10, 30, 10, 20),
-                child: Icon(
-                  Icons.menu,
-                  size: 30,
+    return WillPopScope(
+      onWillPop: _onBackPressed,
+      child: SafeArea(
+        child: ChangeNotifierProvider.value(
+          value: receptionsBloc,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text('Your Receptions'),
+              automaticallyImplyLeading: false,
+            ),
+            floatingActionButton: FloatingActionButton(
+              elevation: 0,
+              heroTag: "Create Reception",
+              onPressed: () {
+                logger.d('Create reception route on date $selectedDate');
+                Navigator.pushReplacementNamed(
+                  context,
+                  CreateReceptionScreen.id,
+                  arguments: selectedDate,
+                );
+              },
+              tooltip: 'Create Reception',
+              child: Icon(Icons.event),
+            ),
+            body: Column(
+              children: <Widget>[
+                /*Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.fromLTRB(10, 30, 10, 20),
+                  child: Icon(
+                    Icons.menu,
+                    size: 30,
+                  ),
+                ),*/
+                CalendarStrip(
+                  startDate: startDate,
+                  endDate: endDate,
+                  onDateSelected: onSelect,
+                  dateTileBuilder: dateTileBuilder,
+                  iconColor: Colors.black87,
+                  monthNameWidget: monthNameWidget,
+                  markedDates: markedDates,
+                  containerDecoration: BoxDecoration(color: Colors.black12),
                 ),
-              ),*/
-              CalendarStrip(
-                startDate: startDate,
-                endDate: endDate,
-                onDateSelected: onSelect,
-                dateTileBuilder: dateTileBuilder,
-                iconColor: Colors.black87,
-                monthNameWidget: monthNameWidget,
-                markedDates: markedDates,
-                containerDecoration: BoxDecoration(color: Colors.black12),
-              ),
-              Expanded(
-                child: StreamBuilder<ApiResponse<List<Reception>>>(
-                    stream: receptionsBloc.receptionsStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        switch (snapshot.data.status) {
-                          case Status.COMPLETED:
-                            if (snapshot.data.data.length == 0) {
-                              return Center(
-                                child: Text(
-                                    'No reception found on ${getDate(Provider.of<ReceptionsBloc>(context).selectedDate).toString()}'),
-                              );
-                            }
-                            return ReceptionsListView(
-                                receptions: snapshot.data.data);
-                            break;
-                          case Status.LOADING:
-                            return Loading(
-                                loadingMessage: snapshot.data.message);
-                            break;
-                          case Status.ERROR:
-                            return Error(errorMessage: snapshot.data.message);
-                            break;
+                Expanded(
+                  child: StreamBuilder<ApiResponse<List<Reception>>>(
+                      stream: receptionsBloc.receptionsStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          switch (snapshot.data.status) {
+                            case Status.COMPLETED:
+                              if (snapshot.data.data.length == 0) {
+                                return Center(
+                                  child: Text(
+                                      'No reception found on ${getDate(Provider.of<ReceptionsBloc>(context).selectedDate).toString()}'),
+                                );
+                              }
+                              return ReceptionsListView(
+                                  receptions: snapshot.data.data);
+                              break;
+                            case Status.LOADING:
+                              return Loading(
+                                  loadingMessage: snapshot.data.message);
+                              break;
+                            case Status.ERROR:
+                              return Error(errorMessage: snapshot.data.message);
+                              break;
+                          }
+                        } else {
+                          return Text('No data');
                         }
-                      } else {
-                        return Text('No data');
-                      }
-                      return Container();
-                    }),
-              ),
-            ],
+                        return Container();
+                      }),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -185,7 +207,7 @@ class ReceptionAppointmentListView extends StatelessWidget {
                     onTap: () => Navigator.pushNamed(
                           context,
                           SlotView.id,
-                          arguments: reception,
+                          arguments: [reception, slot],
                         ),
                     child: SlotTiming()),
                 Expanded(
@@ -264,7 +286,10 @@ class BookedSeat extends StatelessWidget {
       onTap: () => Navigator.pushNamed(
         context,
         SlotView.id,
-        arguments: Provider.of<Reception>(context),
+        arguments: [
+          Provider.of<Reception>(context, listen: false),
+          Provider.of<Slot>(context, listen: false)
+        ],
       ),
       child: Container(
         height: 50,
