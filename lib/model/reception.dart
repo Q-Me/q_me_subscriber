@@ -17,10 +17,10 @@ class Reception with ChangeNotifier {
   Reception({
     this.receptionId,
     this.subscriberId,
-    @required this.startTime,
-    @required this.endTime,
-    @required this.slotDuration,
-    @required this.customersInSlot,
+    this.startTime,
+    this.endTime,
+    this.slotDuration,
+    this.customersInSlot,
     this.status,
   }) {
     this.addSlotList(createSlotsFromDuration(this));
@@ -28,10 +28,10 @@ class Reception with ChangeNotifier {
 
   final String receptionId;
   final String subscriberId;
-  final DateTime startTime;
-  final DateTime endTime;
-  final Duration slotDuration;
-  final int customersInSlot;
+  DateTime startTime;
+  DateTime endTime;
+  Duration slotDuration;
+  int customersInSlot;
   final String status;
   SplayTreeSet<Slot> _slots =
       SplayTreeSet<Slot>(Comparing.on((slot) => slot.startTime));
@@ -42,14 +42,19 @@ class Reception with ChangeNotifier {
 
   addSlotList(List<Slot> slots) => _slots.addAll(slots);
 
+  replaceSlots(List<Slot> slots) {
+    _slots.clear();
+    _slots.addAll(slots);
+  }
+
   modifyBookings() {}
 
   factory Reception.fromJson(Map<String, dynamic> json, {bool local = false}) =>
       Reception(
         receptionId: json["id"],
         subscriberId: json["subscriber_id"],
-        startTime: DateTime.parse(json["starttime"]).toLocal(),
-        endTime: DateTime.parse(json["endtime"]).toLocal(),
+        startTime: DateTime.parse(json["starttime"]),
+        endTime: DateTime.parse(json["endtime"]),
         slotDuration: Duration(minutes: json["slot"]),
         customersInSlot: json["cust_per_slot"],
         status: json["status"],
