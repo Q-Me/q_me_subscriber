@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
+import 'package:qme_subscriber/views/receptions.dart';
 
 import '../constants.dart';
 import '../utilities/time.dart';
@@ -57,7 +58,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
   Future<DateTime> _selectTime(DateTime oldDateTime) async {
     DateTime newDateTime = oldDateTime;
     TimeOfDay picked = await showTimePicker(
-      initialTime: TimeOfDay.now(),
+      initialTime: TimeOfDay.fromDateTime(oldDateTime),
       context: context,
       builder: (BuildContext context, Widget child) {
         return MediaQuery(
@@ -83,7 +84,6 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
           );
         }
       });
-//      logger.d('TIME PICKED\n${picked.toString()}\nDate Selected: ${newDateTime.toString()}');
       return newDateTime;
     } else {
       return oldDateTime;
@@ -101,239 +101,253 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        //  title: Text('Create Queue'),
-        leading: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Icon(Icons.arrow_back_ios)),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
-          child: Column(
-            children: <Widget>[
-              ThemedText(words: ['Create', 'Reception'], fontSize: 50),
-              SizedBox(height: 20),
-              Form(
-                key: formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text('Start', style: kBigTextStyle.copyWith(fontSize: 26)),
-                    Row(
-                      children: <Widget>[
-                        Flexible(
-                          child: InkWell(
-                            onTap: () async {
-                              DateTime picked =
-                                  await _selectDate(_startDateTime);
-                              setState(() {
-//                                logger.d('Date set state called');
-                                _startDateTime = picked;
-                                _endDateTime = picked;
-                                formData['startDateTime'] = _startDateTime;
-                              });
-                            },
-                            child: IgnorePointer(
-                              child: TextFormField(
-                                controller: TextEditingController()
-                                  ..text = _startDateTime != null
-                                      ? getDate(_startDateTime)
-                                      : null,
-                                decoration:
-                                    InputDecoration(hintText: 'DD-MM-YYYY'),
-                                validator: (value) => value.isEmpty
-                                    ? 'Date cannot be left empty'
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 20),
-                        Flexible(
-                          child: InkWell(
-                            onTap: () async {
-                              DateTime temp = await _selectTime(_startDateTime);
-                              if (temp != null) {
-                                setState(() {
-                                  logger.d('Time Set state called');
-                                  _startDateTime = temp;
-                                  formData['startDateTime'] = _startDateTime;
-                                });
-                              } else {
-                                logger.d('no time selected');
-                              }
-                            },
-                            child: IgnorePointer(
-                              child: TextFormField(
-                                controller: TextEditingController()
-                                  ..text = _startDateTime != null
-                                      ? getTime(_startDateTime)
-                                      : null,
-                                decoration: InputDecoration(hintText: 'hh:mm'),
-                                validator: (value) => value.isEmpty
-                                    ? 'Time cannot me left empty '
-                                    : null,
-                                onSaved: (String val) {},
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 15),
-                    Text('End', style: kBigTextStyle.copyWith(fontSize: 26)),
-                    Row(
-                      children: <Widget>[
-                        Flexible(
-                          child: InkWell(
-                            onTap: () async {
-                              DateTime picked = await _selectDate(_endDateTime);
-                              setState(() {
-                                logger.d('Date set state called');
-                                _endDateTime = picked;
-                                formData['endtime'] = _endDateTime;
-                              });
-                            },
-                            child: IgnorePointer(
-                              child: TextFormField(
-                                controller: TextEditingController()
-                                  ..text = _endDateTime != null
-                                      ? getDate(_endDateTime)
-                                      : null,
-                                decoration:
-                                    InputDecoration(hintText: 'DD-MM-YYYY'),
-                                validator: (value) => value.isEmpty
-                                    ? 'Date cannot be left empty'
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 20),
-                        Flexible(
-                          child: InkWell(
-                            onTap: () async {
-                              DateTime temp = await _selectTime(_endDateTime);
-                              if (temp != null) {
-                                setState(() {
-                                  logger.d('Time Set state called');
-                                  _endDateTime = temp;
-                                  formData['endtime'] = _endDateTime;
-                                });
-                              } else {
-                                logger.d('no time selected');
-                              }
-                            },
-                            child: IgnorePointer(
-                              child: TextFormField(
-                                controller: TextEditingController()
-                                  ..text = _endDateTime != null
-                                      ? getTime(_endDateTime)
-                                      : null,
-                                decoration: InputDecoration(hintText: 'hh:mm'),
-                                validator: (value) => value.isEmpty
-                                    ? 'Time cannot me left empty '
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 18),
-                    /*GestureDetector(
-                      onTap: () {
-                        // TODO Show following list of radio buttons in alert box
-                        */ /*
-                        Does not repeat
-                        Every day
-                        Every week
-                        Custom...
-                        */ /*
-                        */ /*on custom selection show a new screen of schedule*/ /*
-                      },
-                      child: Row(
+    return WillPopScope(
+      onWillPop: () => Navigator.pushNamed(context, ReceptionsScreen.id),
+      child: Scaffold(
+        appBar: AppBar(
+          //  title: Text('Create Queue'),
+          leading: GestureDetector(
+              onTap: () =>
+                  Navigator.pushReplacementNamed(context, ReceptionsScreen.id),
+              child: Icon(Icons.arrow_back_ios)),
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18.0),
+            child: Column(
+              children: <Widget>[
+                ThemedText(words: ['Create', 'Reception'], fontSize: 50),
+                SizedBox(height: 20),
+                Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text('Start',
+                          style: kBigTextStyle.copyWith(fontSize: 26)),
+                      Row(
                         children: <Widget>[
-//                        SizedBox(width: 7),
-                          Icon(
-                            Icons.refresh,
-                            size: 25,
-                            color: Colors.black45,
+                          Flexible(
+                            child: InkWell(
+                              onTap: () async {
+                                DateTime picked =
+                                    await _selectDate(_startDateTime);
+                                setState(() {
+//                                logger.d('Date set state called');
+                                  _startDateTime = picked;
+                                  _endDateTime = picked;
+                                  formData['starttime'] = _startDateTime;
+                                });
+                              },
+                              child: IgnorePointer(
+                                child: TextFormField(
+                                  controller: TextEditingController()
+                                    ..text = _startDateTime != null
+                                        ? getDate(_startDateTime)
+                                        : null,
+                                  decoration:
+                                      InputDecoration(hintText: 'DD-MM-YYYY'),
+                                  validator: (value) => value.isEmpty
+                                      ? 'Date cannot be left empty'
+                                      : null,
+                                ),
+                              ),
+                            ),
                           ),
-                          SizedBox(width: 10),
-                          Text(
-                            'Does not repeat',
-                            style:
-                                TextStyle(fontSize: 18, color: Colors.black45),
+                          SizedBox(width: 20),
+                          Flexible(
+                            child: InkWell(
+                              onTap: () async {
+                                DateTime temp =
+                                    await _selectTime(_startDateTime);
+                                if (temp != null) {
+                                  setState(() {
+                                    _startDateTime = temp;
+                                    formData['starttime'] = _startDateTime;
+                                    logger.d(
+                                        'Time Set state called $_startDateTime');
+                                  });
+                                } else {
+                                  logger.d('no time selected');
+                                }
+                              },
+                              child: IgnorePointer(
+                                child: TextFormField(
+                                  controller: TextEditingController()
+                                    ..text = _startDateTime != null
+                                        ? getTime(_startDateTime)
+                                        : null,
+                                  decoration:
+                                      InputDecoration(hintText: 'hh:mm'),
+                                  validator: (value) => value.isEmpty
+                                      ? 'Time cannot me left empty '
+                                      : null,
+                                  onSaved: (String val) {},
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),*/
-                    SizedBox(height: 5),
-                    // TODO Drop down of slot durations for 5 min, 10 min, 15, min, 20 min, 30 min,1 hr
-                    TextFormField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Time per slot (in minutes)',
-                        hintStyle: TextStyle(color: Colors.redAccent),
-                        hoverColor: Colors.green,
+                      SizedBox(height: 15),
+                      Text('End', style: kBigTextStyle.copyWith(fontSize: 26)),
+                      Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: InkWell(
+                              onTap: () async {
+                                DateTime picked =
+                                    await _selectDate(_endDateTime);
+                                setState(() {
+                                  logger.d('Date set state called');
+                                  _endDateTime = picked;
+                                  formData['endtime'] = _endDateTime;
+                                });
+                              },
+                              child: IgnorePointer(
+                                child: TextFormField(
+                                  controller: TextEditingController()
+                                    ..text = _endDateTime != null
+                                        ? getDate(_endDateTime)
+                                        : null,
+                                  decoration:
+                                      InputDecoration(hintText: 'DD-MM-YYYY'),
+                                  validator: (value) => value.isEmpty
+                                      ? 'Date cannot be left empty'
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 20),
+                          Flexible(
+                            child: InkWell(
+                              onTap: () async {
+                                DateTime temp = await _selectTime(_endDateTime);
+                                if (temp != null) {
+                                  setState(() {
+                                    _endDateTime = temp;
+                                    formData['endtime'] = _endDateTime;
+                                    logger.d(
+                                        'Time Set state called $_endDateTime');
+                                  });
+                                } else {
+                                  logger.d('no time selected');
+                                }
+                              },
+                              child: IgnorePointer(
+                                child: TextFormField(
+                                  controller: TextEditingController()
+                                    ..text = _endDateTime != null
+                                        ? getTime(_endDateTime)
+                                        : null,
+                                  decoration:
+                                      InputDecoration(hintText: 'hh:mm'),
+                                  validator: (value) => value.isEmpty
+                                      ? 'Time cannot me left empty '
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      onSaved: (value) {
-                        logger.d(value);
-                      },
-                      validator: (value) {
-                        if (value.isEmpty)
-                          return 'This field cannot be left empty';
-                        else {
-                          try {
-                            formData['slot'] = int.parse(value);
-                            return null;
-                          } on FormatException catch (e) {
-                            logger.d(e.toString());
-                            return 'Please enter an integer value';
-                          } catch (e) {
-                            logger.e(e.toString());
+                      SizedBox(height: 18),
+                      /*GestureDetector(
+                        onTap: () {
+                          // TODO Show following list of radio buttons in alert box
+                          */ /*
+                          Does not repeat
+                          Every day
+                          Every week
+                          Custom...
+                          */ /*
+                          */ /*on custom selection show a new screen of schedule*/ /*
+                        },
+                        child: Row(
+                          children: <Widget>[
+//                        SizedBox(width: 7),
+                            Icon(
+                              Icons.refresh,
+                              size: 25,
+                              color: Colors.black45,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              'Does not repeat',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.black45),
+                            ),
+                          ],
+                        ),
+                      ),*/
+                      SizedBox(height: 5),
+                      // TODO Drop down of slot durations for 5 min, 10 min, 15, min, 20 min, 30 min,1 hr
+                      TextFormField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Time per slot (in minutes)',
+                          hintStyle: TextStyle(color: Colors.redAccent),
+                          hoverColor: Colors.green,
+                        ),
+                        onSaved: (value) {
+                          logger.d(value);
+                        },
+                        validator: (value) {
+                          if (value.isEmpty)
+                            return 'This field cannot be left empty';
+                          else {
+                            try {
+                              formData['slot'] = int.parse(value);
+                              return null;
+                            } on FormatException catch (e) {
+                              logger.d(e.toString());
+                              return 'Please enter an integer value';
+                            } catch (e) {
+                              logger.e(e.toString());
 
-                            return e.toString();
+                              return e.toString();
+                            }
                           }
-                        }
-                      },
-                    ),
-                    SizedBox(height: 15),
-                    TextFormField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Customers served in 1 slot',
-                        hintStyle: TextStyle(color: Colors.redAccent),
-                        hoverColor: Colors.green,
+                        },
                       ),
-                      validator: (value) {
-                        if (value.isEmpty)
-                          return 'This field cannot be left empty';
-                        else {
-                          try {
-                            formData['cust_per_slot'] = int.parse(value);
-                            return null;
-                          } on FormatException catch (e) {
-                            logger.d(e.toString());
-                            return 'Please enter an integer value';
-                          } catch (e) {
-                            logger.e(e.toString());
-                            return e.toString();
+                      SizedBox(height: 15),
+                      TextFormField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Customers served in 1 slot',
+                          hintStyle: TextStyle(color: Colors.redAccent),
+                          hoverColor: Colors.green,
+                        ),
+                        validator: (value) {
+                          if (value.isEmpty)
+                            return 'This field cannot be left empty';
+                          else {
+                            try {
+                              formData['cust_per_slot'] = int.parse(value);
+                              return null;
+                            } on FormatException catch (e) {
+                              logger.d(e.toString());
+                              return 'Please enter an integer value';
+                            } catch (e) {
+                              logger.e(e.toString());
+                              return e.toString();
+                            }
                           }
-                        }
-                      },
-                    ),
-                  ],
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 20),
-              Provider.value(
-                  value: formData,
-                  child: CreateReceptionButton(formKey: formKey)),
-            ],
+                SizedBox(height: 20),
+                Provider.value(
+                    value: formData,
+                    child: Builder(
+                        builder: (context) =>
+                            CreateReceptionButton(formKey: formKey))),
+              ],
+            ),
           ),
         ),
       ),
@@ -386,15 +400,20 @@ class CreateReceptionButton extends StatelessWidget {
                 msgToShow = e.toString();
                 return;
               }
+
               Scaffold.of(context).showSnackBar(
                 SnackBar(
                   content: Text(msgToShow),
                   duration: Duration(seconds: 5),
                 ),
               );
+              logger.d('Timer start');
+              await Future.delayed(Duration(seconds: 3));
+              logger.d('Timer end');
+
               // TODO add the reception to the list of all receptions in the receptions bloc
               if (msgToShow == 'Counter Created Successfully') {
-                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
               }
               return;
             }
