@@ -4,6 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:qme_subscriber/bloc/booking_bloc.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
+<<<<<<< Updated upstream
+=======
+import 'package:qme_subscriber/model/appointment.dart';
+>>>>>>> Stashed changes
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/appointment.dart';
@@ -34,16 +38,120 @@ var data = [{}, {}];
 class _SlotViewState extends State<SlotView> {
   Reception get reception => widget.reception;
   Slot get slot => widget.slot;
+  ReceptionRepository repository = ReceptionRepository();
+  Widget listElement(
+    BuildContext context,
+    int index,
+    dynamic data,
+  ) {
+    var cHeight = MediaQuery.of(context).size.height;
+    var cWidth = MediaQuery.of(context).size.width;
+    final item = data[index].toString();
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: cWidth * 0.04,
+        vertical: cHeight * 0.005,
+      ),
+      child: InkWell(
+          onTap: () async {
+            List<Appointment> response;
+            try {
+              response = await ReceptionRepository().viewBookingsDetailed(
+                  counterId: reception.receptionId,
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                  status: ["UPCOMING"]);
+              logger.d("call booking detailed api success");
+              Navigator.pushNamed(context, AppointmentView.id,
+                  arguments: {widget.reception, response[index]});
+            } catch (e) {
+              logger.e(e);
+              Scaffold.of(context).showSnackBar(SnackBar(
+                content: Text("An error occured."),
+              ));
+            }
+          },
+          child: Dismissible(
+            // Each Dismissible must contain a Key. Keys allow Flutter to
+            // uniquely identify widgets.
+            key: Key(item),
+            // Provide a function that tells the app
+            // what to do after an item has been swiped away.
+            onDismissed: (tap) {
+              // Remove the item from the data source.
+              //setState(() {
+//            data.removeAt(index);
+              //});
+
+              // Then show a snackbar.
+              Scaffold.of(context)
+                  .showSnackBar(SnackBar(content: Text("$item dismissed")));
+            },
+            // Show a red background as the item is swiped away.
+            background: Container(color: Colors.red),
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: cHeight * 0.005,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    Expanded(
+                      child: ListTile(
+                        trailing: Text(
+                          "Booked",
+                        ),
+                        leading: Container(
+                          child: CircleAvatar(
+                            child: Icon(
+                              Icons.account_circle,
+                            ),
+                          ),
+                          width: 32.0,
+                          height: 32.0,
+                          padding: EdgeInsets.all(2), // borde width
+                          decoration: BoxDecoration(
+                            // color: color, // border color
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        title: Text(
+                          "Person" + " " + "Name",
+                        ),
+                        subtitle: Text(
+                          "Phone",
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.all(3),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )),
+    );
+  }
 
   Future<void> getData() async {
     // data = await apicall
   }
-
   @override
   Widget build(BuildContext context) {
     print(cur);
 
     return SafeArea(
+<<<<<<< Updated upstream
       child: Scaffold(
         appBar: AppBar(
           leading: GestureDetector(
@@ -78,8 +186,58 @@ class _SlotViewState extends State<SlotView> {
             },
           ),
         ),
+=======
+        child: Scaffold(
+      appBar: AppBar(
+        leading: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Icon(Icons.arrow_back_ios)),
+        title: Text("Slots"),
+>>>>>>> Stashed changes
       ),
-    );
+      body: BlocProvider(
+          create: (context) => BookingBloc(repository),
+          child: BlocConsumer<BookingBloc, BookingState>(
+            builder: (context, state) {
+              if (state is BookingLoading) {
+                return Center(child: CircularProgressIndicator());
+              } else if (state is BookingInitial) {
+                BlocProvider.of<BookingBloc>(context).add(BookingListRequested(
+                    reception.receptionId,
+                    slot.startTime,
+                    slot.endTime,
+                    ["UPCOMING"],
+                    (slot.endTime.difference(slot.startTime)).inMinutes));
+                return Center(
+                  child: Text("Please wait....Fetching Appointments"),
+                );
+              } else if (state is BookingLoadSuccesful) {
+                return _transBuildList(context, state.response);
+              } else if (state is BookingLoadFailure) {
+                return Center(
+                    child: Column(
+                  children: <Widget>[
+                    Text("Error loading data...Please try again"),
+                    RaisedButton(
+                      onPressed: () {
+                        BlocProvider.of<BookingBloc>(context).add(
+                            BookingListRequested(
+                                reception.receptionId,
+                                slot.startTime,
+                                slot.endTime,
+                                ["UPCOMING"],
+                                (slot.endTime.difference(slot.startTime))
+                                    .inMinutes));
+                      },
+                      child: Text("Retry"),
+                    )
+                  ],
+                ));
+              }
+            },
+            listener: (context, state) {},
+          )),
+    ));
   }
 
   Widget _transBuildList(
@@ -206,94 +364,4 @@ class TimeCard extends StatelessWidget {
       ),
     );
   }
-}
-
-Widget listElement(
-  BuildContext context,
-  int index,
-  dynamic data,
-) {
-  var cHeight = MediaQuery.of(context).size.height;
-  var cWidth = MediaQuery.of(context).size.width;
-  final item = data[index].toString();
-  return Padding(
-    padding: EdgeInsets.symmetric(
-      horizontal: cWidth * 0.04,
-      vertical: cHeight * 0.005,
-    ),
-    child: InkWell(
-        onTap: () {
-          Navigator.pushNamed(context, AppointmentView.id,
-              arguments: {"reception": null});
-        },
-        child: Dismissible(
-          // Each Dismissible must contain a Key. Keys allow Flutter to
-          // uniquely identify widgets.
-          key: Key(item),
-          // Provide a function that tells the app
-          // what to do after an item has been swiped away.
-          onDismissed: (tap) {
-            // Remove the item from the data source.
-            //setState(() {
-//            data.removeAt(index);
-            //});
-
-            // Then show a snackbar.
-            Scaffold.of(context)
-                .showSnackBar(SnackBar(content: Text("$item dismissed")));
-          },
-          // Show a red background as the item is swiped away.
-          background: Container(color: Colors.red),
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: cHeight * 0.005,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Expanded(
-                    child: ListTile(
-                      trailing: Text(
-                        "Booked",
-                      ),
-                      leading: Container(
-                        child: CircleAvatar(
-                          child: Icon(
-                            Icons.account_circle,
-                          ),
-                        ),
-                        width: 32.0,
-                        height: 32.0,
-                        padding: EdgeInsets.all(2), // borde width
-                        decoration: BoxDecoration(
-                          // color: color, // border color
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      title: Text(
-                        "Person" + " " + "Name",
-                      ),
-                      subtitle: Text(
-                        "Phone",
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.all(3),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        )),
-  );
 }

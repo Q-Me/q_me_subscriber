@@ -105,7 +105,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       final Appointment appointment = args[1];
 
       return MaterialPageRoute(
-        builder: (context) => AppointmentView(reception: reception),
+        builder: (context) => AppointmentView(reception: reception, appointment: appointment),
         settings: RouteSettings(name: AppointmentView.id),
       );
 

@@ -124,15 +124,18 @@ class ReceptionRepository {
     @required DateTime endTime,
     @required List<String> status,
     @required int slotDurationInMinutes,
-    @required String accessToken,
+    String accessToken,
   }) async {
+    accessToken = accessToken != null
+        ? accessToken
+        : await SubscriberRepository().getAccessTokenFromStorage();
     final response = await _helper.post(
       '/subscriber/slot/bookings',
       req: {
         "counter_id": counterId,
         "starttime": startTime.toIso8601String(),
         "endtime": endTime.toIso8601String(),
-        "override": status,
+        "status": status,
       },
       headers: {'Authorization': 'Bearer $accessToken'},
     );
@@ -161,15 +164,16 @@ class ReceptionRepository {
     @required DateTime startTime,
     @required DateTime endTime,
     @required List<String> status,
-    @required String accessToken,
+    String accessToken,
   }) async {
+    accessToken = await SubscriberRepository().getAccessTokenFromStorage();
     final response = await _helper.post(
       kSlotBookingsDetailed,
       req: {
         "counter_id": counterId,
         "starttime": startTime.toIso8601String(),
         "endtime": endTime.toIso8601String(),
-        "override": status,
+        "status": status,
       },
       headers: {'Authorization': 'Bearer $accessToken'},
     );

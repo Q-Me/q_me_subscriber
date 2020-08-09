@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/reception.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 
 part 'booking_event.dart';
@@ -34,8 +35,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
           startTime: event.startTime,
           endTime: event.endTime,
           status: event.status,
-          slotDurationInMinutes: event.slotDurationInMinutes,
-          accessToken: event.accessToken);
+          slotDurationInMinutes: event.slotDurationInMinutes);
       logger.i(response);
       yield BookingLoadSuccesful(response);
       logger.d("getting bookings successful");
@@ -47,6 +47,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
 
   Stream<BookingState> _mapAppointmentFinishRequestedToState(
       AppointmentFinishRequested event) async* {
+    yield BookingLoading();
     try {
       var response = await receptionRepository.completeAppointment(
           counterId: event.counterId,
