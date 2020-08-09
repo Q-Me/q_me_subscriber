@@ -9,15 +9,9 @@ import 'package:qme_subscriber/views/otpPage.dart';
 import 'package:qme_subscriber/views/slot.dart';
 
 import 'model/reception.dart';
-import 'views/createQueue.dart';
-import 'views/people.dart';
-import 'views/profile.dart';
-import 'views/queues.dart';
 import 'views/receptions.dart';
 import 'views/signin.dart';
 import 'views/signup.dart';
-import 'views/unknown.dart';
-import 'views/viewQueue.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -33,15 +27,16 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: SignInScreen.id),
       );
 
-    case QueuesScreen.id:
-      return MaterialPageRoute(
-        builder: (context) => QueuesScreen(),
-        settings: RouteSettings(name: QueuesScreen.id),
-      );
     case OtpPage.id:
       return MaterialPageRoute(
         builder: (context) => OtpPage(),
         settings: RouteSettings(name: OtpPage.id),
+      );
+
+    /*case QueuesScreen.id:
+      return MaterialPageRoute(
+        builder: (context) => QueuesScreen(),
+        settings: RouteSettings(name: QueuesScreen.id),
       );
 
     case CreateQueueScreen.id:
@@ -71,7 +66,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => ProfileScreen(),
         settings: RouteSettings(name: ProfileScreen.id),
-      );
+      );*/
 
     case ReceptionsScreen.id:
       return MaterialPageRoute(
@@ -105,7 +100,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       final Appointment appointment = args[1];
 
       return MaterialPageRoute(
-        builder: (context) => AppointmentView(reception: reception, appointment: appointment),
+        builder: (context) => AppointmentView(
+          reception: reception,
+          appointment: appointment,
+        ),
         settings: RouteSettings(name: AppointmentView.id),
       );
 
@@ -129,10 +127,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         settings: RouteSettings(name: CreateAppointment.id),
       );
 
-    default:
+    /*default:
       return MaterialPageRoute(
         builder: (context) => UndefinedView(name: settings.name),
         settings: RouteSettings(name: UndefinedView.id),
-      );
+      );*/
   }
 }

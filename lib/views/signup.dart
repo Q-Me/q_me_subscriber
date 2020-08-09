@@ -1,5 +1,9 @@
 import 'dart:developer';
+import 'dart:io';
+
+import 'package:checkbox_formfield/checkbox_formfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_place_picker/google_maps_place_picker.dart';
@@ -7,19 +11,16 @@ import 'package:keyboard_avoider/keyboard_avoider.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
 import 'package:qme_subscriber/views/signin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../api/keys.dart';
 import '../bloc/signup.dart';
 import '../constants.dart';
 import '../model/subscriber.dart';
-import '../repository/subscriber.dart';
-import '../views/queues.dart';
 import '../widgets/button.dart';
 import '../widgets/formField.dart';
 import '../widgets/text.dart';
-import 'dart:io';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:checkbox_formfield/checkbox_formfield.dart';
+
 class SignUpScreen extends StatefulWidget {
   static const id = '/signup';
 
@@ -57,7 +58,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     "Medical Store",
     "Airport"
   ];
-  String selectedCategory; Future<void> _launchInBrowser(String url) async {
+  String selectedCategory;
+  Future<void> _launchInBrowser(String url) async {
     if (await canLaunch(url)) {
       await launch(
         url,
@@ -191,6 +193,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     formData['phone'] = value;
                                   });
                                   subscriber.phone = value;
+                                  return null;
                                 }
                               },
                               decoration: kTextFieldDecoration.copyWith(
@@ -207,18 +210,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             },
                           ),
                           TextFormField(
-                            
                             onChanged: (value) {
                               formData['address'] = value;
                             },
                             controller: _mapLocationController,
                             showCursor: false,
                             readOnly: true,
-                             validator: (value) {
-                                if (value.isEmpty) {
-                                  return 'This field cannot be left blank';
-                                }
-                             },
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return 'This field cannot be left blank';
+                              }
+                              return null;
+                            },
                             onTap: () {
                               log('Address field tapped');
                               Navigator.push(
@@ -250,7 +253,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ),
                               );
                             },
-                            
                             decoration: InputDecoration(
                               labelText: 'MAP LOCATION',
                               labelStyle: kLabelStyle,
@@ -278,14 +280,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             // Password
                             obscureText: passwordVisible,
                             validator: (value) {
-                             Pattern pattern =
-                                    r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])';
-                                RegExp regex = new RegExp(pattern);
-                                if (value.length < 6 || value.length > 20)
-                                  return 'Password should be not be less than 6 characters';
-                                else if (!regex.hasMatch(value)) {
-                                  return 'Password must contain one numeric ,one upper and one lower case letter';
-                                } {
+                              Pattern pattern =
+                                  r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])';
+                              RegExp regex = new RegExp(pattern);
+                              if (value.length < 6 || value.length > 20)
+                                return 'Password should be not be less than 6 characters';
+                              else if (!regex.hasMatch(value)) {
+                                return 'Password must contain one numeric ,one upper and one lower case letter';
+                              }
+                              {
                                 formData['password'] = value;
                                 return null;
                               }
@@ -350,33 +353,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                           CheckboxListTileFormField(
-                              title: FlatButton(
-                                color: Colors.transparent,
-                                onPressed: () => setState(() {
-                                  _launched = _launchInBrowser(
-                                      "https://q-me.flycricket.io/privacy.html");
-                                }),
-                                child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text(
-                                      'I Agree to Privacy Policy',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    )),
-                              ),
-                              onSaved: (newValue) {
-                                setState(() {
-                                  checkedValue = newValue;
-                                });
-                              },
-                              validator: (bool value) {
-                                if (value) {
-                                  return null;
-                                } else {
-                                  return 'You need to accept terms!';
-                                }
-                              },
+                            title: FlatButton(
+                              color: Colors.transparent,
+                              onPressed: () => setState(() {
+                                _launched = _launchInBrowser(
+                                    "https://q-me.flycricket.io/privacy.html");
+                              }),
+                              child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'I Agree to Privacy Policy',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  )),
                             ),
+                            onSaved: (newValue) {
+                              setState(() {
+                                checkedValue = newValue;
+                              });
+                            },
+                            validator: (bool value) {
+                              if (value) {
+                                return null;
+                              } else {
+                                return 'You need to accept terms!';
+                              }
+                            },
+                          ),
                           SizedBox(height: 50.0),
                           SignUpButton(
                               formKey: formKey,
@@ -421,7 +424,7 @@ class _SignUpButtonState extends State<SignUpButton> {
 
   Future<bool> loginUser(String phone, BuildContext context) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
-          Navigator.pushNamed(context, OtpPage.id);
+    Navigator.pushNamed(context, OtpPage.id);
     _auth.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: Duration(seconds: 60),
@@ -651,8 +654,6 @@ class _SignUpButtonState extends State<SignUpButton> {
                   'userCpasswordSignup', widget.formData['cpassword']);
               prefs.setString('userEmailSignup', widget.formData['email']);
               prefs.setString('fcmToken', widget.fcmToken);
-
-              
             }
           },
           child: Center(
