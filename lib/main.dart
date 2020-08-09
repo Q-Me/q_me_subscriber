@@ -13,7 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 //  await setSession();
   if (await SubscriberRepository().isSessionReady()) {
-    initialHome = SlotView.id;
+    initialHome = ReceptionsScreen.id;
   }
 
   runApp(MyApp());
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light().copyWith(primaryColor: Colors.blue),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: router.generateRoute,
-      initialRoute: ReceptionsScreen.id,
+      initialRoute: initialHome,
       navigatorObservers: [analytics.getAnalyticsObserver()],
     );
   }

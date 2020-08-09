@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
@@ -25,61 +26,61 @@ var cur = DateTime.now();
 DateTime eDate = DateTime.now();
 DateTime sDate = eDate.subtract(Duration(days: 7));
 
-var data = [{}, {}];
+// var appointment = [{}, {}];
+List appointment = [
+  {
+    "starttime": "2020-06-29T15:00:00.000Z",
+    "endtime": "2020-06-29T15:15:00.000Z",
+    "status": "CANCELLED",
+    "note": "",
+    "booked_by": "USER",
+    "cust_name": "Kavya2",
+    "cust_phone": "9898009900"
+  },
+  {
+    "starttime": "2020-06-29T17:00:00.000Z",
+    "endtime": "2020-06-29T17:15:00.000Z",
+    "status": "CANCELLED",
+    "note": "",
+    "booked_by": "USER",
+    "cust_name": "Kavya2",
+    "cust_phone": "9898009900"
+  },
+  {
+    "starttime": "2020-06-29T15:00:00.000Z",
+    "endtime": "2020-06-29T15:15:00.000Z",
+    "status": "UPCOMING",
+    "note": "",
+    "booked_by": "USER",
+    "cust_name": "Kavya2",
+    "cust_phone": "9898009900"
+  }
+];
 
 class _SlotViewState extends State<SlotView> {
   Reception get reception => widget.reception;
   Slot get slot => widget.slot;
-
-  Future<void> getData() async {
-    // data = await apicall
-  }
 
   @override
   Widget build(BuildContext context) {
     print(cur);
 
     return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          leading: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Icon(Icons.arrow_back_ios)),
-          title: Text("Slots"),
-        ),
-        body: FutureBuilder(
-          future: getData(),
-          builder: (context, snapshot) {
-            print(data);
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError)
-                return Container(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Center(
-                        child: Text("Network Error"),
-                      )
-                    ],
-                  ),
-                );
-              else
-                return _transBuildList(context, data);
-            } else
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-          },
-        ),
-      ),
-    );
+        child: Scaffold(
+            appBar: AppBar(
+              leading: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Icon(Icons.arrow_back_ios)),
+              title: Text("Slots"),
+            ),
+            body: _transBuildList(context, appointment)));
   }
 
   Widget _transBuildList(
     BuildContext context,
-    dynamic data,
+    dynamic appointment,
   ) {
-    var len = data == null ? 0 : data.length + 1;
+    var len = appointment == null ? 0 : appointment.length + 1;
 
     return Scrollbar(
       child: ListView.builder(
@@ -93,7 +94,7 @@ class _SlotViewState extends State<SlotView> {
             return listElement(
               context,
               len - index - 1,
-              data,
+              appointment,
             );
         },
       ),
@@ -204,11 +205,11 @@ class TimeCard extends StatelessWidget {
 Widget listElement(
   BuildContext context,
   int index,
-  dynamic data,
+  dynamic appointment,
 ) {
   var cHeight = MediaQuery.of(context).size.height;
   var cWidth = MediaQuery.of(context).size.width;
-  final item = data[index].toString();
+  final item = appointment[index]["cust_name"].toString();
   return Padding(
     padding: EdgeInsets.symmetric(
       horizontal: cWidth * 0.04,
@@ -220,22 +221,11 @@ Widget listElement(
               arguments: {"reception": null});
         },
         child: Dismissible(
-          // Each Dismissible must contain a Key. Keys allow Flutter to
-          // uniquely identify widgets.
           key: Key(item),
-          // Provide a function that tells the app
-          // what to do after an item has been swiped away.
           onDismissed: (tap) {
-            // Remove the item from the data source.
-            //setState(() {
-//            data.removeAt(index);
-            //});
-
-            // Then show a snackbar.
             Scaffold.of(context)
-                .showSnackBar(SnackBar(content: Text("$item dismissed")));
+                .showSnackBar(SnackBar(content: Text("$item Appointment Cancelled")));
           },
-          // Show a red background as the item is swiped away.
           background: Container(color: Colors.red),
           child: Card(
             child: Padding(
@@ -247,9 +237,14 @@ Widget listElement(
                 children: <Widget>[
                   Expanded(
                     child: ListTile(
-                      trailing: Text(
-                        "Booked",
-                      ),
+                      trailing: Text(appointment[index]["status"],
+                          style: appointment[index]["status"] == "UPCOMING"
+                              ? TextStyle(color: Colors.green)
+                              : appointment[index]["status"] == "DONE"
+                                  ? TextStyle(color: Colors.blue)
+                                  : appointment[index]["status"] == "UNBOOKED"
+                                      ? TextStyle(color: Colors.grey)
+                                      : TextStyle(color: Colors.red)),
                       leading: Container(
                         child: CircleAvatar(
                           child: Icon(
@@ -264,11 +259,11 @@ Widget listElement(
                           shape: BoxShape.circle,
                         ),
                       ),
-                      title: Text(
-                        "Person" + " " + "Name",
-                      ),
+                      title: Text(appointment[index]["cust_name"]),
                       subtitle: Text(
-                        "Phone",
+                        appointment[index]["cust_phone"] +
+                            "\n\nNote: " +
+                            appointment[index]["note"],
                       ),
                     ),
                   ),
