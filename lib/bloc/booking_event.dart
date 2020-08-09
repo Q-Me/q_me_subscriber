@@ -17,9 +17,8 @@ class BookingListRequested extends BookingEvent {
 class AppointmentCancelRequested extends BookingEvent {
   final String counterId;
   final String phone;
-  final String accessToken;
 
-  AppointmentCancelRequested(this.counterId, this.phone, this.accessToken);
+  AppointmentCancelRequested(this.counterId, this.phone);
 }
 
 class AppointmentFinishRequested extends BookingEvent {

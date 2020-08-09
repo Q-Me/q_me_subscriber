@@ -69,8 +69,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     try {
       var response = await receptionRepository.cancelAppointment(
           counterId: event.counterId,
-          phone: event.phone,
-          accessToken: event.accessToken);
+          phone: event.phone);
       logger.d("calling cancel api success");
       logger.i(response);
       yield BookingLoadSuccesful(response);

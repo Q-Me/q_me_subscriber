@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:qme_subscriber/bloc/booking_bloc.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
-<<<<<<< Updated upstream
-=======
 import 'package:qme_subscriber/model/appointment.dart';
->>>>>>> Stashed changes
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/appointment.dart';
@@ -39,6 +37,8 @@ class _SlotViewState extends State<SlotView> {
   Reception get reception => widget.reception;
   Slot get slot => widget.slot;
   ReceptionRepository repository = ReceptionRepository();
+  List<Appointment> response;
+
   Widget listElement(
     BuildContext context,
     int index,
@@ -54,7 +54,6 @@ class _SlotViewState extends State<SlotView> {
       ),
       child: InkWell(
           onTap: () async {
-            List<Appointment> response;
             try {
               response = await ReceptionRepository().viewBookingsDetailed(
                   counterId: reception.receptionId,
@@ -63,7 +62,7 @@ class _SlotViewState extends State<SlotView> {
                   status: ["UPCOMING"]);
               logger.d("call booking detailed api success");
               Navigator.pushNamed(context, AppointmentView.id,
-                  arguments: {widget.reception, response[index]});
+                  arguments: [widget.reception, response[index]]);
             } catch (e) {
               logger.e(e);
               Scaffold.of(context).showSnackBar(SnackBar(
@@ -71,24 +70,8 @@ class _SlotViewState extends State<SlotView> {
               ));
             }
           },
-          child: Dismissible(
-            // Each Dismissible must contain a Key. Keys allow Flutter to
-            // uniquely identify widgets.
-            key: Key(item),
-            // Provide a function that tells the app
-            // what to do after an item has been swiped away.
-            onDismissed: (tap) {
-              // Remove the item from the data source.
-              //setState(() {
-//            data.removeAt(index);
-              //});
-
-              // Then show a snackbar.
-              Scaffold.of(context)
-                  .showSnackBar(SnackBar(content: Text("$item dismissed")));
-            },
-            // Show a red background as the item is swiped away.
-            background: Container(color: Colors.red),
+          child: Slidable(
+            actionPane: SlidableDrawerActionPane(),
             child: Card(
               child: Padding(
                 padding: EdgeInsets.symmetric(
@@ -139,6 +122,18 @@ class _SlotViewState extends State<SlotView> {
                 ),
               ),
             ),
+            secondaryActions: <Widget>[
+              IconSlideAction(
+                caption: "Cancel",
+                color: Colors.red,
+                icon: Icons.delete,
+                onTap: () async {
+                  BlocProvider.of<BookingBloc>(context).add(
+                      AppointmentCancelRequested(reception.receptionId,
+                          response[index].customerPhone));
+                },
+              )
+            ],
           )),
     );
   }
@@ -151,49 +146,12 @@ class _SlotViewState extends State<SlotView> {
     print(cur);
 
     return SafeArea(
-<<<<<<< Updated upstream
-      child: Scaffold(
-        appBar: AppBar(
-          leading: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Icon(Icons.arrow_back_ios)),
-          title: Text("Slots"),
-        ),
-        body: BlocProvider(
-          create: (context) => BookingBloc(widget.repository),
-          child: FutureBuilder(
-            future: getData(),
-            builder: (context, snapshot) {
-              print(data);
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.hasError)
-                  return Container(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Center(
-                          child: Text("Network Error"),
-                        )
-                      ],
-                    ),
-                  );
-                else
-                  return _transBuildList(context, data);
-              } else
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-            },
-          ),
-        ),
-=======
         child: Scaffold(
       appBar: AppBar(
         leading: GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Icon(Icons.arrow_back_ios)),
         title: Text("Slots"),
->>>>>>> Stashed changes
       ),
       body: BlocProvider(
           create: (context) => BookingBloc(repository),
@@ -309,7 +267,7 @@ class _SlotViewState extends State<SlotView> {
                   ),
                   child: Center(
                     child: Text(
-                      "There are no Appoinments",
+                      "There are no Appointments",
                       style: TextStyle(
                         fontSize: 20,
                       ),

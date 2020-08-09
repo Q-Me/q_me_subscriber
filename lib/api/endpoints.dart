@@ -1,4 +1,4 @@
-const String baseURL = 'https://dontwaitapp.co/api',
+const String baseURL = '13.127.245.177:3000',
     kSignUpOld = '/subscriber/signup',
     kSignUp = '/subscriber/signupfirebase',
     kSignIn = '/subscriber/login',

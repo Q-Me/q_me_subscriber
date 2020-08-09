@@ -79,8 +79,9 @@ class ReceptionRepository {
   Future<Map<String, dynamic>> cancelAppointment({
     @required String counterId,
     @required String phone,
-    @required String accessToken,
+    String accessToken,
   }) async {
+    accessToken = await SubscriberRepository().getAccessTokenFromStorage();
     final response = await _helper.post(
       kCancelAppointment,
       req: {
