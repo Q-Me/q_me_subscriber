@@ -96,13 +96,16 @@ class SlotListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(
-        '${DateFormat('d MMMM y').format(slot.startTime)} at ${DateFormat.jm().format(slot.startTime)}',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-      ),
-      subtitle: Text(
-        '${slot.endTime.difference(slot.startTime).inMinutes} min, ends at ${DateFormat.jm().format(slot.endTime)}',
+    return Padding(
+      padding: EdgeInsets.only(top: 20),
+      child: ListTile(
+        title: Text(
+          '${DateFormat('d MMMM y').format(slot.startTime)} at ${DateFormat.jm().format(slot.startTime)}',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+        ),
+        subtitle: Text(
+          '${slot.endTime.difference(slot.startTime).inMinutes} min, ends at ${DateFormat.jm().format(slot.endTime)}',
+        ),
       ),
     );
   }

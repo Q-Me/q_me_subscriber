@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 
 class MyBackButton extends StatelessWidget {
@@ -18,6 +16,56 @@ class MyBackButton extends StatelessWidget {
           foregroundColor: Colors.white,
           radius: 20,
           child: Icon(Icons.arrow_back_ios),
+        ),
+      ),
+    );
+  }
+}
+
+class ThemedSolidButton extends StatelessWidget {
+  final String text, notification;
+  final Function buttonFunction;
+  const ThemedSolidButton({
+    @required this.text,
+    this.notification,
+    @required this.buttonFunction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    void displaySnackBar(String text) {
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text(text)));
+    }
+
+    return Container(
+      height: 50.0,
+      child: Material(
+        borderRadius: BorderRadius.circular(20.0),
+        shadowColor: Colors.greenAccent,
+        color: Colors.green,
+        elevation: 7.0,
+        child: InkWell(
+          onTap: () {
+            if (notification != null) {
+              displaySnackBar(notification);
+            }
+//            log('Solid Theme Button pressed');
+            buttonFunction();
+//            log('btn fn executed');
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Center(
+              child: Text(
+                text,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat'),
+              ),
+            ),
+          ),
         ),
       ),
     );
