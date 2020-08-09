@@ -7,6 +7,7 @@ import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/receptions.dart';
+import 'package:qme_subscriber/widgets/slotWidgets.dart';
 
 class CreateAppointment extends StatefulWidget {
   static const String id = '/createAppointment';
@@ -26,6 +27,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
   Slot get slot => widget.slot;
   String get receptionId => widget.receptionId;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
   final phoneFocus = FocusNode();
   final noteFocus = FocusNode();
@@ -35,15 +37,15 @@ class _CreateAppointmentState extends State<CreateAppointment> {
 
   @override
   Widget build(BuildContext context) {
-    void showSnackBar(BuildContext context, String text, int seconds) {
-      Scaffold.of(context).hideCurrentSnackBar();
-      Scaffold.of(context).showSnackBar(
+    void showSnackBar(String text, int seconds) {
+      _scaffoldKey.currentState.hideCurrentSnackBar();
+      _scaffoldKey.currentState.showSnackBar(
         SnackBar(
           content: Text(text),
           duration: Duration(seconds: seconds),
           action: SnackBarAction(
             label: 'Dismiss',
-            onPressed: () => Scaffold.of(context).hideCurrentSnackBar(),
+            onPressed: () => _scaffoldKey.currentState.hideCurrentSnackBar(),
           ),
         ),
       );
@@ -63,15 +65,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              ListTile(
-                title: Text(
-                  '${DateFormat('d MMMM y').format(slot.startTime)} at ${DateFormat.jm().format(slot.startTime)}',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-                ),
-                subtitle: Text(
-                  '${slot.endTime.difference(slot.startTime).inMinutes} min, ends at ${DateFormat.jm().format(slot.endTime)}',
-                ),
-              ),
+              SlotListTile(slot: slot),
               Divider(),
               Form(
                 key: formKey,
@@ -80,11 +74,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                   child: Column(
                     children: [
                       TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Customer Name',
-                          /*TODO make sure that only text with no number is
-                           is put in this field*/
-                        ),
+                        decoration: InputDecoration(labelText: 'Customer Name'),
                         controller: _nameController,
                         autofocus: true,
                         autovalidate: true,
@@ -163,7 +153,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                                 );
                                 if (response["msg"] ==
                                     "Slot Booked Successfully") {
-                                  showSnackBar(context,
+                                  showSnackBar(
                                       "Appointment booked successfully", 5);
 
                                   final Appointment appointment =
@@ -192,7 +182,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                                 }
                               } on Exception catch (e) {
                                 logger.e(e.toString());
-                                showSnackBar(context, e.toString(), 5);
+                                showSnackBar(e.toString(), 5);
                               }
                             }
                           },

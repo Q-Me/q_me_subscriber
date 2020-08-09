@@ -379,6 +379,7 @@ class _AppointmentViewState extends State<AppointmentView> {
                     ),
                   );
                 }
+                return null;
               }, listener: (context, state) {
                 if (state is ProcessFailure) {
                   Scaffold.of(context).showSnackBar(SnackBar(

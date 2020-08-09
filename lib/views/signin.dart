@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
 import 'package:qme_subscriber/views/profile.dart';
+import 'package:qme_subscriber/views/receptions.dart';
 import 'package:qme_subscriber/views/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/text.dart';
@@ -581,7 +582,7 @@ class _SignInScreenState extends State<SignInScreen>
                                                   prefs.setString(
                                                       'fcmToken', _fcmToken);
                                                   Navigator.pushNamed(
-                                                      context, QueuesScreen.id);
+                                                      context, ReceptionsScreen.id);
                                                 } catch (e) {
                                                   print(" !!$e !!");
                                                   Scaffold.of(context)
