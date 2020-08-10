@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:qme_subscriber/bloc/booking_bloc.dart';
+import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
-import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
+import 'package:qme_subscriber/views/appointment.dart';
+import 'package:qme_subscriber/widgets/loader.dart';
 import 'package:qme_subscriber/widgets/slotWidgets.dart';
 
 import '../model/appointment.dart';
@@ -59,108 +60,170 @@ class _SlotViewState extends State<SlotView> {
             child: Icon(Icons.arrow_back_ios)),
         title: Text("Slots"),
       ),
-      body: BlocProvider(
-          create: (context) => BookingBloc(repository),
-          child: BlocConsumer<BookingBloc, BookingState>(
-            builder: (context, state) {
-              if (state is BookingLoading) {
-                return Center(child: CircularProgressIndicator());
-              } else if (state is BookingInitial) {
-                BlocProvider.of<BookingBloc>(context).add(BookingListRequested(
-                    reception.receptionId,
-                    slot.startTime,
-                    slot.endTime,
-                    ["UPCOMING"],
-                    (slot.endTime.difference(slot.startTime)).inMinutes));
-                return Center(
-                  child: Text("Please wait....Fetching Appointments"),
-                );
-              } else if (state is BookingLoadSuccesful) {
-                return Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: MediaQuery.of(context).size.height * 0.018,
-                        horizontal: MediaQuery.of(context).size.width * 0.04,
-                        // bottom: cHeight * 0.015,
+      body: MultiProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => BookingBloc(repository),
+          ),
+          ChangeNotifierProvider.value(value: reception)
+        ],
+        child: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(
+                vertical: MediaQuery.of(context).size.height * 0.018,
+                horizontal: MediaQuery.of(context).size.width * 0.04,
+                // bottom: cHeight * 0.015,
+              ),
+              child: SlotDetails(slot: slot),
+            ),
+            Expanded(
+              child: BlocConsumer<BookingBloc, BookingState>(
+                builder: (context, state) {
+                  if (state is BookingLoading) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (state is BookingInitial) {
+                    BlocProvider.of<BookingBloc>(context).add(
+                      BookingListRequested(
+                        reception.receptionId,
+                        slot.startTime,
+                        slot.endTime,
+                        [
+                          'UPCOMING',
+                          'CANCELLED',
+                          'CANCELLED BY SUBSCRIBER',
+                          'DONE'
+                        ],
+                        slot.endTime.difference(slot.startTime).inMinutes,
                       ),
-                      child: SlotDetails(slot: slot),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: ListView.builder(
-                          itemCount: state.response.length,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (BuildContext context, int index) {
-                            Appointment appointment = state.response[index];
-                            return Card(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: mediaHeight * 0.005,
+                    );
+                    return Loading(
+                        loadingMessage: "Please wait....Fetching Appointments");
+                  } else if (state is BookingLoadSuccessful) {
+                    final List<Appointment> appointments = state.response;
+
+                    return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: Column(
+                        children: [
+                          ListView.builder(
+                            itemCount: appointments.length,
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemBuilder: (BuildContext context, int index) {
+                              return AppointmentCard(
+                                appointment: appointments[index],
+                              );
+                            },
+                          ),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: reception.customersInSlot - slot.booked,
+                            itemBuilder: (BuildContext context, int index) {
+                              return Card(
+                                color: Colors.orange[400],
+                                child: ListTile(
+                                  dense: false,
+                                  title: Center(
+                                      child: Text(
+                                    'Unbooked',
+                                    style:
+                                        Theme.of(context).textTheme.headline6,
+                                  )),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: ListTile(
-                                        trailing: Text(appointment.status),
-                                        leading: Container(
-                                          child: CircleAvatar(
-                                              child:
-                                                  Icon(Icons.account_circle)),
-                                          width: 32.0,
-                                          height: 32.0,
-                                          padding:
-                                              EdgeInsets.all(2), // borde width
-                                          decoration: BoxDecoration(
-                                            // color: color, // border color
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        title: Text(
-                                          appointment.customerName,
-                                        ),
-                                        subtitle: Text(
-                                          appointment.customerPhone,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (state is BookingLoadFailure) {
+                    return Center(
+                        child: Column(
+                      children: <Widget>[
+                        Text("Error loading data...Please try again"),
+                        RaisedButton(
+                          onPressed: () {
+                            BlocProvider.of<BookingBloc>(context).add(
+                                BookingListRequested(
+                                    reception.receptionId,
+                                    slot.startTime,
+                                    slot.endTime,
+                                    ["UPCOMING"],
+                                    (slot.endTime.difference(slot.startTime))
+                                        .inMinutes));
                           },
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              } else if (state is BookingLoadFailure) {
-                return Center(
-                    child: Column(
-                  children: <Widget>[
-                    Text("Error loading data...Please try again"),
-                    RaisedButton(
-                      onPressed: () {
-                        BlocProvider.of<BookingBloc>(context).add(
-                            BookingListRequested(
-                                reception.receptionId,
-                                slot.startTime,
-                                slot.endTime,
-                                ["UPCOMING"],
-                                (slot.endTime.difference(slot.startTime))
-                                    .inMinutes));
-                      },
-                      child: Text("Retry"),
-                    )
-                  ],
-                ));
-              }
-            },
-            listener: (context, state) {},
-          )),
+                          child: Text("Retry"),
+                        )
+                      ],
+                    ));
+                  }
+                  return Text('Unidentified state');
+                },
+                listener: (context, state) {},
+              ),
+            )
+          ],
+        ),
+      ),
     ));
+  }
+}
+
+class AppointmentCard extends StatelessWidget {
+  const AppointmentCard({
+    Key key,
+    @required this.appointment,
+  }) : super(key: key);
+
+  final Appointment appointment;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          AppointmentView.id,
+          arguments: [
+            Provider.of<Reception>(context, listen: false),
+            appointment
+          ],
+        );
+      },
+      child: Card(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: MediaQuery.of(context).size.height * 0.005,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              Expanded(
+                child: ListTile(
+                  trailing: Text(appointment.status),
+                  leading: Container(
+                    child: CircleAvatar(child: Icon(Icons.account_circle)),
+                    width: 32.0,
+                    height: 32.0,
+                    padding: EdgeInsets.all(2), // borde width
+                    decoration: BoxDecoration(
+                      // color: color, // border color
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  title: Text(
+                    appointment.customerName,
+                  ),
+                  subtitle: Text(
+                    appointment.customerPhone,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

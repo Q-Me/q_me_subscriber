@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:qme_subscriber/model/appointment.dart';
-import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/reception.dart';
-import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 
 part 'booking_event.dart';
@@ -31,13 +29,14 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       BookingListRequested event) async* {
     yield BookingLoading();
     try {
-      List<Appointment> response = await receptionRepository.viewBookingsDetailed(
-          counterId: event.counterId,
-          startTime: event.startTime,
-          endTime: event.endTime,
-          status: event.status);
+      List<Appointment> response =
+          await receptionRepository.viewBookingsDetailed(
+              counterId: event.counterId,
+              startTime: event.startTime,
+              endTime: event.endTime,
+              status: event.status);
       logger.i(response);
-      yield BookingLoadSuccesful(response);
+      yield BookingLoadSuccessful(response);
       logger.d("getting bookings successful");
     } catch (e) {
       logger.e("Getting Booking list failed");
@@ -56,7 +55,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
           accessToken: event.accessToken);
       logger.d("calling api for completing appointment success");
       logger.i(response);
-      BookingLoadSuccesful(response);
+      BookingLoadSuccessful(response);
     } catch (e) {
       logger.e(e);
       yield BookingLoadFailure();
@@ -71,7 +70,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
           counterId: event.counterId, phone: event.phone);
       logger.d("calling cancel api success");
       logger.i(response);
-      yield BookingLoadSuccesful(response);
+      yield BookingLoadSuccessful(response);
     } catch (e) {
       logger.e(e);
       yield BookingLoadFailure();

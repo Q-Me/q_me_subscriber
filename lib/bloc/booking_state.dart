@@ -7,9 +7,9 @@ class BookingInitial extends BookingState {}
 
 class BookingLoading extends BookingState {}
 
-class BookingLoadSuccesful extends BookingState {
+class BookingLoadSuccessful extends BookingState {
   final response;
-  BookingLoadSuccesful(this.response) : assert(response != null);
+  BookingLoadSuccessful(this.response) : assert(response != null);
 }
 
 class BookingLoadFailure extends BookingState {}
