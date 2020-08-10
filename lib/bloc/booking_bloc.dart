@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
+import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/reception.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 
 part 'booking_event.dart';
@@ -29,13 +31,11 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       BookingListRequested event) async* {
     yield BookingLoading();
     try {
-      var response = await receptionRepository.viewBookings(
+      List<Appointment> response = await receptionRepository.viewBookingsDetailed(
           counterId: event.counterId,
           startTime: event.startTime,
           endTime: event.endTime,
-          status: event.status,
-          slotDurationInMinutes: event.slotDurationInMinutes,
-          accessToken: event.accessToken);
+          status: event.status);
       logger.i(response);
       yield BookingLoadSuccesful(response);
       logger.d("getting bookings successful");
@@ -47,6 +47,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
 
   Stream<BookingState> _mapAppointmentFinishRequestedToState(
       AppointmentFinishRequested event) async* {
+    yield BookingLoading();
     try {
       var response = await receptionRepository.completeAppointment(
           counterId: event.counterId,
@@ -67,9 +68,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     yield BookingLoading();
     try {
       var response = await receptionRepository.cancelAppointment(
-          counterId: event.counterId,
-          phone: event.phone,
-          accessToken: event.accessToken);
+          counterId: event.counterId, phone: event.phone);
       logger.d("calling cancel api success");
       logger.i(response);
       yield BookingLoadSuccesful(response);
