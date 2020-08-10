@@ -12,27 +12,6 @@ import 'package:qme_subscriber/widgets/slotWidgets.dart';
 
 import '../model/appointment.dart';
 
-final List<Appointment> appointmentList = [
-  Appointment.fromJson({
-    "starttime": "2020-06-29T15:00:00.000Z",
-    "endtime": "2020-06-29T15:15:00.000Z",
-    "status": "CANCELLED",
-    "note": "",
-    "booked_by": "USER",
-    "cust_name": "Kavya2",
-    "cust_phone": "9898009900"
-  }),
-  Appointment.fromJson({
-    "starttime": "2020-06-29T17:00:00.000Z",
-    "endtime": "2020-06-29T17:15:00.000Z",
-    "status": "CANCELLED",
-    "note": "",
-    "booked_by": "USER",
-    "cust_name": "Kavya2",
-    "cust_phone": "9898009900"
-  })
-];
-
 class SlotView extends StatefulWidget {
   static const String id = '/slot';
   final Reception reception;
