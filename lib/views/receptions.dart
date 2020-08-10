@@ -318,7 +318,7 @@ class UnbookedSeat extends StatelessWidget {
         final Slot slot = context.read<Slot>();
         logger.i(
             'Selected reception: ${receptionToJson(reception)}\nSlot selected:${slot.toJson()}');
-        Navigator.pushNamed(context, CreateAppointment.id,
+        Navigator.pushReplacementNamed(context, CreateAppointment.id,
             arguments: [reception.receptionId, slot]);
       },
       child: Container(

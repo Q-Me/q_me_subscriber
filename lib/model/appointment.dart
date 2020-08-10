@@ -25,8 +25,8 @@ class Appointment {
   int otp;
 
   factory Appointment.fromJson(Map<String, dynamic> json) => Appointment(
-        startTime: DateTime.parse(json["starttime"]).toLocal(),
-        endTime: DateTime.parse(json["endtime"]).toLocal(),
+        startTime: DateTime.parse(json["starttime"]),
+        endTime: DateTime.parse(json["endtime"]),
         status: json["status"],
         note: json["note"],
         bookedBy: json["booked_by"],
