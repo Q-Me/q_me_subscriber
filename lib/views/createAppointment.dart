@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/constants.dart';
 import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/slot.dart';
@@ -7,6 +8,8 @@ import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/receptions.dart';
+import 'package:qme_subscriber/widgets/button.dart';
+import 'package:qme_subscriber/widgets/slotWidgets.dart';
 
 class CreateAppointment extends StatefulWidget {
   static const String id = '/createAppointment';
@@ -26,6 +29,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
   Slot get slot => widget.slot;
   String get receptionId => widget.receptionId;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
   final phoneFocus = FocusNode();
   final noteFocus = FocusNode();
@@ -35,15 +39,15 @@ class _CreateAppointmentState extends State<CreateAppointment> {
 
   @override
   Widget build(BuildContext context) {
-    void showSnackBar(BuildContext context, String text, int seconds) {
-      Scaffold.of(context).hideCurrentSnackBar();
-      Scaffold.of(context).showSnackBar(
+    void showSnackBar(String text, int seconds) {
+      _scaffoldKey.currentState.hideCurrentSnackBar();
+      _scaffoldKey.currentState.showSnackBar(
         SnackBar(
           content: Text(text),
           duration: Duration(seconds: seconds),
           action: SnackBarAction(
             label: 'Dismiss',
-            onPressed: () => Scaffold.of(context).hideCurrentSnackBar(),
+            onPressed: () => _scaffoldKey.currentState.hideCurrentSnackBar(),
           ),
         ),
       );
@@ -51,10 +55,11 @@ class _CreateAppointmentState extends State<CreateAppointment> {
 
     return SafeArea(
       child: Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           leading: GestureDetector(
             onTap: () {
-              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
             },
             child: Icon(Icons.arrow_back),
           ),
@@ -63,15 +68,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              ListTile(
-                title: Text(
-                  '${DateFormat('d MMMM y').format(slot.startTime)} at ${DateFormat.jm().format(slot.startTime)}',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-                ),
-                subtitle: Text(
-                  '${slot.endTime.difference(slot.startTime).inMinutes} min, ends at ${DateFormat.jm().format(slot.endTime)}',
-                ),
-              ),
+              SlotListTile(slot: slot),
               Divider(),
               Form(
                 key: formKey,
@@ -80,11 +77,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                   child: Column(
                     children: [
                       TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Customer Name',
-                          /*TODO make sure that only text with no number is
-                           is put in this field*/
-                        ),
+                        decoration: InputDecoration(labelText: 'Customer Name'),
                         controller: _nameController,
                         autofocus: true,
                         autovalidate: true,
@@ -101,6 +94,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                           FocusScope.of(context).requestFocus(phoneFocus);
                         },
                       ),
+                      SizedBox(height: 20),
                       TextFormField(
                         decoration:
                             kTextFieldDecoration.copyWith(labelText: "PHONE"),
@@ -124,6 +118,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                           FocusScope.of(context).requestFocus(noteFocus);
                         },
                       ),
+                      SizedBox(height: 20),
                       TextFormField(
                         controller: _noteController,
 //                        focusNode: noteFocus,
@@ -134,69 +129,74 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                            */
                         ),
                       ),
+                      SizedBox(height: 30),
                       Builder(
-                        builder: (BuildContext context) => RaisedButton(
-                          child: Text('Book'),
-                          onPressed: () async {
-                            if (formKey.currentState.validate()) {
-                              // Dismiss the keyboard
-                              FocusScope.of(context).requestFocus(FocusNode());
+                        builder: (BuildContext context) {
+                          return ThemedSolidButton(
+                            text: "Book Appointment",
+                            buttonFunction: () async {
+                              if (formKey.currentState.validate()) {
+                                // Dismiss the keyboard
+                                FocusScope.of(context)
+                                    .requestFocus(FocusNode());
 
-                              final String name = _nameController.text;
-                              final String phone = _phoneController.text;
-                              final String note = _noteController.text;
-                              logger.d(
-                                  'Name:$name\nPhone:$phone\nNote:$note\n${slot.toJson()}');
-                              try {
-                                final String accessToken =
-                                    await SubscriberRepository()
-                                        .getAccessTokenFromStorage();
-                                final response =
-                                    await ReceptionRepository().bookAppointment(
-                                  receptionId: receptionId,
-                                  startTime: slot.startTime,
-                                  endTime: slot.endTime,
-                                  customerName: name,
-                                  phone: phone,
-                                  note: note,
-                                  accessToken: accessToken,
-                                );
-                                if (response["msg"] ==
-                                    "Slot Booked Successfully") {
-                                  showSnackBar(context,
-                                      "Appointment booked successfully", 5);
-
-                                  final Appointment appointment =
-                                      Appointment.fromJson(response["slot"]);
-                                  return showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text('Booking Details'),
-                                      content: SingleChildScrollView(
-                                        child: AppointmentDetails(
-                                            appointment: appointment),
-                                      ),
-                                      actions: [
-                                        FlatButton(
-                                          child: Text('Go to Home'),
-                                          onPressed: () {
-                                            Navigator.popUntil(
-                                                context,
-                                                ModalRoute.withName(
-                                                    ReceptionsScreen.id));
-                                          },
-                                        )
-                                      ],
-                                    ),
+                                final String name = _nameController.text;
+                                final String phone = _phoneController.text;
+                                final String note = _noteController.text;
+                                logger.d(
+                                    'Name:$name\nPhone:$phone\nNote:$note\n${slot.toJson()}');
+                                try {
+                                  final String accessToken =
+                                      await SubscriberRepository()
+                                          .getAccessTokenFromStorage();
+                                  final response = await ReceptionRepository()
+                                      .bookAppointment(
+                                    receptionId: receptionId,
+                                    startTime: slot.startTime,
+                                    endTime: slot.endTime,
+                                    customerName: name,
+                                    phone: phone,
+                                    note: note,
+                                    accessToken: accessToken,
                                   );
+                                  if (response["msg"] ==
+                                      "Slot Booked Successfully") {
+                                    showSnackBar(
+                                        "Appointment booked successfully", 5);
+
+                                    final Appointment appointment =
+                                        Appointment.fromJson(response["slot"]);
+                                    return showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Booking Details'),
+                                        content: SingleChildScrollView(
+                                          child: AppointmentDetails(
+                                              appointment: appointment),
+                                        ),
+                                        actions: [
+                                          FlatButton(
+                                            child: Text('Go to Home'),
+                                            onPressed: () {
+                                              Navigator.pushReplacementNamed(
+                                                  context, ReceptionsScreen.id);
+                                            },
+                                          )
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                } on BadRequestException catch (e) {
+                                  logger.e(e.toString());
+                                  showSnackBar(e.toMap()["err"], 5);
+                                } catch (e) {
+                                  logger.e(e.toString());
+                                  showSnackBar(e.toString(), 5);
                                 }
-                              } on Exception catch (e) {
-                                logger.e(e.toString());
-                                showSnackBar(context, e.toString(), 5);
                               }
-                            }
-                          },
-                        ),
+                            },
+                          );
+                        },
                       )
                     ],
                   ),
@@ -252,7 +252,7 @@ class AppointmentDetails extends StatelessWidget {
           style: Theme.of(context).textTheme.headline6,
         ),
         Text(
-          '\nPlease make a note of this Name and OTP and communicate it OTP to the customer',
+          '\nPlease make a note of this Name and OTP and communicate OTP to the customer',
           style: TextStyle(
             color: Colors.red,
             decoration: TextDecoration.underline,

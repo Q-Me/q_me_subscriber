@@ -246,16 +246,11 @@ class _OtpPageState extends State<OtpPage> {
                                                   'fcmToken', _fcmToken);
 
                                               // Navigate to QueuesPage
-                                              Navigator.pushAndRemoveUntil(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        QueuesScreen(
-                                                          subscriberId:
-                                                              response['id'],
-                                                        )),
-                                                (Route<dynamic> route) => false,
-                                              );
+                                               Navigator.of(context)
+                                                .pushNamedAndRemoveUntil(
+                                                    ReceptionsScreen.id,
+                                                    (Route<dynamic> route) =>
+                                                        false);
                                             } else if (response['msg'] ==
                                                     "Invalid Credential" ||
                                                 response['error'] != null) {
