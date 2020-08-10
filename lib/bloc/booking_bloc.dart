@@ -30,12 +30,11 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       BookingListRequested event) async* {
     yield BookingLoading();
     try {
-      var response = await receptionRepository.viewBookings(
+      var response = await receptionRepository.viewBookingsDetailed(
           counterId: event.counterId,
           startTime: event.startTime,
           endTime: event.endTime,
-          status: event.status,
-          slotDurationInMinutes: event.slotDurationInMinutes);
+          status: event.status,);
       logger.i(response);
       yield BookingLoadSuccesful(response);
       logger.d("getting bookings successful");

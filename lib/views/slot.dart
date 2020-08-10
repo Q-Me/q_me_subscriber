@@ -10,6 +10,8 @@ import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/widgets/slotWidgets.dart';
 
+import '../model/appointment.dart';
+
 final List<Appointment> appointmentList = [
   Appointment.fromJson({
     "starttime": "2020-06-29T15:00:00.000Z",
@@ -109,11 +111,10 @@ class _SlotViewState extends State<SlotView> {
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10),
                         child: ListView.builder(
-                          itemCount: appointmentList.length,
+                          itemCount: state.response.length,
                           physics: NeverScrollableScrollPhysics(),
                           itemBuilder: (BuildContext context, int index) {
-                            final Appointment appointment =
-                                appointmentList[index];
+                            Appointment appointment = state.response[index];
                             return Card(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
