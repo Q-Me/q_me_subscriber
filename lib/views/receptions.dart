@@ -2,14 +2,17 @@ import 'package:calendar_strip/calendar_strip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/bloc/receptions.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
 import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
+import 'package:qme_subscriber/views/signin.dart';
 import 'package:qme_subscriber/views/slot.dart';
 import 'package:qme_subscriber/widgets/calenderItems.dart';
 import 'package:qme_subscriber/widgets/error.dart';
@@ -22,6 +25,8 @@ class ReceptionsScreen extends StatefulWidget {
 }
 
 class _ReceptionsScreenState extends State<ReceptionsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   DateTime startDate = DateTime.now().subtract(Duration(days: 7));
   DateTime endDate = DateTime.now().add(Duration(days: 7));
   DateTime selectedDate = DateTime.now();
@@ -66,6 +71,20 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
     );
   }
 
+  void showSnackBar(String text, int seconds) {
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+    _scaffoldKey.currentState.showSnackBar(
+      SnackBar(
+        content: Text(text),
+        duration: Duration(seconds: seconds),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          onPressed: () => _scaffoldKey.currentState.hideCurrentSnackBar(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -74,9 +93,38 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
         child: ChangeNotifierProvider.value(
           value: receptionsBloc,
           child: Scaffold(
+            key: _scaffoldKey,
             appBar: AppBar(
               title: Text('Your Receptions'),
               automaticallyImplyLeading: false,
+              actions: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10.0)),
+                      child: IconButton(
+                          icon: Icon(Icons.exit_to_app, color: Colors.red),
+                          onPressed: () async {
+                            try {
+                              final logOutResponse =
+                                  await SubscriberRepository().signOut();
+                              if (logOutResponse["msg"] ==
+                                  "Logged out successfully") {
+                                logger.d('Log Out');
+                                Navigator.pushNamedAndRemoveUntil(
+                                    context, SignInScreen.id, (route) => false);
+                              }
+                            } on BadRequestException catch (e) {
+                              showSnackBar(e.toMap()["error"], 5);
+                              return;
+                            } catch (e) {
+                              showSnackBar(e.toString(), 10);
+                            }
+                          })),
+                )
+              ],
             ),
             floatingActionButton: FloatingActionButton(
               elevation: 0,
