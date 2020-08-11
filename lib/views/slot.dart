@@ -85,6 +85,7 @@ class _SlotViewState extends State<SlotView> {
               Expanded(
                 child: BlocConsumer<BookingBloc, BookingState>(
                   builder: (context, state) {
+                    logger.d(state.toString());
                     if (state is BookingLoading) {
                       return Loading(
                         loadingMessage: 'Fetching appointments data',
@@ -108,6 +109,9 @@ class _SlotViewState extends State<SlotView> {
                           loadingMessage:
                               "Please wait....Fetching Appointments");
                     } else if (state is BookingLoadSuccessful) {
+                      logger.d(
+                          'Appointment List\n${state.response}\nReception:${reception.toJson()}\nSlot:${slot.toJson()}');
+
                       final List<Appointment> appointments = state.response;
 
                       return SingleChildScrollView(
@@ -127,8 +131,8 @@ class _SlotViewState extends State<SlotView> {
                               ),
                               ListView.builder(
                                 shrinkWrap: true,
-                                itemCount:
-                                    reception.customersInSlot - slot.booked,
+                                itemCount: reception.customersInSlot -
+                                    (slot.booked ?? 0),
                                 itemBuilder: (BuildContext context, int index) {
                                   return UnbookedTile();
                                 },

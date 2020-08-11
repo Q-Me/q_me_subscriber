@@ -115,17 +115,18 @@ class _AppointmentViewState extends State<AppointmentView> {
     EdgeInsets _pad = EdgeInsets.symmetric(
         vertical: cHeight * 0.01, horizontal: cWidth * 0.04);
 
-    return SafeArea(
-      child: Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-          title: Text("Appointment"),
-          elevation: 0,
-          backgroundColor: Theme.of(context).primaryColor,
-        ),
-        body: BlocProvider(
-          create: (context) => AppointmentBloc(repository),
-          child: BlocConsumer<AppointmentBloc, AppointmentState>(
+    return BlocProvider(
+      create: (context) {
+        return AppointmentBloc(repository);
+      },
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text("Appointment"),
+            elevation: 0,
+            backgroundColor: Theme.of(context).primaryColor,
+          ),
+          body: BlocConsumer<AppointmentBloc, AppointmentState>(
             builder: (context, state) {
               parentContext = context;
               logger.i(state);
@@ -136,208 +137,216 @@ class _AppointmentViewState extends State<AppointmentView> {
                   ),
                 );
               } else if (state is AppointmentInitial ||
-                  state is ProcessFailure) {
-                return SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      SlotListTile(
-                        slot: Slot(
-                          startTime: appointment.startTime,
-                          endTime: appointment.endTime,
-                        ),
-                      ),
-                      AppointmentDetail(
-                        pad: _pad,
-                        widget: Container(
-                          padding: _pad,
-                          child: CircleAvatar(
-                            backgroundColor: Colors.green,
-                            child: Text(
-                              userName.substring(0, 1).toUpperCase(),
-                              style:
-                                  TextStyle(fontSize: 30, color: Colors.white),
-                            ),
-                            radius: MediaQuery.of(context).size.height * 0.04,
-                          ),
-                        ),
-                        title: userName,
-                      ),
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            _launched = _makePhoneCall('tel:$userPhoneNumber');
-                          });
-                        },
-                        child: Row(
-                          children: <Widget>[
-                            SizedBox(width: 20),
-                            Padding(
-                              padding: EdgeInsets.only(
-                                left: cWidth * 0.04,
-                                top: cHeight * 0.02,
-                              ),
-                              child: Icon(
-                                Icons.phone,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(
-                                left: cWidth * 0.07,
-                                top: cHeight * 0.02,
-                              ),
-                              child: Text(
-                                userPhoneNumber,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      Row(
+                  state is ProcessFailure ||
+                  state is AppointmentWrongOtpProvided) {
+                return Padding(
+                    padding: _pad,
+                    child: SingleChildScrollView(
+                      child: Column(
                         children: <Widget>[
-                          SizedBox(width: 20),
-                          Padding(
-                            padding: EdgeInsets.only(
-                              left: cWidth * 0.04,
-                              top: cHeight * 0.02,
-                            ),
-                            child: Icon(
-                              Icons.note,
-                              color: Colors.grey,
+                          SlotListTile(
+                            slot: Slot(
+                              startTime: appointment.startTime,
+                              endTime: appointment.endTime,
                             ),
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(
-                              left: cWidth * 0.07,
-                              top: cHeight * 0.02,
-                            ),
-                            child: Text(
-                              appointment.note,
-                              style: TextStyle(
-                                fontSize: 18,
+                          AppointmentDetail(
+                            pad: _pad,
+                            widget: Container(
+                              padding: _pad,
+                              child: CircleAvatar(
+                                backgroundColor: Colors.green,
+                                child: Text(
+                                  userName.substring(0, 1).toUpperCase(),
+                                  style: TextStyle(
+                                      fontSize: 30, color: Colors.white),
+                                ),
+                                radius:
+                                    MediaQuery.of(context).size.height * 0.04,
                               ),
                             ),
-                          )
-                        ],
-                      ),
-                      Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 20.0, vertical: cHeight * 0.05),
-                          child: Column(
-                            children: <Widget>[
-                              Text("OTP Verification",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headline4
-                                      .copyWith(fontWeight: FontWeight.bold)),
-                              SizedBox(height: cHeight * 0.03),
-                              Text("Enter OTP for the appointment"),
-                              SizedBox(height: cHeight * 0.05),
-                              PinEntryTextField(
-                                showFieldAsBox: true,
-                                fieldWidth: cWidth * 0.1,
-                                fields: 4,
-                                onSubmit: (String pin) {
-                                  setState(() {
-                                    otpPin = pin;
-                                  });
-                                }, // end onSubmit
-                              ),
-                              SizedBox(height: 50.0),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Expanded(
-                                    child: Container(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 10),
-                                      height: 50.0,
-                                      child: FlatButton(
-                                        onPressed: () async {
-                                          dialogBox(context, "Confirm",
-                                              "Do you really want to cancel");
-                                        },
-                                        child: Text(
-                                          "Cancel",
-                                          style:
-                                              TextStyle(color: Colors.red[700]),
-                                        ),
-                                        textColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                            side: BorderSide(
-                                                color: Colors.red,
-                                                width: 1,
-                                                style: BorderStyle.solid),
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                      ),
+                            title: userName,
+                          ),
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                _launched =
+                                    _makePhoneCall('tel:$userPhoneNumber');
+                              });
+                            },
+                            child: Row(
+                              children: <Widget>[
+                                SizedBox(width: 20),
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    left: cWidth * 0.04,
+                                    top: cHeight * 0.02,
+                                  ),
+                                  child: Icon(
+                                    Icons.phone,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    left: cWidth * 0.07,
+                                    top: cHeight * 0.02,
+                                  ),
+                                  child: Text(
+                                    userPhoneNumber,
+                                    style: TextStyle(
+                                      fontSize: 18,
                                     ),
                                   ),
-                                  Expanded(
-                                    child: Container(
-                                      height: 50.0,
-                                      child: Material(
-                                        borderRadius:
-                                            BorderRadius.circular(20.0),
-                                        shadowColor: buttonEnabled
-                                            ? Colors.blue
-                                            : Colors.grey,
-                                        color: buttonEnabled
-                                            ? Colors.blue
-                                            : Colors.grey,
-                                        elevation: 7.0,
-                                        child: InkWell(
-                                          onTap: () async {
-                                            if (!buttonEnabled) {
-                                              showSnackBar(
-                                                  'Please enter OTP to complete the appointment',
-                                                  10);
-                                              return;
-                                            }
-
-                                            print("Button Enabled");
-                                            BlocProvider.of<AppointmentBloc>(
-                                                    context)
-                                                .add(
-                                              AppointmentFinished(
-                                                reception.receptionId,
-                                                userPhoneNumber,
-                                                await SubscriberRepository()
-                                                    .getAccessTokenFromStorage(),
-                                                int.parse(otpPin),
-                                              ),
-                                            );
-                                          },
-                                          child: Center(
+                                )
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: <Widget>[
+                              SizedBox(width: 20),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  left: cWidth * 0.04,
+                                  top: cHeight * 0.02,
+                                ),
+                                child: Icon(
+                                  Icons.note,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  left: cWidth * 0.07,
+                                  top: cHeight * 0.02,
+                                ),
+                                child: Text(
+                                  appointment.note,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                          Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 20.0, vertical: cHeight * 0.05),
+                              child: Column(
+                                children: <Widget>[
+                                  Text("OTP Verification",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headline4
+                                          .copyWith(
+                                              fontWeight: FontWeight.bold)),
+                                  SizedBox(height: cHeight * 0.03),
+                                  Text("Enter OTP for the appointment"),
+                                  SizedBox(height: cHeight * 0.05),
+                                  PinEntryTextField(
+                                    showFieldAsBox: true,
+                                    fieldWidth: cWidth * 0.1,
+                                    fields: 4,
+                                    onSubmit: (String pin) {
+                                      setState(() {
+                                        otpPin = pin;
+                                      });
+                                    }, // end onSubmit
+                                  ),
+                                  SizedBox(height: 50.0),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 10),
+                                          height: 50.0,
+                                          child: FlatButton(
+                                            onPressed: () async {
+                                              dialogBox(context, "Confirm",
+                                                  "Do you really want to cancel");
+                                            },
                                             child: Text(
-                                              'Done',
+                                              "Cancel",
                                               style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16.0,
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: 'Montserrat',
+                                                  color: Colors.red[700]),
+                                            ),
+                                            textColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                                side: BorderSide(
+                                                    color: Colors.red,
+                                                    width: 1,
+                                                    style: BorderStyle.solid),
+                                                borderRadius:
+                                                    BorderRadius.circular(20)),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          height: 50.0,
+                                          child: Material(
+                                            borderRadius:
+                                                BorderRadius.circular(20.0),
+                                            shadowColor: buttonEnabled
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                            color: buttonEnabled
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                            elevation: 7.0,
+                                            child: InkWell(
+                                              onTap: () async {
+                                                if (!buttonEnabled) {
+                                                  showSnackBar(
+                                                      'Please enter OTP to complete the appointment',
+                                                      10);
+                                                  return;
+                                                }
+
+                                                print("Button Enabled");
+                                                BlocProvider.of<
+                                                            AppointmentBloc>(
+                                                        context)
+                                                    .add(
+                                                  AppointmentFinished(
+                                                    reception.receptionId,
+                                                    userPhoneNumber,
+                                                    await SubscriberRepository()
+                                                        .getAccessTokenFromStorage(),
+                                                    int.parse(otpPin),
+                                                  ),
+                                                );
+                                              },
+                                              child: Center(
+                                                child: Text(
+                                                  'Done',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 16.0,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontFamily: 'Montserrat',
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ],
-                              ),
-                            ],
-                          )),
-                    ],
-                  ),
-                );
+                              )),
+                        ],
+                      ),
+                    ));
               } else if (state is AppointmentCancelSuccessful ||
                   state is AppointmentFinishSuccessful) {
                 return Center(
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       CircularProgressIndicator(backgroundColor: Colors.green),
                       Text(
@@ -356,7 +365,11 @@ class _AppointmentViewState extends State<AppointmentView> {
                 ));
               } else if (state is AppointmentCancelSuccessful ||
                   state is AppointmentFinishSuccessful) {
-                // TODO: Pop the navigator here
+                Navigator.pop(context);
+              } else if (state is AppointmentWrongOtpProvided) {
+                Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text("Please enter correct OTP"),
+                ));
               }
             },
           ),

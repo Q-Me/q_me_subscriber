@@ -12,3 +12,5 @@ class AppointmentFinishSuccessful extends AppointmentState {}
 class AppointmentCancelSuccessful extends AppointmentState {}
 
 class ProcessFailure extends AppointmentState {}
+
+class AppointmentWrongOtpProvided extends AppointmentState {}

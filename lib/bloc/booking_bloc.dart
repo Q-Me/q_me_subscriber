@@ -51,7 +51,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       var response = await receptionRepository.completeAppointment(
           counterId: event.counterId,
           phone: event.phone,
-          otp: event.otp,
+          otp: event.otp.toString(),
           accessToken: event.accessToken);
       logger.d("calling api for completing appointment success");
       logger.i(response);
