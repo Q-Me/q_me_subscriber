@@ -6,14 +6,17 @@ import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/bloc/receptions.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
 import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
+import 'package:qme_subscriber/views/signin.dart';
 import 'package:qme_subscriber/views/slot.dart';
 import 'package:qme_subscriber/widgets/calenderItems.dart';
 import 'package:qme_subscriber/widgets/error.dart';
 import 'package:qme_subscriber/widgets/loader.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReceptionsScreen extends StatefulWidget {
   static const String id = '/receptions';
@@ -77,6 +80,31 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
             appBar: AppBar(
               title: Text('Your Receptions'),
               automaticallyImplyLeading: false,
+              actions: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10.0)
+                    ),
+                      child: IconButton(
+                          icon: Icon(Icons.exit_to_app, color: Colors.red),
+                          onPressed: () async {
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            String accessToken = await SubscriberRepository()
+                                .getAccessTokenFromStorage();
+                            SubscriberRepository().signOut(accessToken);
+                            prefs.setString('accessToken', null);
+                            prefs.setString('refreshToken', null);
+
+                            logger.d('Log Out');
+                            Navigator.pushNamedAndRemoveUntil(
+                                context, SignInScreen.id, (route) => false);
+                          })),
+                )
+              ],
             ),
             floatingActionButton: FloatingActionButton(
               elevation: 0,
