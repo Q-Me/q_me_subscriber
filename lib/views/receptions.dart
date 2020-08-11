@@ -207,7 +207,10 @@ class ReceptionAppointmentListView extends StatelessWidget {
                     onTap: () => Navigator.pushNamed(
                           context,
                           SlotView.id,
-                          arguments: [reception, slot],
+                          arguments: SlotViewArguments(
+                            reception: reception,
+                            slot: slot,
+                          ),
                         ),
                     child: SlotTiming()),
                 Expanded(
@@ -286,10 +289,10 @@ class BookedSeat extends StatelessWidget {
       onTap: () => Navigator.pushNamed(
         context,
         SlotView.id,
-        arguments: [
-          Provider.of<Reception>(context, listen: false),
-          Provider.of<Slot>(context, listen: false)
-        ],
+        arguments: SlotViewArguments(
+          reception: Provider.of<Reception>(context, listen: false),
+          slot: Provider.of<Slot>(context, listen: false),
+        ),
       ),
       child: Container(
         height: 50,
@@ -318,8 +321,14 @@ class UnbookedSeat extends StatelessWidget {
         final Slot slot = context.read<Slot>();
         logger.i(
             'Selected reception: ${receptionToJson(reception)}\nSlot selected:${slot.toJson()}');
-        Navigator.pushReplacementNamed(context, CreateAppointment.id,
-            arguments: [reception.receptionId, slot]);
+        Navigator.pushReplacementNamed(
+          context,
+          CreateAppointment.id,
+          arguments: CreateAppointmentArgs(
+            receptionId: reception.receptionId,
+            slot: slot,
+          ),
+        );
       },
       child: Container(
         height: 50,

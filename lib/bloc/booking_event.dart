@@ -9,18 +9,16 @@ class BookingListRequested extends BookingEvent {
   final DateTime endTime;
   final List<String> status;
   final int slotDurationInMinutes;
-  final String accessToken;
 
   BookingListRequested(this.counterId, this.startTime, this.endTime,
-      this.status, this.slotDurationInMinutes, this.accessToken);
+      this.status, this.slotDurationInMinutes);
 }
 
 class AppointmentCancelRequested extends BookingEvent {
   final String counterId;
   final String phone;
-  final String accessToken;
 
-  AppointmentCancelRequested(this.counterId, this.phone, this.accessToken);
+  AppointmentCancelRequested(this.counterId, this.phone);
 }
 
 class AppointmentFinishRequested extends BookingEvent {
