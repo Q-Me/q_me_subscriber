@@ -2,6 +2,7 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
 import 'package:qme_subscriber/views/profile.dart';
@@ -177,7 +178,7 @@ class _SignInScreenState extends State<SignInScreen>
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-          resizeToAvoidBottomPadding: false,
+          resizeToAvoidBottomPadding: true,
           body: Builder(
             builder: (context) => SingleChildScrollView(
               child: Column(
@@ -277,6 +278,7 @@ class _SignInScreenState extends State<SignInScreen>
                                                 filled: true,
                                                 fillColor: Colors.grey[100],
                                                 hintText: "Mobile Number"),
+                                                keyboardType: TextInputType.phone,
                                             controller: _phoneController,
                                             validator: (value) {
                                               if (value.isEmpty) {
@@ -387,7 +389,7 @@ class _SignInScreenState extends State<SignInScreen>
                                             },
                                             child: Center(
                                               child: Text(
-                                                'Login with OTP',
+                                                'Login',
                                                 style: TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 16.0,
@@ -459,6 +461,7 @@ class _SignInScreenState extends State<SignInScreen>
                                                 filled: true,
                                                 fillColor: Colors.grey[100],
                                                 hintText: "Mobile Number"),
+                                                keyboardType:TextInputType.phone,
                                             controller: _phoneController,
                                             validator: (value) {
                                               if (value.isEmpty) {
@@ -581,10 +584,19 @@ class _SignInScreenState extends State<SignInScreen>
                                                           .getInstance();
                                                   prefs.setString(
                                                       'fcmToken', _fcmToken);
-                                                  Navigator.pushNamed(
-                                                      context, ReceptionsScreen.id);
-                                                } catch (e) {
-                                                  print(" !!$e !!");
+                                                 Navigator.of(context)
+                                                .pushNamedAndRemoveUntil(
+                                                    ReceptionsScreen.id,
+                                                    (Route<dynamic> route) =>
+                                                        false);
+                                                } 
+                                                on UnauthorisedException catch (e){
+                                                   Scaffold.of(context)
+                                                      .showSnackBar(SnackBar(
+                                                          content: Text(
+                                                              e.toMap()["msg"].toString())));
+                                                }
+                                                catch (e) {
                                                   Scaffold.of(context)
                                                       .showSnackBar(SnackBar(
                                                           content: Text(
@@ -598,7 +610,7 @@ class _SignInScreenState extends State<SignInScreen>
                                             },
                                             child: Center(
                                               child: Text(
-                                                'Login with password ',
+                                                'Login',
                                                 style: TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 16.0,

@@ -96,8 +96,8 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                             String accessToken = await SubscriberRepository()
                                 .getAccessTokenFromStorage();
                             SubscriberRepository().signOut(accessToken);
-                            prefs.setString('accessToken', null);
-                            prefs.setString('refreshToken', null);
+                            prefs.remove('accessToken');
+                            prefs.remove('refreshToken');
 
                             logger.d('Log Out');
                             Navigator.pushNamedAndRemoveUntil(

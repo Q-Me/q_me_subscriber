@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
 import 'package:pin_entry_text_field/pin_entry_text_field.dart';
+import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
@@ -192,7 +193,15 @@ class _OtpPageState extends State<OtpPage> {
                                                 'token': formData['token'],
                                               });
                                               log(response.toString());
-                                            } catch (e) {
+                                            } on UnauthorisedException catch (e){
+                                              Scaffold.of(context).showSnackBar(
+                                                  SnackBar(
+                                                      content:
+                                                          Text(e.toMap()["msg"].toString())));
+                                              log('Error: ' + e.toString());
+                                              return;
+                                            }
+                                             catch (e) {
                                               Scaffold.of(context).showSnackBar(
                                                   SnackBar(
                                                       content:
@@ -324,7 +333,13 @@ class _OtpPageState extends State<OtpPage> {
                                                     ReceptionsScreen.id,
                                                     (Route<dynamic> route) =>
                                                         false);
-                                          } catch (e) {
+                                          } on UnauthorisedException catch(e){
+                                            Scaffold.of(context).showSnackBar(
+                                                SnackBar(
+                                                    content:
+                                                        Text(e.toMap()["msg"].toString())));
+                                          }
+                                          catch (e) {
                                             Scaffold.of(context).showSnackBar(
                                                 SnackBar(
                                                     content:

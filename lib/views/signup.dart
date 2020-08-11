@@ -333,7 +333,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               labelText: 'CONFIRM PASSWORD',
                               labelStyle: kLabelStyle,
                               focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.green)),
+                                  borderSide: BorderSide(color: Colors.blue)),
                               focusColor: Theme.of(context).primaryColorDark,
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -568,6 +568,11 @@ class _SignUpButtonState extends State<SignUpButton> {
         },
         codeAutoRetrievalTimeout: null);
   }
+  bool isValidEmail(String email) {
+    return RegExp(
+            r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
+        .hasMatch(email);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -575,7 +580,7 @@ class _SignUpButtonState extends State<SignUpButton> {
       height: 50.0,
       child: Material(
         borderRadius: BorderRadius.circular(20.0),
-        shadowColor: Colors.greenAccent,
+        shadowColor: Colors.blue,
         color: Theme.of(context).primaryColor,
         elevation: 7.0,
         child: InkWell(
@@ -597,6 +602,14 @@ class _SignUpButtonState extends State<SignUpButton> {
                     SnackBar(content: Text('Passwords do not match')));
                 return null;
               }
+              if(widget.formData['email'] != "" ){
+              if(!isValidEmail(widget.formData['email'])){ Scaffold.of(context).showSnackBar(
+                    SnackBar(content: Text('Enter valid email address')));
+                return null;}
+
+                
+              }
+              print("email:${widget.formData['email']}");
 
               FocusScope.of(context)
                   .requestFocus(FocusNode()); // dismiss the keyboard
@@ -619,6 +632,7 @@ class _SignUpButtonState extends State<SignUpButton> {
                           textColor: Colors.white,
                           color: Theme.of(context).primaryColor,
                           onPressed: () {
+                            // Navigator.pop(context);
                             Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
