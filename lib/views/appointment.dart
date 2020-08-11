@@ -346,6 +346,7 @@ class _AppointmentViewState extends State<AppointmentView> {
                   state is AppointmentFinishSuccessful) {
                 return Center(
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       CircularProgressIndicator(backgroundColor: Colors.green),
                       Text(
@@ -364,7 +365,7 @@ class _AppointmentViewState extends State<AppointmentView> {
                 ));
               } else if (state is AppointmentCancelSuccessful ||
                   state is AppointmentFinishSuccessful) {
-                // TODO: Pop the navigator here
+                Navigator.pop(context);
               } else if (state is AppointmentWrongOtpProvided) {
                 Scaffold.of(context).showSnackBar(SnackBar(
                   content: Text("Please enter correct OTP"),

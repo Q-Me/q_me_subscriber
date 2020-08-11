@@ -33,17 +33,13 @@ class AppointmentBloc extends Bloc<AppointmentEvent, AppointmentState> {
       AppointmentFinished event) async* {
     yield Loading();
     try {
-      var response = await repository.completeAppointment(
+      Map<String, dynamic> response = await repository.completeAppointment(
           counterId: event.counterId,
           phone: event.phoneNo,
           otp: event.otp.toString(),
           accessToken: event.accessToken);
-      if (response["msg"] == "Slot done") {
+        logger.d(response["msg"]);
         yield AppointmentFinishSuccessful();
-      } else {
-        logger.e(response["msg"]);
-        yield ProcessFailure();
-      }
     } on BadRequestException {
       yield AppointmentWrongOtpProvided();
     } catch (e) {
