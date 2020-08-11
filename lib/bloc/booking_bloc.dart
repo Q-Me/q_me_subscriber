@@ -37,7 +37,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
               status: event.status);
       logger.i(response);
       yield BookingLoadSuccessful(response);
-      logger.d("getting bookings successful");
+//      logger.d("getting bookings successful");
     } catch (e) {
       logger.e("Getting Booking list failed");
       yield BookingLoadFailure();
@@ -51,7 +51,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       var response = await receptionRepository.completeAppointment(
           counterId: event.counterId,
           phone: event.phone,
-          otp: event.otp,
+          otp: event.otp.toString(),
           accessToken: event.accessToken);
       logger.d("calling api for completing appointment success");
       logger.i(response);

@@ -30,3 +30,7 @@ class AppointmentFinishRequested extends BookingEvent {
   AppointmentFinishRequested(
       this.counterId, this.phone, this.otp, this.accessToken);
 }
+
+class AddUnbookedAppointment extends BookingEvent {}
+
+class RemoveUnbookedAppointment extends BookingEvent {}
