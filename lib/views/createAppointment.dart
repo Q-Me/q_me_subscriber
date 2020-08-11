@@ -177,15 +177,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                                           child: AppointmentDetails(
                                               appointment: appointment),
                                         ),
-                                        actions: [
-                                          FlatButton(
-                                            child: Text('Go to Home'),
-                                            onPressed: () {
-                                              Navigator.pushReplacementNamed(
-                                                  context, ReceptionsScreen.id);
-                                            },
-                                          )
-                                        ],
+                                        actions: [GoToHomeButton()],
                                       ),
                                     );
                                   }
@@ -219,6 +211,22 @@ class _CreateAppointmentState extends State<CreateAppointment> {
     _phoneController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+}
+
+class GoToHomeButton extends StatelessWidget {
+  const GoToHomeButton({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: Text('Go to Home'),
+      onPressed: () {
+        Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
+      },
+    );
   }
 }
 
