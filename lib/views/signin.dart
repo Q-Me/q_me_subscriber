@@ -1,21 +1,20 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
-import 'package:qme_subscriber/views/profile.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 import 'package:qme_subscriber/views/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../widgets/text.dart';
-import '../widgets/formField.dart';
-import 'dart:developer';
+
 import '../constants.dart';
 import '../repository/subscriber.dart';
-import '../views/queues.dart';
-import 'dart:io';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import '../widgets/text.dart';
 
 class SignInScreen extends StatefulWidget {
   static const String id = '/signIn';
@@ -185,7 +184,7 @@ class _SignInScreenState extends State<SignInScreen>
                 children: <Widget>[
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-                    child: ThemedText(words: ['Q ME', 'Subsciber']),
+                    child: ThemedText(words: ['Q Me', 'Partner']),
                   ),
                   Container(
                       padding:
@@ -581,8 +580,8 @@ class _SignInScreenState extends State<SignInScreen>
                                                           .getInstance();
                                                   prefs.setString(
                                                       'fcmToken', _fcmToken);
-                                                  Navigator.pushNamed(
-                                                      context, ReceptionsScreen.id);
+                                                  Navigator.pushNamed(context,
+                                                      ReceptionsScreen.id);
                                                 } catch (e) {
                                                   print(" !!$e !!");
                                                   Scaffold.of(context)
@@ -621,14 +620,14 @@ class _SignInScreenState extends State<SignInScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text(
-                        'New to Q Me?',
+                        'New to Q Me Partners?',
                         style: TextStyle(fontFamily: 'Montserrat'),
                       ),
                       SizedBox(width: 5.0),
                       InkWell(
                         onTap: () {
                           Navigator.of(context).pushNamed(SignUpScreen.id);
-                          print('Register button pressed');
+                          logger.d('Register button pressed');
                         },
                         child: Text(
                           'Register',
