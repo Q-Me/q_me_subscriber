@@ -6,9 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
 import 'package:pin_entry_text_field/pin_entry_text_field.dart';
+import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/views/queues.dart';
+import 'package:qme_subscriber/views/receptions.dart';
 import 'package:qme_subscriber/widgets/button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -98,10 +100,10 @@ class _OtpPageState extends State<OtpPage> {
                                 child: InkWell(
                                   onTap: () async {
                                     Scaffold.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Processing Data'),
-                                            ),
-                                          );
+                                      SnackBar(
+                                        content: Text('Processing Data'),
+                                      ),
+                                    );
                                     final code = _codeController.text.trim();
                                     try {
                                       AuthCredential credential =
@@ -156,7 +158,6 @@ class _OtpPageState extends State<OtpPage> {
                                           _fcmToken = prefs.getString(
                                             'fcmToken',
                                           );
-                                          
 
                                           UserRepository user =
                                               UserRepository();
@@ -245,14 +246,11 @@ class _OtpPageState extends State<OtpPage> {
                                                   'fcmToken', _fcmToken);
 
                                               // Navigate to QueuesPage
-                                              Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          QueuesScreen(
-                                                            subscriberId:
-                                                                response['id'],
-                                                          )));
+                                               Navigator.of(context)
+                                                .pushNamedAndRemoveUntil(
+                                                    ReceptionsScreen.id,
+                                                    (Route<dynamic> route) =>
+                                                        false);
                                             } else if (response['msg'] ==
                                                     "Invalid Credential" ||
                                                 response['error'] != null) {
@@ -277,10 +275,10 @@ class _OtpPageState extends State<OtpPage> {
                                                         'SignUp failed:${response['msg']}')));
                                           }
                                         } else {
-                                           Scaffold.of(context).showSnackBar(
-                                                SnackBar(
-                                                    content: Text(
-                                                        'Processing Data')));
+                                          Scaffold.of(context).showSnackBar(
+                                              SnackBar(
+                                                  content:
+                                                      Text('Processing Data')));
                                           print("login otp");
                                           _fcmToken =
                                               prefs.getString('fcmToken');
@@ -304,7 +302,7 @@ class _OtpPageState extends State<OtpPage> {
                                                 .storeSubscriberData(
                                                     Subscriber.fromJson(
                                                         response));
-                                           
+
                                             var responsefcm =
                                                 await SubscriberRepository()
                                                     .fcmTokenSubmit({
@@ -319,8 +317,13 @@ class _OtpPageState extends State<OtpPage> {
                                                     .getInstance();
                                             prefs.setString(
                                                 'fcmToken', _fcmToken);
-                                            Navigator.pushNamed(
-                                                context, QueuesScreen.id);
+                                            // Navigator.pushNamed(
+                                            //     context, ReceptionsScreen.id);
+                                            Navigator.of(context)
+                                                .pushNamedAndRemoveUntil(
+                                                    ReceptionsScreen.id,
+                                                    (Route<dynamic> route) =>
+                                                        false);
                                           } catch (e) {
                                             Scaffold.of(context).showSnackBar(
                                                 SnackBar(

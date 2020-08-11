@@ -11,23 +11,26 @@ import 'package:qme_subscriber/views/receptions.dart';
 import 'package:qme_subscriber/widgets/button.dart';
 import 'package:qme_subscriber/widgets/slotWidgets.dart';
 
-class CreateAppointment extends StatefulWidget {
-  static const String id = '/createAppointment';
+class CreateAppointmentArgs {
   final Slot slot;
   final String receptionId;
+  const CreateAppointmentArgs(
+      {@required this.receptionId, @required this.slot});
+}
 
-  CreateAppointment({
-    @required this.slot,
-    this.receptionId,
-  });
+class CreateAppointment extends StatefulWidget {
+  static const String id = '/createAppointment';
+  final CreateAppointmentArgs args;
+
+  CreateAppointment(this.args);
 
   @override
   _CreateAppointmentState createState() => _CreateAppointmentState();
 }
 
 class _CreateAppointmentState extends State<CreateAppointment> {
-  Slot get slot => widget.slot;
-  String get receptionId => widget.receptionId;
+  Slot get slot => widget.args.slot;
+  String get receptionId => widget.args.receptionId;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
@@ -174,15 +177,7 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                                           child: AppointmentDetails(
                                               appointment: appointment),
                                         ),
-                                        actions: [
-                                          FlatButton(
-                                            child: Text('Go to Home'),
-                                            onPressed: () {
-                                              Navigator.pushReplacementNamed(
-                                                  context, ReceptionsScreen.id);
-                                            },
-                                          )
-                                        ],
+                                        actions: [GoToHomeButton()],
                                       ),
                                     );
                                   }
@@ -216,6 +211,22 @@ class _CreateAppointmentState extends State<CreateAppointment> {
     _phoneController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+}
+
+class GoToHomeButton extends StatelessWidget {
+  const GoToHomeButton({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: Text('Go to Home'),
+      onPressed: () {
+        Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
+      },
+    );
   }
 }
 

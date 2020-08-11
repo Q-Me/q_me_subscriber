@@ -37,7 +37,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
               status: event.status);
       logger.i(response);
       yield BookingLoadSuccessful(response);
-      logger.d("getting bookings successful");
+//      logger.d("getting bookings successful");
     } catch (e) {
       logger.e("Getting Booking list failed");
       yield BookingLoadFailure();

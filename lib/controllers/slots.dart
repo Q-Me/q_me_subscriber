@@ -92,6 +92,8 @@ List<Slot> modifyBookings(List<Slot> slots, List bookings) {
           .isAtSameMomentAs(DateTime.parse(map['starttime']).toLocal())) {
         slots[i].booked = map['count'];
 //        logger.d('${slots[i].toJson()}');
+      } else {
+        slots[i].booked = 0;
       }
     }
   }

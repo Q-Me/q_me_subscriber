@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
+import 'package:ordered_set/comparing.dart';
 import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/repository/reception.dart';
@@ -79,6 +81,11 @@ class ReceptionsBloc extends ChangeNotifier {
         }
       }
       filteredReceptions = await Future.wait(futureReceptions);
+
+      SplayTreeSet<Reception> receptionsSet = SplayTreeSet<Reception>(
+          Comparing.on((reception) => reception.startTime));
+      receptionsSet.addAll(filteredReceptions);
+      filteredReceptions = receptionsSet.toList();
 
       this.selectedDateReceptions = filteredReceptions;
       receptionsSink.add(ApiResponse.completed(filteredReceptions));
