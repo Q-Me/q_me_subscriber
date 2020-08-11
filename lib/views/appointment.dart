@@ -124,7 +124,8 @@ class _AppointmentViewState extends State<AppointmentView> {
                     ),
                   );
                 } else if (state is AppointmentInitial ||
-                    state is ProcessFailure) {
+                    state is ProcessFailure ||
+                    state is AppointmentWrongOtpProvided) {
                   return Padding(
                       padding: _pad,
                       child: SingleChildScrollView(
@@ -389,6 +390,10 @@ class _AppointmentViewState extends State<AppointmentView> {
                 } else if (state is AppointmentCancelSuccessful ||
                     state is AppointmentFinishSuccessful) {
                   // TODO: Pop the navigator here
+                } else if (state is AppointmentWrongOtpProvided) {
+                  Scaffold.of(context).showSnackBar(SnackBar(
+                    content: Text("Please enter correct otp"),
+                  ));
                 }
               }))),
     );

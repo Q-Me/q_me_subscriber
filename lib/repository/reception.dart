@@ -217,7 +217,7 @@ class ReceptionRepository {
   Future<Map<String, dynamic>> completeAppointment({
     @required String counterId,
     @required String phone,
-    @required int otp,
+    @required String otp,
     @required String accessToken,
   }) async {
     final response = await _helper.post(
