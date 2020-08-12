@@ -249,12 +249,16 @@ class ReceptionRepository {
   }
 
   Future<Reception> viewReceptionDetailed({
-    @required String counterId,
-    @required accessToken,
+    @required String receptionId,
+    String accessToken,
   }) async {
+    accessToken = accessToken != null
+        ? accessToken
+        : await SubscriberRepository().getAccessTokenFromStorage();
+
     final response = await _helper.post(
       kViewDetailedCounter,
-      req: {"counter_id": counterId},
+      req: {"counter_id": receptionId},
       headers: {'Authorization': 'Bearer $accessToken'},
     );
     // Create Reception
