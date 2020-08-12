@@ -46,3 +46,52 @@ class Appointment {
         "otp": otp
       };
 }
+
+final jsonTestString = {
+  "slots": [
+    {
+      "starttime": "2020-08-13T09:00:00.000Z",
+      "endtime": "2020-08-13T10:00:00.000Z",
+      "status": "CANCELLED BY SUBSCRIBER",
+      "note": "A",
+      "booked_by": "SUBSCRIBER",
+      "cust_name": "A",
+      "cust_phone": "+911234567890"
+    },
+    {
+      "starttime": "2020-08-13T09:00:00.000Z",
+      "endtime": "2020-08-13T10:00:00.000Z",
+      "status": "DONE",
+      "note": "b",
+      "booked_by": "SUBSCRIBER",
+      "cust_name": "b",
+      "cust_phone": "+919874563210"
+    },
+    {
+      "starttime": "2020-08-13T09:00:00.000Z",
+      "endtime": "2020-08-13T10:00:00.000Z",
+      "status": "UPCOMING",
+      "note": "8445",
+      "booked_by": "SUBSCRIBER",
+      "cust_name": "c",
+      "cust_phone": "+919856321470"
+    }
+  ]
+};
+
+List<Appointment> filterAppointmentsByStatus(
+    List<Appointment> appointments, String status) {
+  return appointments.map((e) {
+    if (e.status == status) return e;
+  }).toList();
+}
+
+void main() {
+  List<Appointment> appointments = [];
+  for (var appointmentElement in jsonTestString["slots"]) {
+    appointments.add(
+      Appointment.fromJson(Map<String, dynamic>.from(appointmentElement)),
+    );
+  }
+  print(filterAppointmentsByStatus(appointments, "UPCOMING")[0].toJson());
+}
