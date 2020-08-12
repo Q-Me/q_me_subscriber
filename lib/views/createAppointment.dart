@@ -62,7 +62,8 @@ class _CreateAppointmentState extends State<CreateAppointment> {
         appBar: AppBar(
           leading: GestureDetector(
             onTap: () {
-              Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
+              Navigator.pushNamedAndRemoveUntil(context, ReceptionsScreen.id,
+                  (Route<dynamic> route) => false);
             },
             child: Icon(Icons.arrow_back),
           ),
