@@ -131,8 +131,10 @@ class _SlotViewState extends State<SlotView> {
                               ),
                               ListView.builder(
                                 shrinkWrap: true,
-                                itemCount: reception.customersInSlot -
-                                    (slot.upcoming ?? 0),
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: slot.customersInSlot -
+                                    slot.upcoming -
+                                    slot.done,
                                 itemBuilder: (BuildContext context, int index) {
                                   return UnbookedTile();
                                 },

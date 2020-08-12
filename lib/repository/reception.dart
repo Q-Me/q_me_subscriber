@@ -1,10 +1,10 @@
 import 'package:meta/meta.dart';
+import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/controllers/slots.dart';
 import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 
-import '../api/base_helper.dart';
 import '../api/endpoints.dart';
 import '../model/reception.dart';
 
