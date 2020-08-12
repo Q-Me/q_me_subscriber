@@ -83,7 +83,6 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                         decoration: InputDecoration(labelText: 'Customer Name'),
                         controller: _nameController,
                         autofocus: true,
-                        autovalidate: true,
                         validator: (value) {
                           if (value.isEmpty) {
                             return 'Please enter some text';
@@ -104,7 +103,6 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                         keyboardType: TextInputType.phone,
                         textInputAction: TextInputAction.next,
                         controller: _phoneController,
-                        autovalidate: true,
 //                        focusNode: phoneFocus,
                         validator: (value) {
                           // Check for +91 and 10 digits after that
@@ -125,11 +123,8 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                       TextFormField(
                         controller: _noteController,
 //                        focusNode: noteFocus,
-                        autofocus: true,
                         decoration: InputDecoration(
                           labelText: 'Note',
-                          /* Note for the appointment
-                           */
                         ),
                       ),
                       SizedBox(height: 30),
