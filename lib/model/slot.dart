@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 import 'package:ordered_set/comparing.dart';
 
@@ -13,8 +13,8 @@ class Slot extends Equatable with ChangeNotifier {
   Slot({
     @required this.startTime,
     @required this.endTime,
-    this.upcoming,
-    this.done,
+    this.upcoming = 0,
+    this.done = 0,
     this.customersInSlot,
   });
 
@@ -40,7 +40,8 @@ class Slot extends Equatable with ChangeNotifier {
         "starttime": startTime.toIso8601String(),
         "endtime": endTime.toIso8601String(),
         "cust_per_slot": customersInSlot,
-        "booked": upcoming,
+        "upcoming": upcoming,
+        "done": done
       };
 
   @override

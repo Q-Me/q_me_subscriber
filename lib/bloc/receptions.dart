@@ -74,7 +74,7 @@ class ReceptionsBloc extends ChangeNotifier {
         if (_selectedDate.isSameDate(start) || _selectedDate.isSameDate(end)) {
           futureReceptions.add(
             _receptionRepository.viewReceptionDetailed(
-              counterId: reception.receptionId,
+              receptionId: reception.receptionId,
               accessToken: accessToken,
             ),
           );

@@ -1,10 +1,10 @@
 import 'package:meta/meta.dart';
+import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/controllers/slots.dart';
 import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 
-import '../api/base_helper.dart';
 import '../api/endpoints.dart';
 import '../model/reception.dart';
 
@@ -249,12 +249,16 @@ class ReceptionRepository {
   }
 
   Future<Reception> viewReceptionDetailed({
-    @required String counterId,
-    @required accessToken,
+    @required String receptionId,
+    String accessToken,
   }) async {
+    accessToken = accessToken != null
+        ? accessToken
+        : await SubscriberRepository().getAccessTokenFromStorage();
+
     final response = await _helper.post(
       kViewDetailedCounter,
-      req: {"counter_id": counterId},
+      req: {"counter_id": receptionId},
       headers: {'Authorization': 'Bearer $accessToken'},
     );
     // Create Reception
