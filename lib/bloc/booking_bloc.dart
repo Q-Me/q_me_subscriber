@@ -23,6 +23,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       yield* _mapAppointmentFinishRequestedToState(event);
     else if (event is AppointmentCancelRequested)
       yield* _mapAppointmentCancelRequestedToState(event);
+    else if (event is BookingRefreshRequested) yield BookingInitial();
   }
 
   Stream<BookingState> _mapBookingListRequestedToState(

@@ -209,8 +209,8 @@ class UnbookedTile extends StatelessWidget {
         dense: false,
         trailing: Icon(Icons.delete, color: Colors.white),
         title: InkWell(
-          onTap: () {
-            Navigator.pushReplacementNamed(
+          onTap: () async {
+            await Navigator.pushReplacementNamed(
               context,
               CreateAppointment.id,
               arguments: CreateAppointmentArgs(
@@ -221,6 +221,7 @@ class UnbookedTile extends StatelessWidget {
                 slot: Provider.of<Slot>(context, listen: false),
               ),
             );
+            BlocProvider.of<BookingBloc>(context).add(BookingRefreshRequested());
           },
           child: Center(
               child: Text(
@@ -247,7 +248,7 @@ class AppointmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
+      onTap: () async {
         if (appointment.status == "UPCOMING") {
           Navigator.pushReplacementNamed(
             context,
@@ -257,6 +258,7 @@ class AppointmentCard extends StatelessWidget {
               appointment
             ],
           );
+          BlocProvider.of<BookingBloc>(context).add(BookingRefreshRequested());
         }
       },
       child: Card(

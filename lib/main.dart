@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
+import 'package:qme_subscriber/utilities/session.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 
 import 'router.dart' as router;
@@ -7,10 +8,10 @@ import 'services/analytics.dart';
 import 'views/signin.dart';
 
 var analytics = AnalyticsService();
-String initialHome = SignInScreen.id;
+String initialHome = ReceptionsScreen.id;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-//  await setSession();
+  await setSession();
   if (await SubscriberRepository().isSessionReady()) {
     initialHome = ReceptionsScreen.id;
   }
