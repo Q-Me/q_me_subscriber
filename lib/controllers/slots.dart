@@ -90,10 +90,28 @@ List<Slot> modifyBookings(List<Slot> slots, List bookings) {
       if (slots[i]
           .startTime
           .isAtSameMomentAs(DateTime.parse(map['starttime']).toLocal())) {
-        slots[i].booked = map['count'];
+        slots[i].upcoming = map['count'];
 //        logger.d('${slots[i].toJson()}');
       } else {
-        slots[i].booked = 0;
+        slots[i].upcoming = 0;
+      }
+    }
+  }
+  return slots;
+}
+
+List<Slot> modifyDoneSlots(List<Slot> slots, List bookings) {
+  assert(bookings != null);
+
+  for (var map in bookings) {
+    for (int i = 0; i < slots.length; i++) {
+      if (slots[i]
+          .startTime
+          .isAtSameMomentAs(DateTime.parse(map['starttime']).toLocal())) {
+        slots[i].upcoming = map['count'];
+//        logger.d('${slots[i].toJson()}');
+      } else {
+        slots[i].done = 0;
       }
     }
   }
