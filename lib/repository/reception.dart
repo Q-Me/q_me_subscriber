@@ -146,7 +146,7 @@ class ReceptionRepository {
     for (var element in response["slot info"]) {
       DateTime startTime = DateTime.parse(element["starttime"]).toLocal();
       Slot slot = Slot(
-        booked: element["count"],
+        upcoming: element["count"],
         startTime: startTime,
         endTime: startTime.add(Duration(
           minutes: slotDurationInMinutes,
@@ -271,12 +271,21 @@ class ReceptionRepository {
       slots = overrideSlots(slots, createOverrideSlots(response));
     }
 
-    final List bookedSlots = response['slots'];
+    // TODO Handle slot_done
+    final List bookedSlots = response['slots_upcoming'];
     if (bookedSlots != null &&
         bookedSlots is List &&
         bookedSlots.length != null) {
       // update slots according to bookings
       slots = modifyBookings(slots, bookedSlots);
+
+      // TODO Update done slots
+//      slots = modifyDoneSlots
+
+    }
+    final List doneSlots = response['slots_done'];
+    if (doneSlots != null && doneSlots is List && doneSlots.length != null) {
+      slots = modifyDoneSlots(slots, doneSlots);
     }
 
     reception.replaceSlots(slots);

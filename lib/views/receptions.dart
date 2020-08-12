@@ -131,7 +131,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
               heroTag: "Create Reception",
               onPressed: () {
                 logger.d('Create reception route on date $selectedDate');
-                Navigator.pushReplacementNamed(
+                Navigator.pushNamed(
                   context,
                   CreateReceptionScreen.id,
                   arguments: selectedDate,
@@ -233,17 +233,26 @@ class ReceptionAppointmentListView extends StatelessWidget {
       physics: NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         Slot slot = reception.slotList[index];
-        List<Widget> bookedBoxes = List.generate(
-          slot.booked != null ? slot.booked : 0,
-          (index) => BookedSeat(),
+        List<Widget> upcomingBoxes = List.generate(
+          slot.upcoming != null ? slot.upcoming : 0,
+          (index) => UpcomingSeat(),
         );
-        List<Widget> unBookedBoxes = List.generate(
-            slot.booked == null
-                ? slot.customersInSlot
-                : slot.customersInSlot - slot.booked,
-            (index) => UnbookedSeat());
 
-        final allBoxes = [...bookedBoxes, ...unBookedBoxes];
+        List<Widget> doneBoxes = List.generate(
+          slot.done != null ? slot.done : 0,
+          (index) => DoneSeat(),
+        );
+
+        List<Widget> unBookedBoxes = List.generate(
+          slot.upcoming == null
+              ? slot.customersInSlot
+              : slot.customersInSlot -
+                  (slot.upcoming != null ? slot.upcoming : 0) -
+                  (slot.done != null ? slot.done : 0),
+          (index) => UnbookedSeat(),
+        );
+
+        final allBoxes = [...upcomingBoxes, ...doneBoxes, ...unBookedBoxes];
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -252,15 +261,16 @@ class ReceptionAppointmentListView extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 GestureDetector(
-                    onTap: () => Navigator.pushNamed(
-                          context,
-                          SlotView.id,
-                          arguments: SlotViewArguments(
-                            reception: reception,
-                            slot: slot,
-                          ),
-                        ),
-                    child: SlotTiming()),
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    SlotView.id,
+                    arguments: SlotViewArguments(
+                      reception: reception,
+                      slot: slot,
+                    ),
+                  ),
+                  child: SlotTiming(),
+                ),
                 Expanded(
                   child: Wrap(
                     runSpacing: 3,
@@ -273,35 +283,6 @@ class ReceptionAppointmentListView extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class AddOverride extends StatelessWidget {
-  const AddOverride({
-    Key key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        final Reception reception = context.read<Reception>();
-        final Slot slot = context.read<Slot>();
-        logger.d('Reception:${reception.toJson()}\nSlot:${slot.toJson()}');
-        // TODO add an override to this slot
-        // TODO show dialog box to add an override
-      },
-      child: Container(
-        height: 50,
-        width: 50,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          border: Border.all(),
-        ),
-        child: Icon(Icons.add),
-      ),
     );
   }
 }
@@ -325,15 +306,14 @@ class SlotTiming extends StatelessWidget {
   }
 }
 
-class BookedSeat extends StatelessWidget {
-  const BookedSeat({
+class UpcomingSeat extends StatelessWidget {
+  const UpcomingSeat({
     Key key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // TODO Test provider
       onTap: () => Navigator.pushNamed(
         context,
         SlotView.id,
@@ -350,7 +330,43 @@ class BookedSeat extends StatelessWidget {
           color: Colors.blue,
           borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
-        child: Text('booked'),
+        child: Text(
+          'UPCOMING',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class DoneSeat extends StatelessWidget {
+  const DoneSeat({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(
+        context,
+        SlotView.id,
+        arguments: SlotViewArguments(
+          reception: Provider.of<Reception>(context, listen: false),
+          slot: Provider.of<Slot>(context, listen: false),
+        ),
+      ),
+      child: Container(
+        height: 50,
+        alignment: Alignment.center,
+        width: 80,
+        decoration: BoxDecoration(
+          color: Colors.green,
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        child: Text(
+          'DONE',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
@@ -369,7 +385,7 @@ class UnbookedSeat extends StatelessWidget {
         final Slot slot = context.read<Slot>();
         logger.i(
             'Selected reception: ${receptionToJson(reception)}\nSlot selected:${slot.toJson()}');
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamed(
           context,
           CreateAppointment.id,
           arguments: CreateAppointmentArgs(
@@ -383,10 +399,13 @@ class UnbookedSeat extends StatelessWidget {
         alignment: Alignment.center,
         width: 80,
         decoration: BoxDecoration(
-          color: Colors.yellow[800],
+          color: Colors.grey,
           borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
-        child: Text('unbooked'),
+        child: Text(
+          'unbooked',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
   }

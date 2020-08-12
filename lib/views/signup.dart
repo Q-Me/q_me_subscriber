@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_place_picker/google_maps_place_picker.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
 import 'package:qme_subscriber/views/signin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,6 +60,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     "Airport"
   ];
   String selectedCategory;
+
   Future<void> _launchInBrowser(String url) async {
     if (await canLaunch(url)) {
       await launch(
@@ -74,14 +76,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void initState() {
-    passwordVisible = false;
+    passwordVisible = true;
     selectedCategory = subscriberCategory[0];
     signUpBloc = SignUpBloc();
     subscriber = Subscriber();
     super.initState();
     firebaseCloudMessagingListeners();
     _messaging.getToken().then((token) {
-      print("fcmToken: $token");
+      logger.d("fcmToken: $token");
       _fcmToken = token;
     });
   }
@@ -90,19 +92,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (Platform.isIOS) iosPermission();
 
     _messaging.getToken().then((token) {
-      print(token);
+      logger.d(token);
     });
 
     _messaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         //showNotification(message['notification']);
-        print('on message $message');
+        logger.d('on message $message');
       },
       onResume: (Map<String, dynamic> message) async {
-        print('on resume $message');
+        logger.d('on resume $message');
       },
       onLaunch: (Map<String, dynamic> message) async {
-        print('on launch $message');
+        logger.d('on launch $message');
       },
     );
   }
@@ -112,7 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         IosNotificationSettings(sound: true, badge: true, alert: true));
     _messaging.onIosSettingsRegistered
         .listen((IosNotificationSettings settings) {
-      print("Settings registered: $settings");
+      logger.d("Settings registered: $settings");
     });
   }
 
@@ -174,7 +176,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onChanged: (value) {
                                 setState(() {
                                   selectedCategory = value;
-                                  log('Category selected:$selectedCategory');
+                                  logger
+                                      .d('Category selected:$selectedCategory');
                                   formData['category'] = selectedCategory;
                                 });
                               },
@@ -223,7 +226,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               return null;
                             },
                             onTap: () {
-                              log('Address field tapped');
+                              logger.d('Address field tapped');
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -231,7 +234,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     resizeToAvoidBottomInset: true,
                                     apiKey: mapsApiKey,
                                     onPlacePicked: (result) {
-                                      log('${result.geometry.location.lat},${result.geometry.location.lng}');
+                                      logger.d(
+                                          '${result.geometry.location.lat},${result.geometry.location.lng}');
 
                                       _mapLocationController.text =
                                           '${result.geometry.location.lat},${result.geometry.location.lng}';
@@ -260,7 +264,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 icon: Icon(Icons.location_on),
                                 color: Theme.of(context).primaryColor,
                                 onPressed: () {
-                                  log('Location button clicked');
+                                  logger.d('Location button clicked');
                                 },
                               ),
                             ),
@@ -333,7 +337,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               labelText: 'CONFIRM PASSWORD',
                               labelStyle: kLabelStyle,
                               focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.green)),
+                                  borderSide: BorderSide(
+                                      color: Theme.of(context).primaryColor)),
                               focusColor: Theme.of(context).primaryColorDark,
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -420,7 +425,21 @@ class SignUpButton extends StatefulWidget {
 }
 
 class _SignUpButtonState extends State<SignUpButton> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   var idToken;
+  void showSnackBar(String text, int seconds) {
+    Scaffold.of(context).hideCurrentSnackBar();
+   Scaffold.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        duration: Duration(seconds: seconds),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          onPressed: () => Scaffold.of(context).hideCurrentSnackBar(),
+        ),
+      ),
+    );
+  }
 
   Future<bool> loginUser(String phone, BuildContext context) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
@@ -557,9 +576,10 @@ class _SignUpButtonState extends State<SignUpButton> {
         //   //This callback would gets called when verification is done auto maticlly
         // },
         verificationFailed: (AuthException exception) {
-          print(exception.message);
-          Scaffold.of(context).showSnackBar(
-              SnackBar(content: Text(exception.message.toString())));
+          logger.d(exception.message);
+          // Scaffold.of(context).showSnackBar(
+          //     SnackBar(content: Text(exception.message.toString())));
+          showSnackBar(exception.message.toString(), 5);
         },
         codeSent: (String verificationId, [int forceResendingToken]) {
           authOtp = _auth;
@@ -569,42 +589,49 @@ class _SignUpButtonState extends State<SignUpButton> {
         codeAutoRetrievalTimeout: null);
   }
 
+  bool isValidEmail(String email) {
+    return RegExp(
+            r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
+        .hasMatch(email);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 50.0,
       child: Material(
         borderRadius: BorderRadius.circular(20.0),
-        shadowColor: Colors.greenAccent,
+        shadowColor: Theme.of(context).primaryColor,
         color: Theme.of(context).primaryColor,
         elevation: 7.0,
         child: InkWell(
           onTap: () async {
-            log('${widget.formData}');
+            logger.d('${widget.formData}');
             if (widget.formKey.currentState.validate()) {
-              log('${widget.formData is Map<String, String>}');
+              logger.d('${widget.formData is Map<String, String>}');
 
               // check phone number length
               if (widget.formData['phone'].length != 13) {
-                Scaffold.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                        'Phone number must have 10 digits with Country code')));
+                 showSnackBar('Phone number must have 10 digits with Country code', 5);
                 return;
               }
 
               if (widget.formData['password'] != widget.formData['cpassword']) {
-                Scaffold.of(context).showSnackBar(
-                    SnackBar(content: Text('Passwords do not match')));
+                showSnackBar('Passwords do not match', 5);
                 return null;
               }
-
+              if (widget.formData['email'] != "") {
+                if (!isValidEmail(widget.formData['email'])) {
+                      showSnackBar('Enter valid email address', 5);
+                  return null;
+                }
+              }
               FocusScope.of(context)
                   .requestFocus(FocusNode()); // dismiss the keyboard
-              Scaffold.of(context)
-                  .showSnackBar(SnackBar(content: Text('Processing Data')));
+                  showSnackBar('Processing Data', 5);
 
               final phone = widget.phoneController.text.trim();
-              print("phone number: $phone");
+              logger.d("phone number: $phone");
               showDialog(
                   context: context,
                   barrierDismissible: false,
@@ -619,6 +646,7 @@ class _SignUpButtonState extends State<SignUpButton> {
                           textColor: Colors.white,
                           color: Theme.of(context).primaryColor,
                           onPressed: () {
+                            // Navigator.pop(context);
                             Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(

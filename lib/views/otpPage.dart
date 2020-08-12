@@ -6,9 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
 import 'package:pin_entry_text_field/pin_entry_text_field.dart';
+import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/queues.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 import 'package:qme_subscriber/widgets/button.dart';
@@ -122,10 +124,10 @@ class _OtpPageState extends State<OtpPage> {
                                             .then((result) {
                                           idToken = result.token;
                                           formData['token'] = idToken;
-                                          print("@@ $idToken @@");
+                                          logger.d("@@ $idToken @@");
                                         });
 
-                                        log('$formData');
+                                        logger.d('$formData');
                                         SharedPreferences prefs =
                                             await SharedPreferences
                                                 .getInstance();
@@ -168,22 +170,21 @@ class _OtpPageState extends State<OtpPage> {
                                             response =
                                                 await SubscriberRepository()
                                                     .signUp(formData);
-                                            log(response.toString());
+                                            logger.d(response.toString());
                                           } catch (e) {
                                             Scaffold.of(context).showSnackBar(
                                                 SnackBar(
                                                     content:
                                                         Text(e.toString())));
-                                            log('Error: ' + e.toString());
+                                            logger.d('Error: ' + e.toString());
 
                                             return;
                                           }
 
-                                          print("@# $response#@");
-                                          print("@# ${response['msg']}#@");
+                                          logger.d("@# $response#@");
                                           if (response['msg'] ==
                                               'Registration successful') {
-                                            log('SignUp SUCCESSFUL');
+                                            logger.d('SignUp SUCCESSFUL');
                                             try {
                                               // SignIn the user
                                               response =
@@ -191,13 +192,21 @@ class _OtpPageState extends State<OtpPage> {
                                                       .signInFirebaseotp({
                                                 'token': formData['token'],
                                               });
-                                              log(response.toString());
-                                            } catch (e) {
+                                              logger.d(response.toString());
+                                            } on UnauthorisedException catch (e){
+                                              Scaffold.of(context).showSnackBar(
+                                                  SnackBar(
+                                                      content:
+                                                          Text(e.toMap()["msg"].toString())));
+                                              logger.d('Error: ' + e.toString());
+                                              return;
+                                            }
+                                             catch (e) {
                                               Scaffold.of(context).showSnackBar(
                                                   SnackBar(
                                                       content:
                                                           Text(e.toString())));
-                                              log('Error: ' + e.toString());
+                                              logger.d('Error: ' + e.toString());
                                               return;
                                             }
 
@@ -235,10 +244,8 @@ class _OtpPageState extends State<OtpPage> {
                                                       .fcmTokenSubmit({
                                                 'token': _fcmToken,
                                               }, response['accessToken']);
-                                              print(
+                                              logger.d(
                                                   "fcm token Api: $responsefcm");
-                                              print(
-                                                  "fcm token  Apiresponse: ${responsefcm['status']}");
                                               SharedPreferences prefs =
                                                   await SharedPreferences
                                                       .getInstance();
@@ -279,7 +286,6 @@ class _OtpPageState extends State<OtpPage> {
                                               SnackBar(
                                                   content:
                                                       Text('Processing Data')));
-                                          print("login otp");
                                           _fcmToken =
                                               prefs.getString('fcmToken');
                                           var response;
@@ -289,9 +295,9 @@ class _OtpPageState extends State<OtpPage> {
                                                     .signInFirebaseotp({
                                               'token': idToken,
                                             });
-                                            print("@@$response@@");
+                                            logger.d("@@$response@@");
 
-                                            log('SIGNIN API RESPONSE: ' +
+                                            ('SIGNIN API RESPONSE: ' +
                                                 response.toString());
 
                                             await SubscriberRepository()
@@ -308,9 +314,9 @@ class _OtpPageState extends State<OtpPage> {
                                                     .fcmTokenSubmit({
                                               'token': _fcmToken,
                                             }, response['accessToken']);
-                                            print(
+                                            logger.d(
                                                 "fcm token Api: $responsefcm");
-                                            print(
+                                            logger.d(
                                                 "fcm token  Apiresponse: ${responsefcm['status']}");
                                             SharedPreferences prefs =
                                                 await SharedPreferences
@@ -324,24 +330,30 @@ class _OtpPageState extends State<OtpPage> {
                                                     ReceptionsScreen.id,
                                                     (Route<dynamic> route) =>
                                                         false);
-                                          } catch (e) {
+                                          } on UnauthorisedException catch(e){
+                                            Scaffold.of(context).showSnackBar(
+                                                SnackBar(
+                                                    content:
+                                                        Text(e.toMap()["msg"].toString())));
+                                          }
+                                          catch (e) {
                                             Scaffold.of(context).showSnackBar(
                                                 SnackBar(
                                                     content:
                                                         Text(e.toString())));
                                             // _showSnackBar(e.toString());
-                                            log('Error in signIn API: ' +
+                                            logger.d('Error in signIn API: ' +
                                                 e.toString());
                                             return;
                                           }
                                         }
                                       } else {
-                                        print("SignUp failed");
+                                        logger.d("SignUp failed");
                                         return;
                                       }
                                     } on PlatformException catch (e) {
-                                      print("Looking for Error code");
-                                      print(e.message);
+                                      logger.d("Looking for Error code");
+                                      logger.d(e.message);
                                       Navigator.of(context).pop();
 
                                       showDialog(
@@ -365,7 +377,7 @@ class _OtpPageState extends State<OtpPage> {
                                               ],
                                             );
                                           });
-                                      print(e.code);
+                                      logger.d(e.code);
                                     } on Exception catch (e) {
                                       Navigator.of(context).pop();
 
@@ -390,8 +402,7 @@ class _OtpPageState extends State<OtpPage> {
                                               ],
                                             );
                                           });
-                                      print("Looking for Error message");
-                                      print(e);
+                                      logger.d(e);
                                     }
                                   },
                                   child: Center(
