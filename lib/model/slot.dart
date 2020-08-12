@@ -40,7 +40,8 @@ class Slot extends Equatable with ChangeNotifier {
         "starttime": startTime.toIso8601String(),
         "endtime": endTime.toIso8601String(),
         "cust_per_slot": customersInSlot,
-        "booked": upcoming,
+        "upcoming": upcoming,
+        "done": done
       };
 
   @override

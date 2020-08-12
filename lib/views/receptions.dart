@@ -27,7 +27,7 @@ class ReceptionsScreen extends StatefulWidget {
 class _ReceptionsScreenState extends State<ReceptionsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  DateTime startDate = DateTime.now().subtract(Duration(days: 7));
+  DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(Duration(days: 7));
   DateTime selectedDate = DateTime.now();
   List<DateTime> markedDates = [];
