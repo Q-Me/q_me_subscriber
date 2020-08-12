@@ -58,11 +58,18 @@ class SubscriberRepository {
     return response;
   }
 
-  Future<Map<String, dynamic>> signOut(String accessToken) async {
+  Future<Map<String, dynamic>> signOut() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    final String accessToken = prefs.getString("accessToken");
     final response = await _helper.post(
       kSignOut,
       headers: {'Authorization': 'Bearer $accessToken'},
     );
+    if (response["msg"] == "Logged out successfully") {
+      prefs.remove('accessToken');
+      prefs.remove('refreshToken');
+    }
     return response;
   }
 

@@ -326,7 +326,11 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                             return 'This field cannot be left empty';
                           else {
                             try {
-                              formData['cust_per_slot'] = int.parse(value);
+                              final int customers = int.parse(value);
+                              if (customers <= 0) {
+                                return 'Please enter a number greater than 0';
+                              }
+                              formData['cust_per_slot'] = customers;
                               return null;
                             } on FormatException catch (e) {
                               logger.d(e.toString());

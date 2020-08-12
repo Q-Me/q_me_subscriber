@@ -217,7 +217,7 @@ class ReceptionRepository {
   Future<Map<String, dynamic>> completeAppointment({
     @required String counterId,
     @required String phone,
-    @required int otp,
+    @required String otp,
     @required String accessToken,
   }) async {
     final response = await _helper.post(
@@ -271,7 +271,8 @@ class ReceptionRepository {
       slots = overrideSlots(slots, createOverrideSlots(response));
     }
 
-    final List bookedSlots = response['slots'];
+    // TODO Handle slot_done
+    final List bookedSlots = response['slots_upcoming'];
     if (bookedSlots != null &&
         bookedSlots is List &&
         bookedSlots.length != null) {

@@ -59,6 +59,7 @@ class _SlotViewState extends State<SlotView> {
 
     return SafeArea(
       child: Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           leading: GestureDetector(
               onTap: () => Navigator.pop(context),
@@ -84,6 +85,7 @@ class _SlotViewState extends State<SlotView> {
               Expanded(
                 child: BlocConsumer<BookingBloc, BookingState>(
                   builder: (context, state) {
+                    logger.d(state.toString());
                     if (state is BookingLoading) {
                       return Loading(
                         loadingMessage: 'Fetching appointments data',
@@ -107,31 +109,57 @@ class _SlotViewState extends State<SlotView> {
                           loadingMessage:
                               "Please wait....Fetching Appointments");
                     } else if (state is BookingLoadSuccessful) {
+                      logger.d(
+                          'Appointment List\n${state.response}\nReception:${reception.toJson()}\nSlot:${slot.toJson()}');
+
                       final List<Appointment> appointments = state.response;
 
-                      return Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Column(
-                          children: [
-                            ListView.builder(
-                              itemCount: appointments.length,
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemBuilder: (BuildContext context, int index) {
-                                return AppointmentCard(
-                                  appointment: appointments[index],
-                                );
-                              },
-                            ),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              itemCount:
-                                  reception.customersInSlot - slot.booked,
-                              itemBuilder: (BuildContext context, int index) {
-                                return UnbookedTile();
-                              },
-                            ),
-                          ],
+                      return SingleChildScrollView(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Column(
+                            children: [
+                              ListView.builder(
+                                itemCount: appointments.length,
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemBuilder: (BuildContext context, int index) {
+                                  return AppointmentCard(
+                                    appointment: appointments[index],
+                                  );
+                                },
+                              ),
+                              ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: reception.customersInSlot -
+                                    (slot.booked ?? 0),
+                                itemBuilder: (BuildContext context, int index) {
+                                  return UnbookedTile();
+                                },
+                              ),
+                              InkWell(
+                                onTap: () {
+                                  showSnackBar("sdjkgsd", 6);
+//                                  BlocProvider.of<BookingBloc>(context)
+//                                      .add(BookingLoading());
+                                },
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Card(
+                                        child: Container(
+                                            height: 50,
+                                            child: Icon(
+                                              Icons.add,
+                                              size: 35,
+                                            )),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     } else if (state is BookingLoadFailure) {
@@ -175,28 +203,32 @@ class UnbookedTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Navigator.pushReplacementNamed(
-          context,
-          CreateAppointment.id,
-          arguments: CreateAppointmentArgs(
-            receptionId: Provider.of<Reception>(
+    return Card(
+      color: Colors.orange[400],
+      child: ListTile(
+        dense: false,
+        trailing: Icon(Icons.delete, color: Colors.white),
+        title: InkWell(
+          onTap: () {
+            Navigator.pushReplacementNamed(
               context,
-              listen: false,
-            ).receptionId,
-            slot: Provider.of<Slot>(context, listen: false),
-          ),
-        );
-      },
-      child: Card(
-        color: Colors.orange[400],
-        child: ListTile(
-          dense: false,
-          title: Center(
+              CreateAppointment.id,
+              arguments: CreateAppointmentArgs(
+                receptionId: Provider.of<Reception>(
+                  context,
+                  listen: false,
+                ).receptionId,
+                slot: Provider.of<Slot>(context, listen: false),
+              ),
+            );
+          },
+          child: Center(
               child: Text(
             'Unbooked',
-            style: Theme.of(context).textTheme.headline6,
+            style: Theme.of(context)
+                .textTheme
+                .headline6
+                .copyWith(color: Colors.white),
           )),
         ),
       ),

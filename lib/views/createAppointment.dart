@@ -177,21 +177,15 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                                           child: AppointmentDetails(
                                               appointment: appointment),
                                         ),
-                                        actions: [
-                                          FlatButton(
-                                            child: Text('Go to Home'),
-                                            onPressed: () {
-                                              Navigator.pushReplacementNamed(
-                                                  context, ReceptionsScreen.id);
-                                            },
-                                          )
-                                        ],
+                                        actions: [GoToHomeButton()],
                                       ),
                                     );
                                   }
                                 } on BadRequestException catch (e) {
                                   logger.e(e.toString());
-                                  showSnackBar(e.toMap()["err"], 5);
+                                  showSnackBar(
+                                      List.from(e.toMap()["error"]).join("\n"),
+                                      5);
                                 } catch (e) {
                                   logger.e(e.toString());
                                   showSnackBar(e.toString(), 5);
@@ -219,6 +213,22 @@ class _CreateAppointmentState extends State<CreateAppointment> {
     _phoneController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+}
+
+class GoToHomeButton extends StatelessWidget {
+  const GoToHomeButton({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: Text('Go to Home'),
+      onPressed: () {
+        Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
+      },
+    );
   }
 }
 

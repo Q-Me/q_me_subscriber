@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
+import 'package:qme_subscriber/api/app_exceptions.dart';
 
 import '../repository/reception.dart';
 import '../utilities/logger.dart';
@@ -32,17 +33,15 @@ class AppointmentBloc extends Bloc<AppointmentEvent, AppointmentState> {
       AppointmentFinished event) async* {
     yield Loading();
     try {
-      var response = await repository.completeAppointment(
+      Map<String, dynamic> response = await repository.completeAppointment(
           counterId: event.counterId,
           phone: event.phoneNo,
-          otp: event.otp,
+          otp: event.otp.toString(),
           accessToken: event.accessToken);
-      if (response["msg"] == "Slot done") {
+        logger.d(response["msg"]);
         yield AppointmentFinishSuccessful();
-      } else {
-        logger.e(response["msg"]);
-        yield ProcessFailure();
-      }
+    } on BadRequestException {
+      yield AppointmentWrongOtpProvided();
     } catch (e) {
       logger.e(e);
       yield ProcessFailure();
