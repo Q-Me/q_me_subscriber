@@ -1,10 +1,10 @@
 import 'package:meta/meta.dart';
+import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/controllers/slots.dart';
 import 'package:qme_subscriber/model/appointment.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 
-import '../api/base_helper.dart';
 import '../api/endpoints.dart';
 import '../model/reception.dart';
 
@@ -146,7 +146,7 @@ class ReceptionRepository {
     for (var element in response["slot info"]) {
       DateTime startTime = DateTime.parse(element["starttime"]).toLocal();
       Slot slot = Slot(
-        booked: element["count"],
+        upcoming: element["count"],
         startTime: startTime,
         endTime: startTime.add(Duration(
           minutes: slotDurationInMinutes,
@@ -249,12 +249,16 @@ class ReceptionRepository {
   }
 
   Future<Reception> viewReceptionDetailed({
-    @required String counterId,
-    @required accessToken,
+    @required String receptionId,
+    String accessToken,
   }) async {
+    accessToken = accessToken != null
+        ? accessToken
+        : await SubscriberRepository().getAccessTokenFromStorage();
+
     final response = await _helper.post(
       kViewDetailedCounter,
-      req: {"counter_id": counterId},
+      req: {"counter_id": receptionId},
       headers: {'Authorization': 'Bearer $accessToken'},
     );
     // Create Reception
@@ -278,6 +282,14 @@ class ReceptionRepository {
         bookedSlots.length != null) {
       // update slots according to bookings
       slots = modifyBookings(slots, bookedSlots);
+
+      // TODO Update done slots
+//      slots = modifyDoneSlots
+
+    }
+    final List doneSlots = response['slots_done'];
+    if (doneSlots != null && doneSlots is List && doneSlots.length != null) {
+      slots = modifyDoneSlots(slots, doneSlots);
     }
 
     reception.replaceSlots(slots);

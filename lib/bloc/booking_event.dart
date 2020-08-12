@@ -34,3 +34,5 @@ class AppointmentFinishRequested extends BookingEvent {
 class AddUnbookedAppointment extends BookingEvent {}
 
 class RemoveUnbookedAppointment extends BookingEvent {}
+
+class BookingRefreshRequested extends BookingEvent {}

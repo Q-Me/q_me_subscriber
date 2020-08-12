@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 import 'package:ordered_set/comparing.dart';
 
@@ -13,7 +13,8 @@ class Slot extends Equatable with ChangeNotifier {
   Slot({
     @required this.startTime,
     @required this.endTime,
-    this.booked,
+    this.upcoming = 0,
+    this.done = 0,
     this.customersInSlot,
   });
 
@@ -26,7 +27,8 @@ class Slot extends Equatable with ChangeNotifier {
 
   final DateTime startTime;
   final DateTime endTime;
-  int booked; // null means not set
+  int upcoming; // null means not set
+  int done;
   int customersInSlot;
 
   factory Slot.fromJson(Map<String, dynamic> json) => Slot(
@@ -38,11 +40,12 @@ class Slot extends Equatable with ChangeNotifier {
         "starttime": startTime.toIso8601String(),
         "endtime": endTime.toIso8601String(),
         "cust_per_slot": customersInSlot,
-        "booked": booked,
+        "upcoming": upcoming,
+        "done": done
       };
 
   @override
-  List<Object> get props => [startTime, endTime, customersInSlot, booked];
+  List<Object> get props => [startTime, endTime, customersInSlot, upcoming];
 }
 
 List<Slot> appointmentSlots(Map<String, List<Map<String, String>>> thisJson) {
