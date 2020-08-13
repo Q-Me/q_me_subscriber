@@ -85,6 +85,26 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
     );
   }
 
+  Future<void> handleClick(String value) async {
+    switch (value) {
+      case 'Logout':
+        try {
+          final logOutResponse = await SubscriberRepository().signOut();
+          if (logOutResponse["msg"] == "Logged out successfully") {
+            logger.d('Log Out');
+            Navigator.pushNamedAndRemoveUntil(
+                context, SignInScreen.id, (route) => false);
+          }
+        } on BadRequestException catch (e) {
+          showSnackBar(e.toMap()["error"], 5);
+          return;
+        } catch (e) {
+          showSnackBar(e.toString(), 10);
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -98,32 +118,19 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
               title: Text('Your Receptions'),
               automaticallyImplyLeading: false,
               actions: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10.0)),
-                      child: IconButton(
-                          icon: Icon(Icons.exit_to_app, color: Colors.red),
-                          onPressed: () async {
-                            try {
-                              final logOutResponse =
-                                  await SubscriberRepository().signOut();
-                              if (logOutResponse["msg"] ==
-                                  "Logged out successfully") {
-                                logger.d('Log Out');
-                                Navigator.pushNamedAndRemoveUntil(
-                                    context, SignInScreen.id, (route) => false);
-                              }
-                            } on BadRequestException catch (e) {
-                              showSnackBar(e.toMap()["error"], 5);
-                              return;
-                            } catch (e) {
-                              showSnackBar(e.toString(), 10);
-                            }
-                          })),
-                )
+                PopupMenuButton<String>(
+                  onSelected: handleClick,
+                  itemBuilder: (BuildContext context) {
+                    return {'Logout'}.map(
+                      (String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice),
+                        );
+                      },
+                    ).toList();
+                  },
+                ),
               ],
             ),
             floatingActionButton: FloatingActionButton(
