@@ -86,7 +86,7 @@ class ReceptionsBloc extends ChangeNotifier {
           Comparing.on((reception) => reception.startTime));
       receptionsSet.addAll(filteredReceptions);
       filteredReceptions = receptionsSet.toList();
-
+      logger.d("Filtered receptions returned");
       this.selectedDateReceptions = filteredReceptions;
       receptionsSink.add(ApiResponse.completed(filteredReceptions));
     } on Exception catch (e) {
