@@ -37,9 +37,22 @@ class _SlotViewState extends State<SlotView> {
 
   double get mediaHeight => MediaQuery.of(context).size.height;
   Reception get reception => widget.args.reception;
-  Slot get slot => widget.args.slot;
+  Slot slot;
   ReceptionRepository repository = ReceptionRepository();
-  List<Appointment> response;
+  List<String> statusRequestList = [
+    'UPCOMING',
+    'CANCELLED',
+    'CANCELLED BY SUBSCRIBER',
+    'DONE'
+  ];
+  List<Appointment> appointments;
+
+  @override
+  void initState() {
+    slot = widget.args.slot;
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,12 +109,7 @@ class _SlotViewState extends State<SlotView> {
                           reception.receptionId,
                           slot.startTime,
                           slot.endTime,
-                          [
-                            'UPCOMING',
-                            'CANCELLED',
-                            'CANCELLED BY SUBSCRIBER',
-                            'DONE'
-                          ],
+                          statusRequestList,
                           slot.endTime.difference(slot.startTime).inMinutes,
                         ),
                       );
@@ -110,15 +118,32 @@ class _SlotViewState extends State<SlotView> {
                               "Please wait....Fetching Appointments");
                     } else if (state is BookingLoadSuccessful) {
                       logger.d(
-                          'Appointment List\n${state.response}\nReception:${reception.toJson()}\nSlot:${slot.toJson()}');
+                          'Reception:${reception.toJson()}\nSlot:${slot.toJson()}');
 
-                      final List<Appointment> appointments = state.response;
+                      if (state.response is List) {
+                        appointments = state.response;
+                      }
+                      if (state.response is Slot) {
+                        slot = state.response;
+                      }
+
+                      // update the slot upcoming and done values
+                      slot.upcoming = filterAppointmentsByStatus(
+                        appointments,
+                        "UPCOMING",
+                      ).length;
+
+                      slot.done = filterAppointmentsByStatus(
+                        appointments,
+                        "DONE",
+                      ).length;
 
                       return SingleChildScrollView(
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           child: Column(
                             children: [
+                              // UPCOMING, DONE, CANCELLED, CANCELLED BY SUBSCRIBER
                               ListView.builder(
                                 itemCount: appointments.length,
                                 shrinkWrap: true,
@@ -129,9 +154,11 @@ class _SlotViewState extends State<SlotView> {
                                   );
                                 },
                               ),
+                              // Unbooked
                               ListView.builder(
                                 shrinkWrap: true,
                                 physics: NeverScrollableScrollPhysics(),
+                                // TODO take this from response
                                 itemCount: slot.customersInSlot -
                                     slot.upcoming -
                                     slot.done,
@@ -141,9 +168,13 @@ class _SlotViewState extends State<SlotView> {
                               ),
                               InkWell(
                                 onTap: () {
-                                  showSnackBar("sdjkgsd", 6);
-//                                  BlocProvider.of<BookingBloc>(context)
-//                                      .add(BookingLoading());
+//                                  showSnackBar("sdjkgsd", 6);
+                                  BlocProvider.of<BookingBloc>(context).add(
+                                    AddUnbookedAppointment(
+                                      reception.receptionId,
+                                      slot,
+                                    ),
+                                  );
                                 },
                                 child: Row(
                                   children: [
@@ -176,7 +207,7 @@ class _SlotViewState extends State<SlotView> {
                                       reception.receptionId,
                                       slot.startTime,
                                       slot.endTime,
-                                      ["UPCOMING"],
+                                      statusRequestList,
                                       (slot.endTime.difference(slot.startTime))
                                           .inMinutes));
                             },
@@ -209,7 +240,17 @@ class UnbookedTile extends StatelessWidget {
       color: Colors.orange[400],
       child: ListTile(
         dense: false,
-        trailing: Icon(Icons.delete, color: Colors.white),
+        trailing: InkWell(
+          onTap: () {
+            BlocProvider.of<BookingBloc>(context).add(
+              RemoveUnbookedAppointment(
+                Provider.of<Reception>(context, listen: false).receptionId,
+                Provider.of<Slot>(context, listen: false),
+              ),
+            );
+          },
+          child: Icon(Icons.delete, color: Colors.white),
+        ),
         title: InkWell(
           onTap: () {
             Navigator.pushNamed(
@@ -222,18 +263,22 @@ class UnbookedTile extends StatelessWidget {
                 ).receptionId,
                 slot: Provider.of<Slot>(context, listen: false),
               ),
-            ).then((value) => {
-              BlocProvider.of<BookingBloc>(context).add(BookingRefreshRequested())
-            });
+            ).then(
+              (value) => {
+                BlocProvider.of<BookingBloc>(context)
+                    .add(BookingRefreshRequested())
+              },
+            );
           },
           child: Center(
-              child: Text(
-            'Unbooked',
-            style: Theme.of(context)
-                .textTheme
-                .headline6
-                .copyWith(color: Colors.white),
-          )),
+            child: Text(
+              'Unbooked',
+              style: Theme.of(context)
+                  .textTheme
+                  .headline6
+                  .copyWith(color: Colors.white),
+            ),
+          ),
         ),
       ),
     );
@@ -294,7 +339,9 @@ class AppointmentCard extends StatelessWidget {
                     appointment.customerName,
                   ),
                   subtitle: Text(appointment.customerPhone +
-                      "\nNote: ${appointment.note}"),
+                      (appointment.note.length >= 1
+                          ? "\nNote: ${appointment.note}"
+                          : "")),
                 ),
               ),
             ],
