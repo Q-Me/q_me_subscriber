@@ -11,7 +11,7 @@ var analytics = AnalyticsService();
 String initialHome = ReceptionsScreen.id;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await setSession();
+  // await setSession();
   if (await SubscriberRepository().isSessionReady()) {
     initialHome = ReceptionsScreen.id;
   }
