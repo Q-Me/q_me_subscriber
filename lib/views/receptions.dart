@@ -235,12 +235,24 @@ class ReceptionAppointmentListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Reception reception = Provider.of<Reception>(context);
+
     return ListView.builder(
       itemCount: reception.slotList.length,
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         Slot slot = reception.slotList[index];
+        DateTime now = DateTime.now();
+        now = DateTime.utc(
+          now.year,
+          now.month,
+          now.day,
+          now.hour,
+          now.minute,
+          now.second,
+        );
+        bool bookingEnabled = slot.endTime.isAfter(now);
+
         List<Widget> upcomingBoxes = List.generate(
           slot.upcoming != null ? slot.upcoming : 0,
           (index) => UpcomingSeat(),
@@ -255,7 +267,7 @@ class ReceptionAppointmentListView extends StatelessWidget {
           slot.upcoming == null
               ? slot.customersInSlot
               : slot.customersInSlot - slot.upcoming - slot.done,
-          (index) => UnbookedSeat(),
+          (index) => UnbookedSeat(bookingEnabled: bookingEnabled),
         );
 
         final allBoxes = [...upcomingBoxes, ...doneBoxes, ...unBookedBoxes];
@@ -397,8 +409,11 @@ class DoneSeat extends StatelessWidget {
 }
 
 class UnbookedSeat extends StatelessWidget {
+  final bool bookingEnabled;
+
   const UnbookedSeat({
     Key key,
+    this.bookingEnabled = false,
   }) : super(key: key);
 
   @override
@@ -409,6 +424,9 @@ class UnbookedSeat extends StatelessWidget {
         final Slot slot = context.read<Slot>();
         logger.i(
             'Selected reception: ${receptionToJson(reception)}\nSlot selected:${slot.toJson()}');
+        if (!bookingEnabled) {
+          return;
+        }
         await Navigator.pushNamed(
           context,
           CreateAppointment.id,
