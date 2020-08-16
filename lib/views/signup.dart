@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:checkbox_formfield/checkbox_formfield.dart';
@@ -143,12 +142,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: KeyboardAvoider(
                       child: Column(
                         children: <Widget>[
-                          MyFormField(
-                            required: true,
-                            name: 'OWNER\'S NAME',
-                            callback: (value) {
+                          TextFormField(
+                            decoration: kTextFieldDecoration.copyWith(
+                              labelText: 'OWNER\'S NAME',
+                            ),
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return 'This field cannot be left blank';
+                              }
                               formData['owner'] = value;
                               subscriber.owner = value;
+                              return null;
                             },
                           ),
                           SizedBox(height: 10.0),
@@ -429,7 +433,7 @@ class _SignUpButtonState extends State<SignUpButton> {
   var idToken;
   void showSnackBar(String text, int seconds) {
     Scaffold.of(context).hideCurrentSnackBar();
-   Scaffold.of(context).showSnackBar(
+    Scaffold.of(context).showSnackBar(
       SnackBar(
         content: Text(text),
         duration: Duration(seconds: seconds),
@@ -447,7 +451,7 @@ class _SignUpButtonState extends State<SignUpButton> {
     _auth.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: Duration(seconds: 60),
-        // verificationCompleted: (AuthCredential credential) async {
+        /*// verificationCompleted: (AuthCredential credential) async {
         //   AuthResult result = await _auth.signInWithCredential(credential);
 
         //   FirebaseUser user = result.user;
@@ -574,7 +578,7 @@ class _SignUpButtonState extends State<SignUpButton> {
         //   }
 
         //   //This callback would gets called when verification is done auto maticlly
-        // },
+        // },*/
         verificationFailed: (AuthException exception) {
           logger.d(exception.message);
           // Scaffold.of(context).showSnackBar(
@@ -612,7 +616,8 @@ class _SignUpButtonState extends State<SignUpButton> {
 
               // check phone number length
               if (widget.formData['phone'].length != 13) {
-                 showSnackBar('Phone number must have 10 digits with Country code', 5);
+                showSnackBar(
+                    'Phone number must have 10 digits with Country code', 5);
                 return;
               }
 
@@ -622,13 +627,13 @@ class _SignUpButtonState extends State<SignUpButton> {
               }
               if (widget.formData['email'] != "") {
                 if (!isValidEmail(widget.formData['email'])) {
-                      showSnackBar('Enter valid email address', 5);
+                  showSnackBar('Enter valid email address', 5);
                   return null;
                 }
               }
               FocusScope.of(context)
                   .requestFocus(FocusNode()); // dismiss the keyboard
-                  showSnackBar('Processing Data', 5);
+              showSnackBar('Processing Data', 5);
 
               final phone = widget.phoneController.text.trim();
               logger.d("phone number: $phone");
