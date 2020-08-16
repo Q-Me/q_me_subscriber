@@ -88,19 +88,42 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
   Future<void> handleClick(String value) async {
     switch (value) {
       case 'Logout':
-        try {
-          final logOutResponse = await SubscriberRepository().signOut();
-          if (logOutResponse["msg"] == "Logged out successfully") {
-            logger.d('Log Out');
-            Navigator.pushNamedAndRemoveUntil(
-                context, SignInScreen.id, (route) => false);
-          }
-        } on BadRequestException catch (e) {
-          showSnackBar(e.toMap()["error"], 5);
-          return;
-        } catch (e) {
-          showSnackBar(e.toString(), 10);
-        }
+        AlertDialog alert = AlertDialog(
+          title: Text("Are you sure you want to logout?"),
+          actions: [
+            FlatButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            FlatButton(
+              child: Text("Yes log out"),
+              onPressed: () async {
+                try {
+                  final logOutResponse = await SubscriberRepository().signOut();
+                  if (logOutResponse["msg"] == "Logged out successfully") {
+                    logger.d('Log Out');
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, SignInScreen.id, (route) => false);
+                  }
+                } on BadRequestException catch (e) {
+                  showSnackBar(e.toMap()["error"], 5);
+                  return;
+                } catch (e) {
+                  showSnackBar(e.toString(), 10);
+                }
+              },
+            ),
+          ],
+        );
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return alert;
+          },
+        );
+        return null;
         break;
     }
   }
