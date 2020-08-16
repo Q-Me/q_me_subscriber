@@ -302,6 +302,27 @@ class ReceptionAppointmentListView extends StatelessWidget {
                     children: allBoxes,
                   ),
                 ),
+                GestureDetector(
+                  onTap: () async {
+                    await Navigator.pushNamed(
+                      context,
+                      SlotView.id,
+                      arguments: SlotViewArguments(
+                        reception: reception,
+                        slot: slot,
+                      ),
+                    );
+                    Provider.of<ReceptionsBloc>(
+                      context,
+                      listen: false,
+                    ).getReceptionsByDate();
+                  },
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(width: 10)
               ],
             ),
           ),
