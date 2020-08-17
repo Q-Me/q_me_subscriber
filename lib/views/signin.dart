@@ -5,6 +5,7 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
@@ -631,7 +632,11 @@ class _SignInScreenState extends State<SignInScreen>
                       ),
                       SizedBox(width: 5.0),
                       InkWell(
-                        onTap: () {
+                        onTap: () async {
+                          // Check for location permission
+                          if (await Permission.location.request().isGranted) {
+                            logger.d('Location permission granted');
+                          }
                           Navigator.of(context).pushNamed(SignUpScreen.id);
                           logger.d('Register button pressed');
                         },

@@ -52,11 +52,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   final List<String> subscriberCategory = [
     "Choose Category",
-    "Saloon",
+    "Beauty & Wellness",
     "Grocery Store",
     "Supermarket",
-    "Medical Store",
-    "Airport"
   ];
   String selectedCategory;
 
@@ -144,7 +142,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         children: <Widget>[
                           TextFormField(
                             decoration: kTextFieldDecoration.copyWith(
-                              labelText: 'OWNER\'S NAME',
+                              labelText: 'NAME',
                             ),
                             validator: (value) {
                               if (value.isEmpty) {
