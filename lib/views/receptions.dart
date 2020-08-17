@@ -274,7 +274,7 @@ class ReceptionAppointmentListView extends StatelessWidget {
           now.minute,
           now.second,
         );
-        bool bookingEnabled = slot.endTime.isAfter(now);
+        bool bookingEnabled = slot.startTime.isAfter(now);
 
         List<Widget> upcomingBoxes = List.generate(
           slot.upcoming != null ? slot.upcoming : 0,
