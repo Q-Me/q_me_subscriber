@@ -88,19 +88,42 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
   Future<void> handleClick(String value) async {
     switch (value) {
       case 'Logout':
-        try {
-          final logOutResponse = await SubscriberRepository().signOut();
-          if (logOutResponse["msg"] == "Logged out successfully") {
-            logger.d('Log Out');
-            Navigator.pushNamedAndRemoveUntil(
-                context, SignInScreen.id, (route) => false);
-          }
-        } on BadRequestException catch (e) {
-          showSnackBar(e.toMap()["error"], 5);
-          return;
-        } catch (e) {
-          showSnackBar(e.toString(), 10);
-        }
+        AlertDialog alert = AlertDialog(
+          title: Text("Are you sure you want to logout?"),
+          actions: [
+            FlatButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            FlatButton(
+              child: Text("Yes log out"),
+              onPressed: () async {
+                try {
+                  final logOutResponse = await SubscriberRepository().signOut();
+                  if (logOutResponse["msg"] == "Logged out successfully") {
+                    logger.d('Log Out');
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, SignInScreen.id, (route) => false);
+                  }
+                } on BadRequestException catch (e) {
+                  showSnackBar(e.toMap()["error"], 5);
+                  return;
+                } catch (e) {
+                  showSnackBar(e.toString(), 10);
+                }
+              },
+            ),
+          ],
+        );
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return alert;
+          },
+        );
+        return null;
         break;
     }
   }
@@ -251,7 +274,7 @@ class ReceptionAppointmentListView extends StatelessWidget {
           now.minute,
           now.second,
         );
-        bool bookingEnabled = slot.endTime.isAfter(now);
+        bool bookingEnabled = slot.startTime.isAfter(now);
 
         List<Widget> upcomingBoxes = List.generate(
           slot.upcoming != null ? slot.upcoming : 0,
@@ -302,6 +325,27 @@ class ReceptionAppointmentListView extends StatelessWidget {
                     children: allBoxes,
                   ),
                 ),
+                GestureDetector(
+                  onTap: () async {
+                    await Navigator.pushNamed(
+                      context,
+                      SlotView.id,
+                      arguments: SlotViewArguments(
+                        reception: reception,
+                        slot: slot,
+                      ),
+                    );
+                    Provider.of<ReceptionsBloc>(
+                      context,
+                      listen: false,
+                    ).getReceptionsByDate();
+                  },
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(width: 10)
               ],
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
@@ -33,6 +34,7 @@ class _SignInScreenState extends State<SignInScreen>
   var idToken;
   var verificationIdVar;
   var _authVar;
+  bool passwordHidden = true;
   String countryCodeVal;
   String countryCodePassword;
   bool showOtpTextfield = false;
@@ -56,7 +58,7 @@ class _SignInScreenState extends State<SignInScreen>
     _auth.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: Duration(seconds: 60),
-        // verificationCompleted: (AuthCredential credential) async {
+        /*// verificationCompleted: (AuthCredential credential) async {
         //   AuthResult result = await _auth.signInWithCredential(credential);
         //   print("printing the credential");
         //   print(credential);
@@ -107,7 +109,7 @@ class _SignInScreenState extends State<SignInScreen>
         //   }
 
         //   //This callback would gets called when verification is done auto maticlly
-        // },
+        // },*/
         verificationFailed: (AuthException exception) {
           print("here is exception error");
           print(exception.message);
@@ -225,72 +227,66 @@ class _SignInScreenState extends State<SignInScreen>
                                                   .size
                                                   .height *
                                               0.02),
-                                      Card(
-                                        child: new ListTile(
-                                          leading: CountryCodePicker(
-                                            onChanged: print,
-                                            initialSelection: 'In',
-                                            hideSearch: false,
-                                            showCountryOnly: false,
-                                            showOnlyCountryWhenClosed: false,
-                                            builder: (countryCode) {
-                                              var countryCodes = countryCode;
-                                              countryCodeVal =
-                                                  countryCodes.toString();
-                                              return Container(
-                                                  alignment: Alignment.center,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.15,
-                                                  // height: 0.085,
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.grey[200],
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10)),
-                                                  child: Text(
-                                                    '$countryCode',
-                                                    style: TextStyle(
-                                                        color: Colors.black),
-                                                  ));
-                                            },
-                                          ),
-                                          title: TextFormField(
-                                            decoration: InputDecoration(
-                                                enabledBorder: OutlineInputBorder(
+                                      ListTile(
+                                        leading: CountryCodePicker(
+                                          onChanged: print,
+                                          initialSelection: 'In',
+                                          hideSearch: false,
+                                          showCountryOnly: false,
+                                          showOnlyCountryWhenClosed: false,
+                                          builder: (countryCode) {
+                                            var countryCodes = countryCode;
+                                            countryCodeVal =
+                                                countryCodes.toString();
+                                            return Container(
+                                                alignment: Alignment.center,
+                                                width: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.15,
+                                                // height: 0.085,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.grey[200],
                                                     borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(8)),
-                                                    borderSide: BorderSide(
-                                                        color:
-                                                            Colors.grey[200])),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius.all(
-                                                                Radius.circular(
-                                                                    8)),
-                                                        borderSide: BorderSide(
-                                                            color: Colors
-                                                                .grey[300])),
-                                                filled: true,
-                                                fillColor: Colors.grey[100],
-                                                hintText: "Mobile Number"),
-                                                keyboardType: TextInputType.phone,
-                                            controller: _phoneController,
-                                            validator: (value) {
-                                              if (value.isEmpty) {
-                                                return 'This field cannot be left blank';
-                                              } else {
-                                                setState(() {
-                                                  phoneNumber =
-                                                      countryCodeVal + value;
-                                                });
-                                                return null;
-                                              }
-                                            },
-                                          ),
+                                                        BorderRadius.circular(
+                                                            10)),
+                                                child: Text(
+                                                  '$countryCode',
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ));
+                                          },
+                                        ),
+                                        title: TextFormField(
+                                          decoration: InputDecoration(
+                                              enabledBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(8)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[200])),
+                                              focusedBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(8)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[300])),
+                                              filled: true,
+                                              fillColor: Colors.grey[100],
+                                              hintText: "Mobile Number"),
+                                          keyboardType: TextInputType.phone,
+                                          controller: _phoneController,
+                                          validator: (value) {
+                                            if (value.isEmpty) {
+                                              return 'This field cannot be left blank';
+                                            } else {
+                                              setState(() {
+                                                phoneNumber =
+                                                    countryCodeVal + value;
+                                              });
+                                              return null;
+                                            }
+                                          },
                                         ),
                                       ),
                                       SizedBox(
@@ -408,73 +404,66 @@ class _SignInScreenState extends State<SignInScreen>
                                                   .size
                                                   .height *
                                               0.02),
-                                      Card(
-                                        child: ListTile(
-                                          leading: CountryCodePicker(
-                                            onChanged: print,
-                                            initialSelection: 'In',
-                                            hideSearch: false,
-                                            showCountryOnly: false,
-                                            showOnlyCountryWhenClosed: false,
-                                            builder: (countryCode) {
-                                              var countryCodes = countryCode;
-                                              countryCodePassword =
-                                                  countryCodes.toString();
-                                              return Container(
-                                                  alignment: Alignment.center,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.15,
-                                                  // height: 0.085,
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.grey[200],
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10)),
-                                                  child: Text(
-                                                    '$countryCode',
-                                                    style: TextStyle(
-                                                        color: Colors.black),
-                                                  ));
-                                            },
-                                          ),
-                                          title: TextFormField(
-                                            decoration: InputDecoration(
-                                                enabledBorder: OutlineInputBorder(
+                                      ListTile(
+                                        leading: CountryCodePicker(
+                                          onChanged: print,
+                                          initialSelection: 'In',
+                                          hideSearch: false,
+                                          showCountryOnly: false,
+                                          showOnlyCountryWhenClosed: false,
+                                          builder: (countryCode) {
+                                            var countryCodes = countryCode;
+                                            countryCodePassword =
+                                                countryCodes.toString();
+                                            return Container(
+                                                alignment: Alignment.center,
+                                                width: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.15,
+                                                // height: 0.085,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.grey[200],
                                                     borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(8)),
-                                                    borderSide: BorderSide(
-                                                        color:
-                                                            Colors.grey[200])),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius.all(
-                                                                Radius.circular(
-                                                                    8)),
-                                                        borderSide: BorderSide(
-                                                            color: Colors
-                                                                .grey[300])),
-                                                filled: true,
-                                                fillColor: Colors.grey[100],
-                                                hintText: "Mobile Number"),
-                                                keyboardType:TextInputType.phone,
-                                            controller: _phoneController,
-                                            validator: (value) {
-                                              if (value.isEmpty) {
-                                                return 'This field cannot be left blank';
-                                              } else {
-                                                setState(() {
-                                                  phoneNumber =
-                                                      countryCodePassword +
-                                                          value;
-                                                });
-                                                return null;
-                                              }
-                                            },
-                                          ),
+                                                        BorderRadius.circular(
+                                                            10)),
+                                                child: Text(
+                                                  '$countryCode',
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ));
+                                          },
+                                        ),
+                                        title: TextFormField(
+                                          decoration: InputDecoration(
+                                              enabledBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(8)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[200])),
+                                              focusedBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(8)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[300])),
+                                              filled: true,
+                                              fillColor: Colors.grey[100],
+                                              hintText: "Mobile Number"),
+                                          keyboardType: TextInputType.phone,
+                                          controller: _phoneController,
+                                          validator: (value) {
+                                            if (value.isEmpty) {
+                                              return 'This field cannot be left blank';
+                                            } else {
+                                              setState(() {
+                                                phoneNumber =
+                                                    countryCodePassword + value;
+                                              });
+                                              return null;
+                                            }
+                                          },
                                         ),
                                       ),
                                       SizedBox(
@@ -482,40 +471,45 @@ class _SignInScreenState extends State<SignInScreen>
                                                   .size
                                                   .height *
                                               0.02),
-                                      Card(
-                                        child: ListTile(
-                                          title: TextFormField(
-                                            obscureText: true,
-                                            decoration: InputDecoration(
-                                                enabledBorder: OutlineInputBorder(
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(8)),
-                                                    borderSide: BorderSide(
-                                                        color:
-                                                            Colors.grey[200])),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius.all(
-                                                                Radius.circular(
-                                                                    8)),
-                                                        borderSide: BorderSide(
-                                                            color: Colors
-                                                                .grey[300])),
-                                                filled: true,
-                                                fillColor: Colors.grey[100],
-                                                hintText: "Password"),
-                                            controller: _passwordController,
-                                            validator: (value) {
-                                              if (value.isEmpty) {
-                                                return 'This field cannot be left blank';
-                                              } else {
-                                                password = value;
-                                                return null;
-                                              }
-                                            },
-                                          ),
+                                      ListTile(
+                                        title: TextFormField(
+                                          obscureText: passwordHidden,
+                                          decoration: InputDecoration(
+                                              suffixIcon: GestureDetector(
+                                                onTap: () {
+                                                  setState(() {
+                                                    passwordHidden =
+                                                        !passwordHidden;
+                                                  });
+                                                },
+                                                child: passwordHidden
+                                                    ? Icon(Icons.visibility_off)
+                                                    : Icon(Icons.visibility),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(8)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[200])),
+                                              focusedBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(8)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[300])),
+                                              filled: true,
+                                              fillColor: Colors.grey[100],
+                                              hintText: "Password"),
+                                          controller: _passwordController,
+                                          validator: (value) {
+                                            if (value.isEmpty) {
+                                              return 'This field cannot be left blank';
+                                            } else {
+                                              password = value;
+                                              return null;
+                                            }
+                                          },
                                         ),
                                       ),
                                       SizedBox(
@@ -584,19 +578,19 @@ class _SignInScreenState extends State<SignInScreen>
                                                   prefs.setString(
                                                       'fcmToken', _fcmToken);
 
-                                                 Navigator.of(context)
-                                                .pushNamedAndRemoveUntil(
-                                                    ReceptionsScreen.id,
-                                                    (Route<dynamic> route) =>
-                                                        false);
-                                                } 
-                                                on UnauthorisedException catch (e){
-                                                   Scaffold.of(context)
+                                                  Navigator.of(context)
+                                                      .pushNamedAndRemoveUntil(
+                                                          ReceptionsScreen.id,
+                                                          (Route<dynamic>
+                                                                  route) =>
+                                                              false);
+                                                } on UnauthorisedException catch (e) {
+                                                  Scaffold.of(context)
                                                       .showSnackBar(SnackBar(
-                                                          content: Text(
-                                                              e.toMap()["msg"].toString())));
-                                                }
-                                                catch (e) {
+                                                          content: Text(e
+                                                              .toMap()["msg"]
+                                                              .toString())));
+                                                } catch (e) {
                                                   Scaffold.of(context)
                                                       .showSnackBar(SnackBar(
                                                           content: Text(
@@ -638,7 +632,11 @@ class _SignInScreenState extends State<SignInScreen>
                       ),
                       SizedBox(width: 5.0),
                       InkWell(
-                        onTap: () {
+                        onTap: () async {
+                          // Check for location permission
+                          if (await Permission.location.request().isGranted) {
+                            logger.d('Location permission granted');
+                          }
                           Navigator.of(context).pushNamed(SignUpScreen.id);
                           logger.d('Register button pressed');
                         },
