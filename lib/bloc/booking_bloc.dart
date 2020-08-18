@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:qme_subscriber/model/appointment.dart';
+import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 
@@ -23,7 +24,12 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       yield* _mapAppointmentFinishRequestedToState(event);
     else if (event is AppointmentCancelRequested)
       yield* _mapAppointmentCancelRequestedToState(event);
-    else if (event is BookingRefreshRequested) yield BookingInitial();
+    else if (event is BookingRefreshRequested)
+      yield BookingInitial();
+    else if (event is AddUnbookedAppointment)
+      yield* _mapAddUnbookedAppointmentToState(event);
+    else if (event is RemoveUnbookedAppointment)
+      yield* _mapRemoveUnbookedAppointmentToState(event);
   }
 
   Stream<BookingState> _mapBookingListRequestedToState(
@@ -50,7 +56,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     yield BookingLoading();
     try {
       var response = await receptionRepository.completeAppointment(
-          counterId: event.counterId,
+          counterId: event.receptionId,
           phone: event.phone,
           otp: event.otp.toString(),
           accessToken: event.accessToken);
@@ -74,6 +80,52 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       yield BookingLoadSuccessful(response);
     } catch (e) {
       logger.e(e);
+      yield BookingLoadFailure();
+    }
+  }
+
+  Stream<BookingState> _mapAddUnbookedAppointmentToState(
+      AddUnbookedAppointment event) async* {
+    yield BookingLoading();
+    try {
+      Slot slot = event.slot;
+      final response = await receptionRepository.createOverrideSlot(
+        receptionId: event.receptionId,
+        startTime: event.slot.startTime,
+        endTime: event.slot.endTime,
+        customerPerSlotOverride: event.slot.customersInSlot + 1,
+      );
+
+      response["msg"] = "Override Set Successfully";
+      slot.customersInSlot = event.slot.customersInSlot + 1;
+
+      yield BookingLoadSuccessful(slot);
+    } catch (e) {
+      logger.d(e.toString());
+
+      yield BookingLoadFailure();
+    }
+  }
+
+  Stream<BookingState> _mapRemoveUnbookedAppointmentToState(
+      RemoveUnbookedAppointment event) async* {
+    yield BookingLoading();
+
+    try {
+      Slot slot = event.slot;
+      final response = await receptionRepository.createOverrideSlot(
+        receptionId: event.receptionId,
+        startTime: event.slot.startTime,
+        endTime: event.slot.endTime,
+        customerPerSlotOverride: event.slot.customersInSlot - 1,
+      );
+
+      response["msg"] = "Override Set Successfully";
+      slot.customersInSlot = event.slot.customersInSlot - 1;
+
+      yield BookingLoadSuccessful(slot);
+    } catch (e) {
+      logger.d(e.toString());
       yield BookingLoadFailure();
     }
   }

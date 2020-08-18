@@ -34,16 +34,17 @@ class AppointmentBloc extends Bloc<AppointmentEvent, AppointmentState> {
     yield Loading();
     try {
       Map<String, dynamic> response = await repository.completeAppointment(
-          counterId: event.counterId,
-          phone: event.phoneNo,
-          otp: event.otp.toString(),
-          accessToken: event.accessToken);
-        logger.d(response["msg"]);
-        yield AppointmentFinishSuccessful();
+        counterId: event.counterId,
+        phone: event.phoneNo,
+        otp: event.otp.toString(),
+        accessToken: event.accessToken,
+      );
+      logger.d(response["msg"]);
+      yield AppointmentFinishSuccessful();
     } on BadRequestException {
       yield AppointmentWrongOtpProvided();
     } catch (e) {
-      logger.e(e);
+      logger.e(e.toString());
       yield ProcessFailure();
     }
   }
@@ -52,24 +53,22 @@ class AppointmentBloc extends Bloc<AppointmentEvent, AppointmentState> {
       AppointmentCancelRequested event) async* {
     yield Loading();
     try {
-      var response = await repository.cancelAppointment(
-          counterId: event.counterId,
-          phone: event.phoneNo,
-          accessToken: event.accessToken);
+      final response = await repository.cancelAppointment(
+        counterId: event.counterId,
+        phone: event.phoneNo,
+        accessToken: event.accessToken,
+      );
       var update;
       if (response["msg"] == "Slot Cancelled") {
         yield AppointmentCancelSuccessful();
-        update = await repository.updateReceptionStatus(
-            counterId: event.counterId,
-            status: "DONE",
-            accessToken: event.accessToken);
       } else {
         logger.e(response["msg"]);
         logger.e(update);
         yield ProcessFailure();
       }
     } catch (e) {
-      logger.e(e);
+      logger.e(e.toString());
+      ProcessFailure();
     }
   }
 }

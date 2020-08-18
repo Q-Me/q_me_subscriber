@@ -81,9 +81,15 @@ final jsonTestString = {
 
 List<Appointment> filterAppointmentsByStatus(
     List<Appointment> appointments, String status) {
-  return appointments.map((e) {
-    if (e.status == status) return e;
-  }).toList();
+  return appointments
+      .where((appointment) => appointment.status == status)
+      .toList();
+}
+
+void logList(List<Appointment> appointments) {
+  for (int i = 0; i < appointments.length; i++) {
+    print(appointments[i].toJson());
+  }
 }
 
 void main() {

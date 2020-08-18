@@ -85,6 +85,49 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
     );
   }
 
+  Future<void> handleClick(String value) async {
+    switch (value) {
+      case 'Logout':
+        AlertDialog alert = AlertDialog(
+          title: Text("Are you sure you want to logout?"),
+          actions: [
+            FlatButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            FlatButton(
+              child: Text("Yes log out"),
+              onPressed: () async {
+                try {
+                  final logOutResponse = await SubscriberRepository().signOut();
+                  if (logOutResponse["msg"] == "Logged out successfully") {
+                    logger.d('Log Out');
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, SignInScreen.id, (route) => false);
+                  }
+                } on BadRequestException catch (e) {
+                  showSnackBar(e.toMap()["error"], 5);
+                  return;
+                } catch (e) {
+                  showSnackBar(e.toString(), 10);
+                }
+              },
+            ),
+          ],
+        );
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return alert;
+          },
+        );
+        return null;
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -98,44 +141,32 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
               title: Text('Your Receptions'),
               automaticallyImplyLeading: false,
               actions: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10.0)),
-                      child: IconButton(
-                          icon: Icon(Icons.exit_to_app, color: Colors.red),
-                          onPressed: () async {
-                            try {
-                              final logOutResponse =
-                                  await SubscriberRepository().signOut();
-                              if (logOutResponse["msg"] ==
-                                  "Logged out successfully") {
-                                logger.d('Log Out');
-                                Navigator.pushNamedAndRemoveUntil(
-                                    context, SignInScreen.id, (route) => false);
-                              }
-                            } on BadRequestException catch (e) {
-                              showSnackBar(e.toMap()["error"], 5);
-                              return;
-                            } catch (e) {
-                              showSnackBar(e.toString(), 10);
-                            }
-                          })),
-                )
+                PopupMenuButton<String>(
+                  onSelected: handleClick,
+                  itemBuilder: (BuildContext context) {
+                    return {'Logout'}.map(
+                      (String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice),
+                        );
+                      },
+                    ).toList();
+                  },
+                ),
               ],
             ),
             floatingActionButton: FloatingActionButton(
               elevation: 0,
               heroTag: "Create Reception",
-              onPressed: () {
+              onPressed: () async {
                 logger.d('Create reception route on date $selectedDate');
-                Navigator.pushNamed(
+                await Navigator.pushNamed(
                   context,
                   CreateReceptionScreen.id,
                   arguments: selectedDate,
                 );
+                receptionsBloc.getReceptionsByDate();
               },
               tooltip: 'Create Reception',
               child: Icon(Icons.event),
@@ -227,12 +258,24 @@ class ReceptionAppointmentListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Reception reception = Provider.of<Reception>(context);
+
     return ListView.builder(
       itemCount: reception.slotList.length,
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         Slot slot = reception.slotList[index];
+        DateTime now = DateTime.now();
+        now = DateTime.utc(
+          now.year,
+          now.month,
+          now.day,
+          now.hour,
+          now.minute,
+          now.second,
+        );
+        bool bookingEnabled = slot.startTime.isAfter(now);
+
         List<Widget> upcomingBoxes = List.generate(
           slot.upcoming != null ? slot.upcoming : 0,
           (index) => UpcomingSeat(),
@@ -247,7 +290,7 @@ class ReceptionAppointmentListView extends StatelessWidget {
           slot.upcoming == null
               ? slot.customersInSlot
               : slot.customersInSlot - slot.upcoming - slot.done,
-          (index) => UnbookedSeat(),
+          (index) => UnbookedSeat(bookingEnabled: bookingEnabled),
         );
 
         final allBoxes = [...upcomingBoxes, ...doneBoxes, ...unBookedBoxes];
@@ -259,14 +302,20 @@ class ReceptionAppointmentListView extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 GestureDetector(
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    SlotView.id,
-                    arguments: SlotViewArguments(
-                      reception: reception,
-                      slot: slot,
-                    ),
-                  ),
+                  onTap: () async {
+                    await Navigator.pushNamed(
+                      context,
+                      SlotView.id,
+                      arguments: SlotViewArguments(
+                        reception: reception,
+                        slot: slot,
+                      ),
+                    );
+                    Provider.of<ReceptionsBloc>(
+                      context,
+                      listen: false,
+                    ).getReceptionsByDate();
+                  },
                   child: SlotTiming(),
                 ),
                 Expanded(
@@ -276,6 +325,27 @@ class ReceptionAppointmentListView extends StatelessWidget {
                     children: allBoxes,
                   ),
                 ),
+                GestureDetector(
+                  onTap: () async {
+                    await Navigator.pushNamed(
+                      context,
+                      SlotView.id,
+                      arguments: SlotViewArguments(
+                        reception: reception,
+                        slot: slot,
+                      ),
+                    );
+                    Provider.of<ReceptionsBloc>(
+                      context,
+                      listen: false,
+                    ).getReceptionsByDate();
+                  },
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(width: 10)
               ],
             ),
           ),
@@ -312,14 +382,20 @@ class UpcomingSeat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(
-        context,
-        SlotView.id,
-        arguments: SlotViewArguments(
-          reception: Provider.of<Reception>(context, listen: false),
-          slot: Provider.of<Slot>(context, listen: false),
-        ),
-      ),
+      onTap: () async {
+        await Navigator.pushNamed(
+          context,
+          SlotView.id,
+          arguments: SlotViewArguments(
+            reception: Provider.of<Reception>(context, listen: false),
+            slot: Provider.of<Slot>(context, listen: false),
+          ),
+        );
+        Provider.of<ReceptionsBloc>(
+          context,
+          listen: false,
+        ).getReceptionsByDate();
+      },
       child: Container(
         height: 50,
         alignment: Alignment.center,
@@ -345,14 +421,20 @@ class DoneSeat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(
-        context,
-        SlotView.id,
-        arguments: SlotViewArguments(
-          reception: Provider.of<Reception>(context, listen: false),
-          slot: Provider.of<Slot>(context, listen: false),
-        ),
-      ),
+      onTap: () async {
+        await Navigator.pushNamed(
+          context,
+          SlotView.id,
+          arguments: SlotViewArguments(
+            reception: Provider.of<Reception>(context, listen: false),
+            slot: Provider.of<Slot>(context, listen: false),
+          ),
+        );
+        Provider.of<ReceptionsBloc>(
+          context,
+          listen: false,
+        ).getReceptionsByDate();
+      },
       child: Container(
         height: 50,
         alignment: Alignment.center,
@@ -371,19 +453,25 @@ class DoneSeat extends StatelessWidget {
 }
 
 class UnbookedSeat extends StatelessWidget {
+  final bool bookingEnabled;
+
   const UnbookedSeat({
     Key key,
+    this.bookingEnabled = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         final Reception reception = context.read<Reception>();
         final Slot slot = context.read<Slot>();
         logger.i(
             'Selected reception: ${receptionToJson(reception)}\nSlot selected:${slot.toJson()}');
-        Navigator.pushNamed(
+        if (!bookingEnabled) {
+          return;
+        }
+        await Navigator.pushNamed(
           context,
           CreateAppointment.id,
           arguments: CreateAppointmentArgs(
@@ -391,6 +479,10 @@ class UnbookedSeat extends StatelessWidget {
             slot: slot,
           ),
         );
+        Provider.of<ReceptionsBloc>(
+          context,
+          listen: false,
+        ).getReceptionsByDate();
       },
       child: Container(
         height: 50,

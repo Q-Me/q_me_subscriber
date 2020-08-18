@@ -258,7 +258,7 @@ void createOverrideReception(ReceptionRepository receptionRepository) async {
   final today = DateTime(now.year, now.month, now.day + 1);
 
   final response = await receptionRepository.createOverrideSlot(
-    counterId: 'f55cNXCtP',
+    receptionId: 'f55cNXCtP',
     startTime: today.add(Duration(hours: 10)),
     endTime: today.add(Duration(hours: 14)),
     customerPerSlotOverride: 0,

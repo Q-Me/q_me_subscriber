@@ -122,7 +122,13 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text('Start', style: kBigTextStyle.copyWith(fontSize: 26)),
+                    Text(
+                      'Start',
+                      style: kBigTextStyle.copyWith(
+                        fontSize: 26,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
                     Row(
                       children: <Widget>[
                         Flexible(
@@ -186,7 +192,13 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                       ],
                     ),
                     SizedBox(height: 15),
-                    Text('End', style: kBigTextStyle.copyWith(fontSize: 26)),
+                    Text(
+                      'End',
+                      style: kBigTextStyle.copyWith(
+                        fontSize: 26,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
                     Row(
                       children: <Widget>[
                         Flexible(

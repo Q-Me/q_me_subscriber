@@ -22,17 +22,34 @@ class AppointmentCancelRequested extends BookingEvent {
 }
 
 class AppointmentFinishRequested extends BookingEvent {
-  final String counterId;
+  final String receptionId;
   final String phone;
   final int otp;
   final String accessToken;
 
   AppointmentFinishRequested(
-      this.counterId, this.phone, this.otp, this.accessToken);
+    this.receptionId,
+    this.phone,
+    this.otp,
+    this.accessToken,
+  );
 }
 
-class AddUnbookedAppointment extends BookingEvent {}
+class AddUnbookedAppointment extends BookingEvent {
+  final String receptionId;
+  final Slot slot;
 
-class RemoveUnbookedAppointment extends BookingEvent {}
+  AddUnbookedAppointment(
+    this.receptionId,
+    this.slot,
+  );
+}
+
+class RemoveUnbookedAppointment extends BookingEvent {
+  final String receptionId;
+  final Slot slot;
+
+  RemoveUnbookedAppointment(this.receptionId, this.slot);
+}
 
 class BookingRefreshRequested extends BookingEvent {}

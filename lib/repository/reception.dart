@@ -57,16 +57,18 @@ class ReceptionRepository {
   }
 
   Future<Map<String, dynamic>> createOverrideSlot({
-    @required String counterId,
+    @required String receptionId,
     @required DateTime startTime,
     @required DateTime endTime,
     @required int customerPerSlotOverride,
-    @required String accessToken,
+    String accessToken,
   }) async {
+    final String accessToken =
+        await SubscriberRepository().getAccessTokenFromStorage();
     final response = await _helper.post(
       '/subscriber/slot/override',
       req: {
-        "counter_id": counterId,
+        "counter_id": receptionId,
         "starttime": startTime.toIso8601String(),
         "endtime": endTime.toIso8601String(),
         "override": customerPerSlotOverride.toString(),

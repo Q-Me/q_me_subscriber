@@ -180,7 +180,11 @@ class _CreateAppointmentState extends State<CreateAppointment> {
                                 } on BadRequestException catch (e) {
                                   logger.e(e.toString());
                                   showSnackBar(
-                                      List.from(e.toMap()["error"]).join("\n"),
+                                      List.from(e.toMap()["error"] is List
+                                              ? List.from(e.toMap()["error"])
+                                                  .join("\n")
+                                              : e.toMap()["error"])
+                                          .join("\n"),
                                       5);
                                 } catch (e) {
                                   logger.e(e.toString());

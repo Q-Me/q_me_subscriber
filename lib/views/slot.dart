@@ -17,8 +17,10 @@ import '../model/appointment.dart';
 class SlotViewArguments {
   final Reception reception;
   final Slot slot;
-  SlotViewArguments({@required this.reception, @required this.slot}) {
-    logger.d('Reception:${reception.toJson()}\nSlot:\n${slot.toJson()}');
+  SlotViewArguments({@required this.reception, @required this.slot})
+      : assert(reception != null && slot != null) {
+    logger.d(
+        'Reception:${reception.toJson()}\nSlot:\n${slot.toJson()}\nNow:${DateTime.now().toString()}');
   }
 }
 
@@ -37,9 +39,22 @@ class _SlotViewState extends State<SlotView> {
 
   double get mediaHeight => MediaQuery.of(context).size.height;
   Reception get reception => widget.args.reception;
-  Slot get slot => widget.args.slot;
+  Slot slot;
   ReceptionRepository repository = ReceptionRepository();
-  List<Appointment> response;
+  List<String> statusRequestList = [
+    'UPCOMING',
+    'CANCELLED',
+    'CANCELLED BY SUBSCRIBER',
+    'DONE'
+  ];
+  List<Appointment> appointments;
+
+  @override
+  void initState() {
+    slot = widget.args.slot;
+    appointments = [];
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +86,7 @@ class _SlotViewState extends State<SlotView> {
             BlocProvider(create: (context) => BookingBloc(repository)),
             ChangeNotifierProvider.value(value: reception),
             ChangeNotifierProvider.value(value: slot),
+            Provider.value(value: appointments),
           ],
           child: Column(
             children: [
@@ -82,17 +98,143 @@ class _SlotViewState extends State<SlotView> {
                 ),
                 child: SlotDetails(slot: slot),
               ),
-              Expanded(
-                child: BlocConsumer<BookingBloc, BookingState>(
-                  builder: (context, state) {
-                    logger.d(state.toString());
-                    if (state is BookingLoading) {
-                      return Loading(
-                        loadingMessage: 'Fetching appointments data',
+              Expanded(child: BookingBlocConsumer())
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BookingBlocConsumer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    Reception reception = Provider.of<Reception>(context, listen: false);
+    Slot slot = Provider.of<Slot>(context);
+    List<Appointment> appointments = Provider.of<List<Appointment>>(context);
+
+    return BlocConsumer<BookingBloc, BookingState>(
+      builder: (context, state) {
+        logger.d(state.toString());
+        if (state is BookingLoading) {
+          return Loading(
+            loadingMessage: 'Fetching appointments data',
+          );
+        } else if (state is BookingInitial) {
+          BlocProvider.of<BookingBloc>(context).add(
+            BookingListRequested(
+              reception.receptionId,
+              slot.startTime,
+              slot.endTime,
+              ['UPCOMING', 'CANCELLED', 'CANCELLED BY SUBSCRIBER', 'DONE'],
+              slot.endTime.difference(slot.startTime).inMinutes,
+            ),
+          );
+          return Loading(
+              loadingMessage: "Please wait....Fetching Appointments");
+        } else if (state is BookingLoadSuccessful) {
+          DateTime now = DateTime.now();
+          now = DateTime.utc(
+            now.year,
+            now.month,
+            now.day,
+            now.hour,
+            now.minute,
+            now.second,
+          );
+          bool bookingEnabled = slot.startTime.isAfter(now);
+          logger.d(
+              'Reception:${reception.toJson()}\nSlot:${slot.toJson()}\n Now:${now.toString()} \nNow:${now.timeZoneName}\tSlot end:${slot.endTime.timeZoneName}\nBookingEnabled:$bookingEnabled');
+          if (state.response is List) {
+            appointments = state.response;
+          }
+          if (state.response is Slot) {
+            slot = state.response;
+          }
+
+          // update the slot upcoming and done values
+          slot.upcoming = filterAppointmentsByStatus(
+            appointments,
+            "UPCOMING",
+          ).length;
+
+          slot.done = filterAppointmentsByStatus(
+            appointments,
+            "DONE",
+          ).length;
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                children: [
+                  // UPCOMING, DONE, CANCELLED, CANCELLED BY SUBSCRIBER
+                  ListView.builder(
+                    itemCount: appointments.length,
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemBuilder: (BuildContext context, int index) {
+                      return AppointmentCard(
+                        appointment: appointments[index],
                       );
-                    } else if (state is BookingInitial) {
-                      BlocProvider.of<BookingBloc>(context).add(
-                        BookingListRequested(
+                    },
+                  ),
+                  // Unbooked
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: slot.customersInSlot - slot.upcoming - slot.done,
+                    itemBuilder: (BuildContext context, int index) {
+                      return UnbookedTile(
+                        bookingEnable: bookingEnabled,
+                      );
+                    },
+                  ),
+                  bookingEnabled
+                      ? InkWell(
+                          onTap: () {
+                            BlocProvider.of<BookingBloc>(context).add(
+                              AddUnbookedAppointment(
+                                reception.receptionId,
+                                slot,
+                              ),
+                            );
+                          },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Card(
+                                  child: Container(
+                                    height: 50,
+                                    child: Icon(
+                                      Icons.add,
+                                      size: 35,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Container(),
+                ],
+              ),
+            ),
+          );
+        } else if (state is BookingLoadFailure) {
+          // TODO check if the appointment list is available
+          // if apppointment list is filled and corresponds with slot instance
+          // then show that list and show a snackbat error
+          // else show the below widget
+          return Center(
+              child: Column(
+            children: <Widget>[
+              Text("Error loading data...Please try again"),
+              RaisedButton(
+                onPressed: () {
+                  BlocProvider.of<BookingBloc>(context).add(
+                      BookingListRequested(
                           reception.receptionId,
                           slot.startTime,
                           slot.endTime,
@@ -102,141 +244,92 @@ class _SlotViewState extends State<SlotView> {
                             'CANCELLED BY SUBSCRIBER',
                             'DONE'
                           ],
-                          slot.endTime.difference(slot.startTime).inMinutes,
-                        ),
-                      );
-                      return Loading(
-                          loadingMessage:
-                              "Please wait....Fetching Appointments");
-                    } else if (state is BookingLoadSuccessful) {
-                      logger.d(
-                          'Appointment List\n${state.response}\nReception:${reception.toJson()}\nSlot:${slot.toJson()}');
-
-                      final List<Appointment> appointments = state.response;
-
-                      return SingleChildScrollView(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Column(
-                            children: [
-                              ListView.builder(
-                                itemCount: appointments.length,
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemBuilder: (BuildContext context, int index) {
-                                  return AppointmentCard(
-                                    appointment: appointments[index],
-                                  );
-                                },
-                              ),
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount: slot.customersInSlot -
-                                    slot.upcoming -
-                                    slot.done,
-                                itemBuilder: (BuildContext context, int index) {
-                                  return UnbookedTile();
-                                },
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  showSnackBar("sdjkgsd", 6);
-//                                  BlocProvider.of<BookingBloc>(context)
-//                                      .add(BookingLoading());
-                                },
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Card(
-                                        child: Container(
-                                            height: 50,
-                                            child: Icon(
-                                              Icons.add,
-                                              size: 35,
-                                            )),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    } else if (state is BookingLoadFailure) {
-                      return Center(
-                          child: Column(
-                        children: <Widget>[
-                          Text("Error loading data...Please try again"),
-                          RaisedButton(
-                            onPressed: () {
-                              BlocProvider.of<BookingBloc>(context).add(
-                                  BookingListRequested(
-                                      reception.receptionId,
-                                      slot.startTime,
-                                      slot.endTime,
-                                      ["UPCOMING"],
-                                      (slot.endTime.difference(slot.startTime))
-                                          .inMinutes));
-                            },
-                            child: Text("Retry"),
-                          )
-                        ],
-                      ));
-                    }
-                    return Text('Unidentified state');
-                  },
-                  listener: (context, state) {},
-                ),
+                          (slot.endTime.difference(slot.startTime)).inMinutes));
+                },
+                child: Text("Retry"),
               )
             ],
-          ),
-        ),
-      ),
+          ));
+        } else {
+          return Text('Unidentified state');
+        }
+      },
+      listener: (context, state) {},
     );
   }
 }
 
 class UnbookedTile extends StatelessWidget {
+  final bool bookingEnable;
   const UnbookedTile({
     Key key,
+    this.bookingEnable = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: Colors.orange[400],
-      child: ListTile(
-        dense: false,
-        trailing: Icon(Icons.delete, color: Colors.white),
-        title: InkWell(
-          onTap: () {
-            Navigator.pushNamed(
-              context,
-              CreateAppointment.id,
-              arguments: CreateAppointmentArgs(
-                receptionId: Provider.of<Reception>(
-                  context,
-                  listen: false,
-                ).receptionId,
-                slot: Provider.of<Slot>(context, listen: false),
+    return bookingEnable
+        ? Card(
+            color: Colors.orange[400],
+            child: ListTile(
+              dense: false,
+              trailing: InkWell(
+                onTap: () {
+                  BlocProvider.of<BookingBloc>(context).add(
+                    RemoveUnbookedAppointment(
+                      context.read<Reception>().receptionId,
+                      context.read<Slot>(),
+                    ),
+                  );
+                },
+                child: Icon(Icons.delete, color: Colors.white),
               ),
-            ).then((value) => {
-              BlocProvider.of<BookingBloc>(context).add(BookingRefreshRequested())
-            });
-          },
-          child: Center(
-              child: Text(
-            'Unbooked',
-            style: Theme.of(context)
-                .textTheme
-                .headline6
-                .copyWith(color: Colors.white),
-          )),
-        ),
-      ),
-    );
+              title: InkWell(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    CreateAppointment.id,
+                    arguments: CreateAppointmentArgs(
+                      receptionId: Provider.of<Reception>(
+                        context,
+                        listen: false,
+                      ).receptionId,
+                      slot: Provider.of<Slot>(context, listen: false),
+                    ),
+                  ).then(
+                    (value) => {
+                      BlocProvider.of<BookingBloc>(context)
+                          .add(BookingRefreshRequested())
+                    },
+                  );
+                },
+                child: Center(
+                  child: Text(
+                    'Unbooked',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headline6
+                        .copyWith(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          )
+        : Card(
+            color: Colors.orange[400],
+            child: ListTile(
+              dense: false,
+              title: Center(
+                child: Text(
+                  'Unbooked',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline6
+                      .copyWith(color: Colors.white),
+                ),
+              ),
+            ),
+          );
   }
 }
 
@@ -294,7 +387,9 @@ class AppointmentCard extends StatelessWidget {
                     appointment.customerName,
                   ),
                   subtitle: Text(appointment.customerPhone +
-                      "\nNote: ${appointment.note}"),
+                      (appointment.note.length >= 1
+                          ? "\nNote: ${appointment.note}"
+                          : "")),
                 ),
               ),
             ],
