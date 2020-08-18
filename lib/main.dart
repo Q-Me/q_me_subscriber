@@ -8,6 +8,7 @@ import 'views/signin.dart';
 
 var analytics = AnalyticsService();
 String initialHome = SignInScreen.id;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (await SubscriberRepository().isSessionReady()) {
