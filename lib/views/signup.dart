@@ -249,25 +249,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                                       subscriber.latitude =
                                           result.geometry.location.lat;
-                                      formData['latitude'] =
-                                          subscriber.latitude.toString();
-
                                       subscriber.longitude =
                                           result.geometry.location.lng;
-                                      formData['longitude'] =
-                                          subscriber.longitude.toString();
-                                      logger.d(formData.toString() +
-                                          '\n${DateTime.now()}');
+
+                                      if (subscriber.latitude != null &&
+                                          subscriber.longitude != null) {
+                                        formData['latitude'] =
+                                            subscriber.latitude.toString();
+                                        formData['longitude'] =
+                                            subscriber.longitude.toString();
+                                        _mapLocationController.text =
+                                            '${formData['latitude']},${formData['longitude']}';
+                                        logger.d(formData.toString() +
+                                            '\n${DateTime.now()}');
+                                      }
                                       Navigator.of(context).pop();
                                     },
                                     useCurrentLocation: true,
-                                    forceAndroidLocationManager: true,
                                   ),
                                 ),
                               );
-                              _mapLocationController.text =
-                                  '${formData['latitude']},${formData['longitude']}';
-//                              formKey.currentState.save();
                             },
                             decoration: InputDecoration(
                               labelText: 'MAP LOCATION*',

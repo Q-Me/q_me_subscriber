@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,11 +5,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
 import 'package:pin_entry_text_field/pin_entry_text_field.dart';
 import 'package:qme_subscriber/api/app_exceptions.dart';
-import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/subscriber.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
-import 'package:qme_subscriber/views/queues.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 import 'package:qme_subscriber/widgets/button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -87,6 +83,7 @@ class _OtpPageState extends State<OtpPage> {
                               fieldWidth:
                                   MediaQuery.of(context).size.width * 0.1,
                               fields: 6,
+
                               onSubmit: (String pin) {
                                 _codeController.text = pin;
                               }, // end onSubmit
@@ -193,20 +190,22 @@ class _OtpPageState extends State<OtpPage> {
                                                 'token': formData['token'],
                                               });
                                               logger.d(response.toString());
-                                            } on UnauthorisedException catch (e){
+                                            } on UnauthorisedException catch (e) {
                                               Scaffold.of(context).showSnackBar(
                                                   SnackBar(
-                                                      content:
-                                                          Text(e.toMap()["msg"].toString())));
-                                              logger.d('Error: ' + e.toString());
+                                                      content: Text(e
+                                                          .toMap()["msg"]
+                                                          .toString())));
+                                              logger
+                                                  .d('Error: ' + e.toString());
                                               return;
-                                            }
-                                             catch (e) {
+                                            } catch (e) {
                                               Scaffold.of(context).showSnackBar(
                                                   SnackBar(
                                                       content:
                                                           Text(e.toString())));
-                                              logger.d('Error: ' + e.toString());
+                                              logger
+                                                  .d('Error: ' + e.toString());
                                               return;
                                             }
 
@@ -253,11 +252,11 @@ class _OtpPageState extends State<OtpPage> {
                                                   'fcmToken', _fcmToken);
 
                                               // Navigate to QueuesPage
-                                               Navigator.of(context)
-                                                .pushNamedAndRemoveUntil(
-                                                    ReceptionsScreen.id,
-                                                    (Route<dynamic> route) =>
-                                                        false);
+                                              Navigator.of(context)
+                                                  .pushNamedAndRemoveUntil(
+                                                      ReceptionsScreen.id,
+                                                      (Route<dynamic> route) =>
+                                                          false);
                                             } else if (response['msg'] ==
                                                     "Invalid Credential" ||
                                                 response['error'] != null) {
@@ -330,13 +329,13 @@ class _OtpPageState extends State<OtpPage> {
                                                     ReceptionsScreen.id,
                                                     (Route<dynamic> route) =>
                                                         false);
-                                          } on UnauthorisedException catch(e){
+                                          } on UnauthorisedException catch (e) {
                                             Scaffold.of(context).showSnackBar(
                                                 SnackBar(
-                                                    content:
-                                                        Text(e.toMap()["msg"].toString())));
-                                          }
-                                          catch (e) {
+                                                    content: Text(e
+                                                        .toMap()["msg"]
+                                                        .toString())));
+                                          } catch (e) {
                                             Scaffold.of(context).showSnackBar(
                                                 SnackBar(
                                                     content:
