@@ -58,58 +58,58 @@ class _SignInScreenState extends State<SignInScreen>
     _auth.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: Duration(seconds: 60),
-        /*// verificationCompleted: (AuthCredential credential) async {
-        //   AuthResult result = await _auth.signInWithCredential(credential);
-        //   print("printing the credential");
-        //   print(credential);
+        /* verificationCompleted: (AuthCredential credential) async {
+          AuthResult result = await _auth.signInWithCredential(credential);
+          print("printing the credential");
+          print(credential);
 
-        //   FirebaseUser user = result.user;
+          FirebaseUser user = result.user;
 
-        //   if (user != null) {
-        //     var token = await user.getIdToken().then((result) async {
-        //       idToken = result.token;
-        //       print(" $idToken ");
-        //       FocusScope.of(context)
-        //           .requestFocus(FocusNode()); // dismiss the keyboard
-        //       Scaffold.of(context)
-        //           .showSnackBar(SnackBar(content: Text('Processing Data')));
-        //       var response;
-        //       try {
-        //          SharedPreferences prefs = await SharedPreferences.getInstance();
-        //         prefs.setString('fcmToken', _fcmToken);
-        //         response = await SubscriberRepository().signInFirebaseotp({
-        //           'token': idToken,
-        //         });
-        //         print("@@$response@@");
+          if (user != null) {
+            var token = await user.getIdToken().then((result) async {
+              idToken = result.token;
+              print(" $idToken ");
+              FocusScope.of(context)
+                  .requestFocus(FocusNode()); // dismiss the keyboard
+              Scaffold.of(context)
+                  .showSnackBar(SnackBar(content: Text('Processing Data')));
+              var response;
+              try {
+                 SharedPreferences prefs = await SharedPreferences.getInstance();
+                prefs.setString('fcmToken', _fcmToken);
+                response = await SubscriberRepository().signInFirebaseotp({
+                  'token': idToken,
+                });
+                print("@@$response@@");
 
-        //         log('SIGNIN API RESPONSE: ' + response.toString());
+                log('SIGNIN API RESPONSE: ' + response.toString());
 
-        //         await SubscriberRepository()
-        //             .storeSubscriberData(Subscriber.fromJson(response));
-        //         Scaffold.of(context)
-        //             .showSnackBar(SnackBar(content: Text('Processing Data')));
-        //         var responsefcm = await SubscriberRepository().fcmTokenSubmit({
-        //           'token': _fcmToken,
-        //         }, response['accessToken']);
-        //       prefs.setString('fcmToken',_fcmToken );
-        //         print("fcm token Api: $responsefcm");
-        //         print("fcm token  Apiresponse: ${responsefcm['status']}");
-        //         Navigator.pushNamed(context, QueuesScreen.id);
-        //       } catch (e) {
-        //         print(" !!$e !!");
-        //         Scaffold.of(context)
-        //             .showSnackBar(SnackBar(content: Text(e.toString())));
-        //         // _showSnackBar(e.toString());
-        //         log('Error in signIn API: ' + e.toString());
-        //         return;
-        //       }
-        //     });
-        //   } else {
-        //     print("Error");
-        //   }
+                await SubscriberRepository()
+                    .storeSubscriberData(Subscriber.fromJson(response));
+                Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text('Processing Data')));
+                var responsefcm = await SubscriberRepository().fcmTokenSubmit({
+                  'token': _fcmToken,
+                }, response['accessToken']);
+              prefs.setString('fcmToken',_fcmToken );
+                print("fcm token Api: $responsefcm");
+                print("fcm token  Apiresponse: ${responsefcm['status']}");
+                Navigator.pushNamed(context, QueuesScreen.id);
+              } catch (e) {
+                print(" !!$e !!");
+                Scaffold.of(context)
+                    .showSnackBar(SnackBar(content: Text(e.toString())));
+                // _showSnackBar(e.toString());
+                log('Error in signIn API: ' + e.toString());
+                return;
+              }
+            });
+          } else {
+            print("Error");
+          }
 
         //   //This callback would gets called when verification is done auto maticlly
-        // },*/
+        },*/
         verificationFailed: (AuthException exception) {
           print("here is exception error");
           print(exception.message);
@@ -139,17 +139,14 @@ class _SignInScreenState extends State<SignInScreen>
     super.initState();
     _controller = new TabController(length: 2, vsync: this);
     firebaseCloudMessagingListeners();
-    _messaging.getToken().then((token) {
-      print("fcmToken: $token");
-      _fcmToken = token;
-    });
   }
 
   void firebaseCloudMessagingListeners() {
     if (Platform.isIOS) iosPermission();
 
     _messaging.getToken().then((token) {
-      print(token);
+      logger.d("FCM Token $token");
+      _fcmToken = token;
     });
 
     _messaging.configure(

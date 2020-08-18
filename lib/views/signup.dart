@@ -34,6 +34,9 @@ String loginPage;
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _phoneController = TextEditingController(text: "+91");
+  TextEditingController _mapLocationController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
   bool showSpinner = false;
   final formKey = GlobalKey<FormState>();
   Map<String, String> formData = {};
@@ -51,7 +54,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // otp verification with firebase
 
   final List<String> subscriberCategory = [
-    "Choose Category",
     "Beauty & Wellness",
     "Grocery Store",
     "Supermarket",
@@ -117,7 +119,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var _mapLocationController = TextEditingController();
     return SafeArea(
       child: Scaffold(
         resizeToAvoidBottomPadding: false,
@@ -163,51 +164,58 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             },
                           ),
                           SizedBox(height: 10.0),
-                          Container(
-                            child: DropdownButtonFormField<String>(
-                              decoration: InputDecoration(
-                                  labelText: 'Subscriber Category'),
-                              items: subscriberCategory.map((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                              hint: Text(selectedCategory),
-                              value: selectedCategory,
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedCategory = value;
-                                  logger
-                                      .d('Category selected:$selectedCategory');
-                                  formData['category'] = selectedCategory;
-                                });
-                              },
-                            ),
+                          DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                                labelStyle: TextStyle(
+                                    fontFamily: 'Montserrat',
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey),
+                                focusedBorder: UnderlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: Colors.green)),
+                                focusColor: Colors.lightBlue,
+                                labelText: 'Subscriber Category'),
+                            items: subscriberCategory.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedCategory = value;
+                                logger.d('Category selected:$selectedCategory');
+                                formData['category'] = selectedCategory;
+                              });
+                              logger.d(formData.toString());
+                            },
+                            validator: (value) => value == null
+                                ? 'This field cannot be left blank'
+                                : null,
                           ),
                           SizedBox(height: 10.0),
-                          Container(
-                            child: TextFormField(
-                              keyboardType: TextInputType.phone,
-                              controller: _phoneController,
-                              validator: (value) {
-                                if (value.isEmpty) {
-                                  return 'This field cannot be left blank';
-                                } else {
-                                  setState(() {
-                                    formData['phone'] = value;
-                                  });
-                                  subscriber.phone = value;
-                                  return null;
-                                }
-                              },
-                              decoration: kTextFieldDecoration.copyWith(
-                                  labelText: "PHONE"),
-                            ),
+                          TextFormField(
+                            keyboardType: TextInputType.phone,
+                            controller: _phoneController,
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return 'This field cannot be left blank';
+                              } else if (!value.startsWith('+91')) {
+                                return 'Phone number must start with +91 followed by 10 digits';
+                              } else if (value.length != 13) {
+                                return 'Please enter 10 digit phone number after +91';
+                              } else {
+                                formData['phone'] = value;
+                                subscriber.phone = value;
+                                return null;
+                              }
+                            },
+                            decoration: kTextFieldDecoration.copyWith(
+                                labelText: "PHONE*"),
                           ),
                           SizedBox(height: 10.0),
                           MyFormField(
-                            name: 'ADDRESS',
+                            name: 'ADDRESS*',
                             required: true,
                             callback: (value) {
                               formData['address'] = value;
@@ -227,9 +235,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               }
                               return null;
                             },
-                            onTap: () {
+                            onTap: () async {
                               logger.d('Address field tapped');
-                              Navigator.push(
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => PlacePicker(
@@ -238,9 +246,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     onPlacePicked: (result) {
                                       logger.d(
                                           '${result.geometry.location.lat},${result.geometry.location.lng}');
-
-                                      _mapLocationController.text =
-                                          '${result.geometry.location.lat},${result.geometry.location.lng}';
 
                                       subscriber.latitude =
                                           result.geometry.location.lat;
@@ -251,16 +256,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                           result.geometry.location.lng;
                                       formData['longitude'] =
                                           subscriber.longitude.toString();
-
+                                      logger.d(formData.toString() +
+                                          '\n${DateTime.now()}');
                                       Navigator.of(context).pop();
                                     },
                                     useCurrentLocation: true,
+                                    forceAndroidLocationManager: true,
                                   ),
                                 ),
                               );
+                              _mapLocationController.text =
+                                  '${formData['latitude']},${formData['longitude']}';
+//                              formKey.currentState.save();
                             },
                             decoration: InputDecoration(
-                              labelText: 'MAP LOCATION',
+                              labelText: 'MAP LOCATION*',
                               labelStyle: kLabelStyle,
                               suffixIcon: IconButton(
                                 icon: Icon(Icons.location_on),
@@ -272,11 +282,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                           SizedBox(height: 10.0),
-                          MyFormField(
+                          TextFormField(
                             keyboardType: TextInputType.emailAddress,
-                            name: 'EMAIL',
-                            required: false,
-                            callback: (value) {
+                            validator: (value) {
+                              if (RegExp(
+                                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                  .hasMatch(value)) {
+                                return 'Email not valid';
+                              } else {
+                                return null;
+                              }
+                            },
+                            decoration: kTextFieldDecoration.copyWith(
+                                labelText: 'EMAIL'),
+                            onSaved: (value) {
                               formData['email'] = value;
                               subscriber.email = value;
                             },
@@ -284,14 +303,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           SizedBox(height: 10.0),
                           TextFormField(
                             // Password
-                            obscureText: passwordVisible,
+                            obscureText: !passwordVisible,
+                            controller: passwordController,
                             validator: (value) {
                               Pattern pattern =
                                   r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])';
                               RegExp regex = new RegExp(pattern);
-                              if (value.length < 6 || value.length > 20)
+                              if (value.length < 6)
                                 return 'Password should be not be less than 6 characters';
-                              else if (!regex.hasMatch(value)) {
+                              else if (value.length > 20) {
+                                return 'Password should be not be more than 20 characters';
+                              } else if (!regex.hasMatch(value)) {
                                 return 'Password must contain one numeric ,one upper and one lower case letter';
                               }
                               {
@@ -300,7 +322,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               }
                             },
                             decoration: InputDecoration(
-                              labelText: 'PASSWORD',
+                              labelText: 'PASSWORD*',
                               labelStyle: kLabelStyle,
                               focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
@@ -325,18 +347,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           SizedBox(height: 10.0),
                           TextFormField(
-                            // Password
-                            obscureText: passwordVisible,
+                            obscureText: !passwordVisible,
                             validator: (value) {
                               if (value.length < 6)
                                 return 'Password should be not be less than 6 characters';
-                              else {
+                              else if (passwordController.text != value) {
+                                return 'Both passwords should match';
+                              } else {
                                 formData['cpassword'] = value;
                                 return null;
                               }
                             },
                             decoration: InputDecoration(
-                              labelText: 'CONFIRM PASSWORD',
+                              labelText: 'CONFIRM PASSWORD*',
                               labelStyle: kLabelStyle,
                               focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
@@ -379,13 +402,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 checkedValue = newValue;
                               });
                             },
-                            validator: (bool value) {
-                              if (value) {
-                                return null;
-                              } else {
-                                return 'You need to accept terms!';
-                              }
-                            },
+                            validator: (bool value) =>
+                                value ? null : 'You need to accept terms!',
                           ),
                           SizedBox(height: 50.0),
                           SignUpButton(
@@ -610,6 +628,7 @@ class _SignUpButtonState extends State<SignUpButton> {
           onTap: () async {
             logger.d('${widget.formData}');
             if (widget.formKey.currentState.validate()) {
+              widget.formKey.currentState.save();
               logger.d('${widget.formData is Map<String, String>}');
 
               // check phone number length

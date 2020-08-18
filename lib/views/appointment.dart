@@ -269,7 +269,7 @@ class _AppointmentViewState extends State<AppointmentView> {
                                                   "Do you really want to cancel");
                                             },
                                             child: Text(
-                                              "Cancel",
+                                              "Cancel Booking",
                                               style: TextStyle(
                                                   color: Colors.red[700]),
                                             ),
