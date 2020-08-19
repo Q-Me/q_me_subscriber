@@ -286,7 +286,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           TextFormField(
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
-                              if (RegExp(
+                              if (!RegExp(
                                       r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                                   .hasMatch(value)) {
                                 return 'Email not valid';
@@ -388,7 +388,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               color: Colors.transparent,
                               onPressed: () => setState(() {
                                 _launched = _launchInBrowser(
-                                    "https://q-me.flycricket.io/privacy.html");
+                                    "https://github.com/Q-Me/public_releases/blob/master/subscriber/PrivacyPolicy.md");
                               }),
                               child: Align(
                                   alignment: Alignment.centerLeft,
