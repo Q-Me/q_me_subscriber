@@ -34,8 +34,8 @@ List<Slot> createOverrideSlots(Map<String, dynamic> response) {
   List<Slot> overrideList = [];
   for (var map in response['overrides']) {
     final Slot override = Slot(
-      startTime: DateTime.parse(map['starttime']).toLocal(),
-      endTime: DateTime.parse(map['endtime']).toLocal(),
+      startTime: DateTime.parse(map['starttime']),
+      endTime: DateTime.parse(map['endtime']),
       customersInSlot: map['override'],
     );
     overrideList.add(override);
