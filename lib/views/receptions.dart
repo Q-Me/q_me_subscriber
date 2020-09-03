@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:calendar_strip/calendar_strip.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +35,8 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
   DateTime selectedDate = DateTime.now();
   List<DateTime> markedDates = [];
   ReceptionsBloc receptionsBloc;
+    final FirebaseMessaging _messaging = FirebaseMessaging();
+  var _fcmToken;
 
   onSelect(DateTime select) {
 //    logger.d('Select functions: $select');
@@ -50,7 +55,42 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
     receptionsBloc = ReceptionsBloc(selectedDate);
     receptionsBloc.date = selectedDate;
     super.initState();
+     firebaseCloudMessagingListeners();
+    _messaging.getToken().then((token) {
+      logger.d("fcmToken: $token");
+      _fcmToken = token;
+    });
   }
+   void firebaseCloudMessagingListeners() {
+    if (Platform.isIOS) iosPermission();
+
+    _messaging.getToken().then((token) {
+      print(token);
+    });
+
+    _messaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        //showNotification(message['notification']);
+        print('on message $message');
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print('on resume $message');
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print('on launch $message');
+      },
+    );
+  }
+
+  void iosPermission() {
+    _messaging.requestNotificationPermissions(
+        IosNotificationSettings(sound: true, badge: true, alert: true));
+    _messaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings settings) {
+      print("Settings registered: $settings");
+    });
+  }
+
 
   Future<bool> _onBackPressed() {
     return showDialog(
