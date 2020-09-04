@@ -1,9 +1,14 @@
+import 'dart:io';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer';
 import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/views/signin.dart';
+import 'package:qme_subscriber/views/signup.dart';
 import 'package:qme_subscriber/widgets/appDrawer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../views/viewQueue.dart';
 import '../views/createQueue.dart';
 import '../widgets/text.dart';
@@ -25,11 +30,57 @@ class QueuesScreen extends StatefulWidget {
 class _QueuesScreenState extends State<QueuesScreen> {
   QueuesBloc queuesBloc;
   String queueDisplayStatus = kQueueStatusList[0];
+  final FirebaseMessaging _messaging = FirebaseMessaging();
+  var _fcmToken;
 
   @override
   void initState() {
     super.initState();
     queuesBloc = QueuesBloc(queueStatus: queueDisplayStatus);
+     firebaseCloudMessagingListeners();
+    _messaging.getToken().then((token) {
+      print("fcmToken: $token");
+      _fcmToken = token;
+      verifyFcmTokenChange(_fcmToken);
+    });
+      
+  }
+  void verifyFcmTokenChange(String _fcmToken)async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+             var fcmToken=  prefs.getString('fcmToken' );
+              if (fcmToken != _fcmToken){
+                print("verify fcm: $fcmToken");
+                print("verify _fcm: $_fcmToken");
+         Navigator.pushNamed(context, SignInScreen.id);}
+              }
+    void firebaseCloudMessagingListeners() {
+    if (Platform.isIOS) iosPermission();
+
+    _messaging.getToken().then((token) {
+      print(token);
+    });
+
+    _messaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        //showNotification(message['notification']);
+        print('on message $message');
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print('on resume $message');
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print('on launch $message');
+      },
+    );
+  }
+
+  void iosPermission() {
+    _messaging.requestNotificationPermissions(
+        IosNotificationSettings(sound: true, badge: true, alert: true));
+    _messaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings settings) {
+      print("Settings registered: $settings");
+    });
   }
 
   @override

@@ -45,3 +45,4 @@ app.*.map.json
 #keys
 key.jks
 android/key.properties
+/pubspec.lock

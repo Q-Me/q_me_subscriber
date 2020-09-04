@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+
 import '../model/queue.dart';
 
 String getDate(DateTime dateTime) => DateFormat("dd-MM-yyyy").format(dateTime);
@@ -13,3 +14,11 @@ String getFullDateTime(DateTime dateTime) =>
 
 String getApiDateTime(DateTime dateTime) =>
     DateFormat('MM-dd-yyyy HH:mm').format(dateTime);
+
+extension DateOnlyCompare on DateTime {
+  bool isSameDate(DateTime other) {
+    return this.year == other.year &&
+        this.month == other.month &&
+        this.day == other.day;
+  }
+}
