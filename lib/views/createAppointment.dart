@@ -265,7 +265,7 @@ class AppointmentDetails extends StatelessWidget {
           style: Theme.of(context).textTheme.headline6,
         ),
         Text(
-          '\nImportant:\nPlease note this OTP and use it to confirm the appointment after customer visits the store. You won't see it after you exit this screen',
+          "\nImportant:\nPlease note this OTP and use it to confirm the appointment after customer visits the store. You won't see it after you exit this screen",
           style: TextStyle(
             color: Colors.red,
             decoration: TextDecoration.underline,
