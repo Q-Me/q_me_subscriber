@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
+import 'package:flutter/material.dart';
 
 class ThemedText extends StatelessWidget {
   final double fontSize;
@@ -38,7 +38,7 @@ class ThemedText extends StatelessWidget {
           style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.bold,
-              color: Colors.green),
+              color: Theme.of(context).primaryColor),
         )
       ],
     ));
