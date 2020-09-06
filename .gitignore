@@ -46,3 +46,4 @@ app.*.map.json
 key.jks
 android/key.properties
 /pubspec.lock
+.vscode/tasks.json
