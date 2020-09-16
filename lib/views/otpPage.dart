@@ -50,13 +50,16 @@ class _OtpPageState extends State<OtpPage> {
                             top: MediaQuery.of(context).size.height * 0.025),
                         child: Center(
                           child: Hero(
-                            tag: 'hero',
-                            child: new CircleAvatar(
-                              backgroundColor: Colors.transparent,
-                              radius: 60.0,
-                              child: SvgPicture.asset("assets/images/user.svg"),
+                          tag: 'hero',
+                          child: new CircleAvatar(
+                            backgroundColor: Colors.blue,
+                            radius: 80.0,
+                            child: Padding(
+                              padding: const EdgeInsets.all(1.5),
+                              child: SvgPicture.asset("assets/images/otpSvg.svg"),
                             ),
                           ),
+                        ),
                         ),
                       ),
                     ),
