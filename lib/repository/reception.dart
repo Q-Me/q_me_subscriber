@@ -234,31 +234,6 @@ class ReceptionRepository {
     return response;
   }
 
-  Future<Map<String, dynamic>> repeatSchedule({
-    @required String startTime,
-    @required String endTime,
-    @required String slot,
-    @required String custPerSlot,
-    @required List daysOfWeek,
-    @required String repeatTill,
-    @required String accessToken,
-  }) async {
-    final response = await _helper.post(
-      krepeatSchedule,
-      req: {
-        "starttime": "$startTime",
-        "endtime": "$endTime",
-        "slot": "$slot",
-        "cust_per_slot": "$custPerSlot",
-        "daysOfWeek": daysOfWeek,
-        "repeatTill": "$repeatTill",
-      },
-      headers: {'Authorization': 'Bearer $accessToken'},
-    );
-    return response;
-  }
-
-
   Future<Map<String, dynamic>> updateReceptionStatus({
     @required String counterId,
     @required String status,

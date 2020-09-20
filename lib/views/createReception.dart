@@ -5,7 +5,6 @@ import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
-import 'package:qme_subscriber/views/customerRecurrence.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 
 import '../constants.dart';
@@ -396,8 +395,8 @@ class CreateReceptionButton extends StatelessWidget {
       alignment: Alignment.center,
       child: Material(
         borderRadius: BorderRadius.circular(20.0),
-        shadowColor: Colors.blue,
-        color: Theme.of(context).primaryColor,
+        shadowColor: Colors.greenAccent,
+        color: Colors.green,
         elevation: 7.0,
         child: InkWell(
           onTap: () async {
@@ -443,26 +442,17 @@ class CreateReceptionButton extends StatelessWidget {
                 );
 //                logger.d(response);
 
-                // showSnackBar(response);
+                showSnackBar(response);
 
 //                logger.d('Timer start');
                 await Future.delayed(Duration(seconds: 3));
 //                logger.d('Timer end');
                 buttonPressable = true;
                 logger.d("buttonPressable:$buttonPressable");
+
                 // TODO add the reception to the list of all receptions in the receptions bloc
                 if (response == 'Counter Created Successfully') {
-                  Navigator.pushNamed(context, CustomerRecurrence.id,arguments: [
-            reception.startTime.toString(),
-            reception.endTime.toString(),
-              reception.customersInSlot.toString(),
-              reception.slotDuration.inMinutes.toString()
-            ],
-            );
-                  // Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
-                }
-                else{
-                  showSnackBar(response);
+                  Navigator.pushReplacementNamed(context, ReceptionsScreen.id);
                 }
               } catch (e) {
                 logger.e(e.toString());
