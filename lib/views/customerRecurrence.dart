@@ -34,8 +34,8 @@ enum SingingCharacter { lafayette, jefferson }
 SingingCharacter _character = SingingCharacter.lafayette;
 
 class _CustomerRecurrenceState extends State<CustomerRecurrence> {
-List weekdays = [0, 1, 2, 3, 4, 5, 6];
   DateTime _selectedDate = DateTime.now();
+List weekdays = [0, 1, 2, 3, 4, 5, 6];
 final values = List.filled(7, true);
   List<DateTime> selectedMonthsDays;
   Iterable<DateTime> selectedWeeksDays;
