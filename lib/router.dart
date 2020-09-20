@@ -102,8 +102,19 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
 
     case CustomerRecurrence.id:
+      List args = settings.arguments as List;
+      final String startTime = args[0];
+      final String endTime = args[1];
+      final String customersInSlot = args[2];
+      final String slotDuration = args[3];
+
       return MaterialPageRoute(
-        builder: (context) => CustomerRecurrence(),
+        builder: (context) => CustomerRecurrence(
+          startTime: startTime,
+          endTime: endTime,
+          customersInSlot: customersInSlot,
+          slotDuration: slotDuration,
+        ),
         settings: RouteSettings(name: CustomerRecurrence.id),
       );
 
