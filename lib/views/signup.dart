@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:checkbox_formfield/checkbox_formfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -7,12 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_place_picker/google_maps_place_picker.dart';
 import 'package:keyboard_avoider/keyboard_avoider.dart';
+import 'package:qme_subscriber/api/app_exceptions.dart';
+import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/otpPage.dart';
+import 'package:qme_subscriber/views/receptions.dart';
 import 'package:qme_subscriber/views/signin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../api/keys.dart';
 import '../bloc/signup.dart';
 import '../constants.dart';
@@ -36,22 +37,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _phoneController = TextEditingController(text: "+91");
   TextEditingController _mapLocationController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-
   bool showSpinner = false;
   final formKey = GlobalKey<FormState>();
   Map<String, String> formData = {};
   bool passwordVisible;
   SignUpBloc signUpBloc;
   Subscriber subscriber;
-  final _codeController = TextEditingController();
   final FirebaseMessaging _messaging = FirebaseMessaging();
   var _fcmToken;
   var idToken;
   bool checkedValue = false;
-  bool showOtpTextfield = false;
   Future<void> _launched;
-
-  // otp verification with firebase
 
   final List<String> subscriberCategory = [
     "Beauty & Wellness",
@@ -75,7 +71,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void initState() {
-    passwordVisible = true;
+    passwordVisible = false;
     selectedCategory = subscriberCategory[0];
     signUpBloc = SignUpBloc();
     subscriber = Subscriber();
@@ -121,7 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomPadding: true,
         body: Builder(
           builder: (context) => SingleChildScrollView(
             reverse: true,
@@ -286,6 +282,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           TextFormField(
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
+                              if(value != "")
                               if (!RegExp(
                                       r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                                   .hasMatch(value)) {
@@ -448,7 +445,7 @@ class SignUpButton extends StatefulWidget {
 class _SignUpButtonState extends State<SignUpButton> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   var idToken;
-  void showSnackBar(String text, int seconds) {
+  void showSnackBar(String text ,int seconds ) {
     Scaffold.of(context).hideCurrentSnackBar();
     Scaffold.of(context).showSnackBar(
       SnackBar(
@@ -464,143 +461,144 @@ class _SignUpButtonState extends State<SignUpButton> {
 
   Future<bool> loginUser(String phone, BuildContext context) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
-    Navigator.pushNamed(context, OtpPage.id);
+showAlert( BuildContext context , String title,String content){
+   return showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text("SignUn Failed"),
+                          content: Text(content),
+                          actions: <Widget>[
+                            FlatButton(
+                              child: Text("OK"),
+                              textColor: Colors.white,
+                              color: Theme.of(context).primaryColor,
+                              onPressed: () {
+                               Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SignInScreen(),
+                          ),
+                          (route) => false,
+                        );
+                              },
+                            )
+                          ],
+                        );
+                      });
+}
+
+
+
     _auth.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: Duration(seconds: 60),
-        /*// verificationCompleted: (AuthCredential credential) async {
-        //   AuthResult result = await _auth.signInWithCredential(credential);
+        verificationCompleted: (AuthCredential credential) async {
+          AuthResult result = await _auth.signInWithCredential(credential);
+          FirebaseUser user = result.user;
+          if (user != null) {
+            var token = await user.getIdToken().then((result) {
+              idToken = result.token;
+              widget.formData['token'] = idToken;
+              logger.d(" $idToken ");
+            });
+            logger.d('${widget.formData}');
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            widget.formData['owner'] = prefs.getString('ownerSignup');
+            widget.formData['category'] = prefs.getString('categorySignup');
+            widget.formData['address'] = prefs.getString('addressSignup');
+            widget.formData['name'] = prefs.getString('nameSignup');
+            widget.formData['latitude'] = prefs.getString('latitudeSignup');
+            widget.formData['longitude'] = prefs.getString('longitudeSignup');
+            widget.formData['phone'] = prefs.getString('userPhoneSignup');
+            widget.formData['password'] = prefs.getString('userPasswordSignup');
+            widget.formData['cpassword'] =
+                prefs.getString('userCpasswordSignup');
+            widget.formData['email'] = prefs.getString(
+              'userEmailSignup',
+            );
+            var response;
+            try {
+              response = await SubscriberRepository().signUp(widget.formData);
+              logger.d(response.toString());
+            }on BadRequestException catch(e){
+                showAlert(context ,"SignUp failed!", e.toMap()["msg"].toString());
+            } 
+            catch (e) {
+              showAlert(context ,"SignUp failed!", e.toMap()["msg"].toString());
+              return;
+            }
+            logger.d("@# $response#@");
+            if (response['msg'] == 'Registration successful') {
+              logger.d('SignUp SUCCESSFUL');
+              try {
+                // SignIn the user
+                response = await SubscriberRepository().signInFirebaseotp({
+                  'token': widget.formData['token'],
+                });
+                await SubscriberRepository()
+                    .storeSubscriberData(Subscriber.fromJson(response));
 
-        //   FirebaseUser user = result.user;
+                var responsefcm = await SubscriberRepository().fcmTokenSubmit({
+                  'token': widget.fcmToken,
+                }, response['accessToken']);
+                logger.d("fcm token Api: $responsefcm");
+                 prefs.setString('fcmToken', widget.fcmToken);
+                logger.d(response.toString());
+              } catch (e) {
+                showAlert(context ,"Signup Failed!", e.toMap()["msg"].toString());
+                logger.d('Error: ' + e.toString());
+                return;
+              }
 
-        //   if (user != null) {
-        //     var token = await user.getIdToken().then((result) {
-        //       idToken = result.token;
-        //       widget.formData['token'] = idToken;
-        //       print(" $idToken ");
-        //     });
-        //     log('${widget.formData}');
-        //     SharedPreferences prefs = await SharedPreferences.getInstance();
+              if (response['isSubscriber'] != null &&
+                  response['isSubscriber'] == true) {
 
-        //     widget.formData['owner'] = prefs.getString('ownerSignup');
-        //     widget.formData['category'] = prefs.getString('categorySignup');
+                // Store tokens into memory
+                widget.formData.putIfAbsent('id', () => response['id']);
+                widget.formData
+                    .putIfAbsent('accessToken', () => response['accessToken']);
+                widget.formData.putIfAbsent(
+                    'refreshToken', () => response['refreshToken']);
+                await SubscriberRepository().storeSubscriberData(
+                  Subscriber.fromJson(
+                    widget.formData,
+                  ),
+                );
 
-        //     widget.formData['address'] = prefs.getString('addressSignup');
+                 Navigator.of(context).pushNamedAndRemoveUntil(
+                    ReceptionsScreen.id, (Route<dynamic> route) => false);
+              } else if (response['msg'] == "Invalid Credential" ||
+                  response['error'] != null) {
+                    showAlert(context ,"SignUp Failed!", response['msg'] != null
+                      ? response['msg']
+                      : response['error'].toString(),);
+              } else {
+                showAlert(context ,"Signup Failed!", "Some unexpected error occurred");
+              }
+            } else {
+               showAlert(context ,"Signup Failed!", response['msg']);
+            }
+          } else {
+            print("Error");
+          }
 
-        //     widget.formData['name'] = prefs.getString('nameSignup');
-
-        //     widget.formData['latitude'] = prefs.getString('latitudeSignup');
-
-        //     widget.formData['longitude'] = prefs.getString('longitudeSignup');
-        //     widget.formData['phone'] = prefs.getString('userPhoneSignup');
-        //     widget.formData['password'] = prefs.getString('userPasswordSignup');
-        //     widget.formData['cpassword'] =
-        //         prefs.getString('userCpasswordSignup');
-        //     widget.formData['email'] = prefs.getString(
-        //       'userEmailSignup',
-        //     );
-
-        //     Scaffold.of(context).showSnackBar(
-        //       SnackBar(
-        //         content: Text('Processing Data'),
-        //       ),
-        //     );
-
-        //     // UserRepository user = UserRepository();
-        //     // Make SignUp API call
-
-        //     var response;
-        //     try {
-        //       response = await SubscriberRepository().signUp(widget.formData);
-        //       log(response.toString());
-        //     } catch (e) {
-        //       Scaffold.of(context)
-        //           .showSnackBar(SnackBar(content: Text(e.toString())));
-        //       log('Error: ' + e.toString());
-
-        //       return;
-        //     }
-
-        //     print("@# $response#@");
-        //     print("@# ${response['msg']}#@");
-        //     if (response['msg'] == 'Registration successful') {
-        //       log('SignUp SUCCESSFUL');
-        //       try {
-        //         // SignIn the user
-        //         response = await SubscriberRepository().signInFirebaseotp({
-        //           'token': widget.formData['token'],
-        //         });
-        //         await SubscriberRepository()
-        //             .storeSubscriberData(Subscriber.fromJson(response));
-        //         Scaffold.of(context)
-        //             .showSnackBar(SnackBar(content: Text('Processing Data')));
-
-        //         var responsefcm = await SubscriberRepository().fcmTokenSubmit({
-        //           'token': widget.fcmToken,
-        //         }, response['accessToken']);
-        //         print("fcm token Api: $responsefcm");
-        //         print("fcm token  Apiresponse: ${responsefcm['status']}");
-        //          prefs.setString('fcmToken', widget.fcmToken);
-        //         log(response.toString());
-        //       } catch (e) {
-        //         Scaffold.of(context)
-        //             .showSnackBar(SnackBar(content: Text(e.toString())));
-        //         log('Error: ' + e.toString());
-        //         return;
-        //       }
-
-        //       if (response['isSubscriber'] != null &&
-        //           response['isSubscriber'] == true) {
-        //         // SignIn success
-
-        //         // Store tokens into memory
-        //         widget.formData.putIfAbsent('id', () => response['id']);
-        //         widget.formData
-        //             .putIfAbsent('accessToken', () => response['accessToken']);
-        //         widget.formData.putIfAbsent(
-        //             'refreshToken', () => response['refreshToken']);
-        //         await SubscriberRepository().storeSubscriberData(
-        //           Subscriber.fromJson(
-        //             widget.formData,
-        //           ),
-        //         );
-
-        //         // Store profile info in local DB
-
-        //         // Navigate to QueuesPage
-        //         Navigator.push(
-        //             context,
-        //             MaterialPageRoute(
-        //                 builder: (context) => QueuesScreen(
-        //                       subscriberId: response['id'],
-        //                     )));
-        //       } else if (response['msg'] == "Invalid Credential" ||
-        //           response['error'] != null) {
-        //         Scaffold.of(context).showSnackBar(SnackBar(
-        //             content: Text(
-        //           response['msg'] != null
-        //               ? response['msg']
-        //               : response['error'].toString(),
-        //         )));
-        //       } else {
-        //         Scaffold.of(context).showSnackBar(
-        //             SnackBar(content: Text('Some unexpected error occurred')));
-        //       }
-        //     } else {
-        //       Scaffold.of(context).showSnackBar(
-        //           SnackBar(content: Text('SignUp failed:${response['msg']}')));
-        //     }
-        //   } else {
-        //     print("Error");
-        //   }
-
-        //   //This callback would gets called when verification is done auto maticlly
-        // },*/
+          //This callback would gets called when verification is done auto maticlly
+        },
         verificationFailed: (AuthException exception) {
           logger.d(exception.message);
-          // Scaffold.of(context).showSnackBar(
-          //     SnackBar(content: Text(exception.message.toString())));
-          showSnackBar(exception.message.toString(), 5);
+           String fireBaseError  = exception.message.toString();
+          if (exception.message ==
+              "The format of the phone number provided is incorrect. Please enter the phone number in a format that can be parsed into E.164 format. E.164 phone numbers are written in the format [+][country code][subscriber number including area code]. [ TOO_LONG ]"
+              ||exception.message ==  "The format of the phone number provided is incorrect. Please enter the phone number in a format that can be parsed into E.164 format. E.164 phone numbers are written in the format [+][country code][subscriber number including area code]. [ TOO_SHORT ]")
+               { fireBaseError = "Please verify and enter correct 10 digit phone number with country code.";}
+               else if (exception.message == "We have blocked all requests from this device due to unusual activity. Try again later.")
+               {
+                 fireBaseError = "You have tried maximum number of signup.please retry after some time.";
+               }
+               
+          showAlert(context ,"Alert!", fireBaseError);
         },
         codeSent: (String verificationId, [int forceResendingToken]) {
           authOtp = _auth;
@@ -627,7 +625,6 @@ class _SignUpButtonState extends State<SignUpButton> {
         elevation: 7.0,
         child: InkWell(
           onTap: () async {
-            logger.d('${widget.formData}');
             if (widget.formKey.currentState.validate()) {
               widget.formKey.currentState.save();
               logger.d('${widget.formData is Map<String, String>}');
@@ -635,7 +632,7 @@ class _SignUpButtonState extends State<SignUpButton> {
               // check phone number length
               if (widget.formData['phone'].length != 13) {
                 showSnackBar(
-                    'Phone number must have 10 digits with Country code', 5);
+                    'Phone number must have 10 digits addition to Country code', 5);
                 return;
               }
 
@@ -683,7 +680,8 @@ class _SignUpButtonState extends State<SignUpButton> {
                           textColor: Colors.white,
                           color: Theme.of(context).primaryColor,
                           onPressed: () async {
-                            Navigator.of(context).pop();
+                            Navigator.of(context)
+                                                    .pushNamed(OtpPage.id);
                             loginUser(phone, context);
                           },
                         ),

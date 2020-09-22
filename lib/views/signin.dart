@@ -1,6 +1,5 @@
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,7 +12,6 @@ import 'package:qme_subscriber/views/otpPage.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 import 'package:qme_subscriber/views/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../constants.dart';
 import '../repository/subscriber.dart';
 import '../widgets/text.dart';
@@ -28,16 +26,14 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen>
     with TickerProviderStateMixin {
   final _phoneController = TextEditingController();
+  final _phonePasswordController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _codeController = TextEditingController();
   TabController _controller;
   var idToken;
   var verificationIdVar;
-  var _authVar;
   bool passwordHidden = true;
   String countryCodeVal;
   String countryCodePassword;
-  bool showOtpTextfield = false;
   final FirebaseMessaging _messaging = FirebaseMessaging();
   var _fcmToken;
   final formKey =
@@ -45,11 +41,6 @@ class _SignInScreenState extends State<SignInScreen>
   String phoneNumber;
   String password;
   final scaffoldKey = new GlobalKey<ScaffoldState>();
-  void _showSnackBar(String text) {
-    scaffoldKey.currentState.showSnackBar(new SnackBar(
-      content: new Text(text),
-    ));
-  }
 
   // otp verification with firebase
   Future<bool> loginUser(String phone, BuildContext context) async {
@@ -58,7 +49,7 @@ class _SignInScreenState extends State<SignInScreen>
     _auth.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: Duration(seconds: 60),
-        /* verificationCompleted: (AuthCredential credential) async {
+        verificationCompleted: (AuthCredential credential) async {
           AuthResult result = await _auth.signInWithCredential(credential);
           print("printing the credential");
           print(credential);
@@ -68,68 +59,104 @@ class _SignInScreenState extends State<SignInScreen>
           if (user != null) {
             var token = await user.getIdToken().then((result) async {
               idToken = result.token;
-              print(" $idToken ");
-              FocusScope.of(context)
-                  .requestFocus(FocusNode()); // dismiss the keyboard
-              Scaffold.of(context)
-                  .showSnackBar(SnackBar(content: Text('Processing Data')));
+              logger.d(" $idToken ");
               var response;
               try {
-                 SharedPreferences prefs = await SharedPreferences.getInstance();
+                SharedPreferences prefs = await SharedPreferences.getInstance();
                 prefs.setString('fcmToken', _fcmToken);
                 response = await SubscriberRepository().signInFirebaseotp({
                   'token': idToken,
                 });
-                print("@@$response@@");
-
-                log('SIGNIN API RESPONSE: ' + response.toString());
-
+                logger.d("@@$response@@");
                 await SubscriberRepository()
                     .storeSubscriberData(Subscriber.fromJson(response));
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text('Processing Data')));
                 var responsefcm = await SubscriberRepository().fcmTokenSubmit({
                   'token': _fcmToken,
                 }, response['accessToken']);
-              prefs.setString('fcmToken',_fcmToken );
-                print("fcm token Api: $responsefcm");
-                print("fcm token  Apiresponse: ${responsefcm['status']}");
-                Navigator.pushNamed(context, QueuesScreen.id);
+                prefs.setString('fcmToken', _fcmToken);
+                logger.d("fcm token Api: $responsefcm");
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                    ReceptionsScreen.id, (Route<dynamic> route) => false);
               } catch (e) {
                 print(" !!$e !!");
-                Scaffold.of(context)
-                    .showSnackBar(SnackBar(content: Text(e.toString())));
-                // _showSnackBar(e.toString());
-                log('Error in signIn API: ' + e.toString());
+                showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text("SignIn Failed"),
+                        content: Text(e.toMap()["msg"].toString()),
+                        actions: <Widget>[
+                          FlatButton(
+                            child: Text("OK"),
+                            textColor: Colors.white,
+                            color: Theme.of(context).primaryColor,
+                            onPressed: () {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SignInScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            },
+                          )
+                        ],
+                      );
+                    });
                 return;
               }
             });
           } else {
             print("Error");
           }
-
-        //   //This callback would gets called when verification is done auto maticlly
-        },*/
+        },
         verificationFailed: (AuthException exception) {
           print("here is exception error");
           print(exception.message);
-          Scaffold.of(context).showSnackBar(
-              SnackBar(content: Text(exception.message.toString())));
+          String fireBaseError  = exception.message;
+          if (exception.message ==
+              "The format of the phone number provided is incorrect. Please enter the phone number in a format that can be parsed into E.164 format. E.164 phone numbers are written in the format [+][country code][subscriber number including area code]. [ TOO_LONG ]"
+              ||exception.message ==  "The format of the phone number provided is incorrect. Please enter the phone number in a format that can be parsed into E.164 format. E.164 phone numbers are written in the format [+][country code][subscriber number including area code]. [ TOO_SHORT ]")
+               { fireBaseError = "Please verify and enter correct 10 digit phone number with country code.";}
+               else if (exception.message == "We have blocked all requests from this device due to unusual activity. Try again later.")
+               {
+                 fireBaseError = "You have tried maximum number of signin.please retry after some time.";
+               }
+               
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text("Alert!"),
+                    content: Text(fireBaseError),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text("OK"),
+                        textColor: Colors.white,
+                        color: Theme.of(context).primaryColor,
+                        onPressed: () {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SignInScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                      )
+                    ],
+                  );
+                });
         },
         codeSent: (String verificationId, [int forceResendingToken]) async {
-          // _authVar = _auth;
-          // verificationIdVar = verificationId;
-
           verificationIdOtp = verificationId;
           authOtp = _auth;
           loginPage = "SignIn";
           SharedPreferences prefs = await SharedPreferences.getInstance();
 
           prefs.setString('fcmToken', _fcmToken);
-
-          setState(() {
-            showOtpTextfield = true;
-          });
         },
         codeAutoRetrievalTimeout: null);
   }
@@ -338,16 +365,8 @@ class _SignInScreenState extends State<SignInScreen>
                                                                     context)
                                                                 .primaryColor,
                                                             onPressed: () {
-                                                              Navigator
-                                                                  .pushAndRemoveUntil(
-                                                                      context,
-                                                                      MaterialPageRoute(
-                                                                        builder:
-                                                                            (context) =>
-                                                                                SignInScreen(),
-                                                                      ),
-                                                                      (route) =>
-                                                                          false);
+                                                              Navigator.pop(
+                                                                  context);
                                                             },
                                                           ),
                                                           FlatButton(
@@ -360,18 +379,23 @@ class _SignInScreenState extends State<SignInScreen>
                                                                 .primaryColor,
                                                             onPressed:
                                                                 () async {
-                                                              Navigator.of(
-                                                                      context)
-                                                                  .pop();
-                                                              loginUser(
+                                                              SharedPreferences
+                                                                  prefs =
+                                                                  await SharedPreferences
+                                                                      .getInstance();
+                                                              prefs.setString(
+                                                                  'userPhoneSignup',
                                                                   countryCodeVal +
-                                                                      phone,
-                                                                  context);
+                                                                      phone);
                                                               Navigator
                                                                   .pushNamed(
                                                                       context,
                                                                       OtpPage
                                                                           .id);
+                                                              loginUser(
+                                                                  countryCodeVal +
+                                                                      phone,
+                                                                  context);
                                                             },
                                                           ),
                                                         ],
@@ -449,7 +473,7 @@ class _SignInScreenState extends State<SignInScreen>
                                               fillColor: Colors.grey[100],
                                               hintText: "Mobile Number"),
                                           keyboardType: TextInputType.phone,
-                                          controller: _phoneController,
+                                          controller: _phonePasswordController,
                                           validator: (value) {
                                             if (value.isEmpty) {
                                               return 'This field cannot be left blank';
@@ -590,8 +614,9 @@ class _SignInScreenState extends State<SignInScreen>
                                                 } catch (e) {
                                                   Scaffold.of(context)
                                                       .showSnackBar(SnackBar(
-                                                          content: Text(
-                                                              e.toString())));
+                                                          content: Text(e
+                                                              .toMap()["msg"]
+                                                              .toString())));
                                                   // _showSnackBar(e.toString());
                                                   log('Error in signIn API: ' +
                                                       e.toString());

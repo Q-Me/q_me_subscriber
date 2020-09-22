@@ -22,7 +22,6 @@ const String baseURL = 'http://13.127.245.177:4000/api',
     kBookAppointment = '/subscriber/slot/book',
     kDoneAppointment = '/subscriber/slot/doneslot',
     kUpdateReceptionStatus = '/subscriber/slot/updatestatus',
-    kViewDetailedCounter = '/subscriber/slot/viewcounterdetailed',
-    krepeatSchedule = '/subscriber/slot/schedule';
+    kViewDetailedCounter = '/subscriber/slot/viewcounterdetailed';
 
 const String fcmUrl = '/subscriber/fcm';
