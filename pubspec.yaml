@@ -79,6 +79,7 @@ flutter:
   assets:
     - assets/images/drawer_header_background.png
     - assets/images/user.svg
+    - assets/images/otpSvg.svg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
