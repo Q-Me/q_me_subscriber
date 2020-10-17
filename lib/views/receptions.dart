@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:calendar_strip/calendar_strip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/api/base_helper.dart';
+import 'package:qme_subscriber/bloc/reception_bloc/reception_bloc.dart';
 import 'package:qme_subscriber/bloc/receptions.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
@@ -26,20 +31,21 @@ class ReceptionsScreen extends StatefulWidget {
 
 class _ReceptionsScreenState extends State<ReceptionsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  Completer<void> _completer = Completer<void>();
 
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(Duration(days: 7));
   DateTime selectedDate = DateTime.now();
   List<DateTime> markedDates = [];
-  ReceptionsBloc receptionsBloc;
+  // ReceptionsBloc receptionsBloc;
 
-  onSelect(DateTime select) {
-//    logger.d('Select functions: $select');
-    setState(() {
-      selectedDate = select;
-    });
-    receptionsBloc.date = select;
-  }
+//   onSelect(DateTime select) {
+// //    logger.d('Select functions: $select');
+//     setState(() {
+//       selectedDate = select;
+//     });
+//     receptionsBloc.date = select;
+//   }
 
   addedReception() {
     /*TODO When coming back from Create Reception page*/
@@ -47,8 +53,8 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
 
   @override
   void initState() {
-    receptionsBloc = ReceptionsBloc(selectedDate);
-    receptionsBloc.date = selectedDate;
+    // receptionsBloc = ReceptionsBloc(selectedDate);
+    // receptionsBloc.date = selectedDate;
     super.initState();
   }
 
@@ -109,100 +115,167 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onBackPressed,
-      child: SafeArea(
-        child: ChangeNotifierProvider.value(
-          value: receptionsBloc,
-          child: Scaffold(
-            key: _scaffoldKey,
-            appBar: AppBar(
-              title: Text('Your Receptions'),
-              automaticallyImplyLeading: false,
-              actions: <Widget>[
-                PopupMenuButton<String>(
-                  onSelected: handleClick,
-                  itemBuilder: (BuildContext context) {
-                    return {'Logout'}.map(
-                      (String choice) {
-                        return PopupMenuItem<String>(
-                          value: choice,
-                          child: Text(choice),
-                        );
-                      },
-                    ).toList();
-                  },
-                ),
-              ],
-            ),
-            floatingActionButton: FloatingActionButton(
-              elevation: 0,
-              heroTag: "Create Reception",
-              onPressed: () async {
-                logger.d('Create reception route on date $selectedDate');
-                await Navigator.pushNamed(
-                  context,
-                  CreateReceptionScreen.id,
-                  arguments: selectedDate,
-                );
-                receptionsBloc.getReceptionsByDate();
-              },
-              tooltip: 'Create Reception',
-              child: Icon(Icons.event),
-            ),
-            body: Column(
-              children: <Widget>[
-                /*Container(
-                  alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.fromLTRB(10, 30, 10, 20),
-                  child: Icon(
-                    Icons.menu,
-                    size: 30,
+      child: BlocProvider(
+        create: (context) => ReceptionBloc(),
+        child: SafeArea(
+          // child: ChangeNotifierProvider.value(
+          //   value: receptionsBloc,
+          child: Builder(builder: (context) {
+            return Scaffold(
+              key: _scaffoldKey,
+              appBar: AppBar(
+                title: Text('Your Receptions'),
+                automaticallyImplyLeading: false,
+                actions: <Widget>[
+                  PopupMenuButton<String>(
+                    onSelected: handleClick,
+                    itemBuilder: (BuildContext context) {
+                      return {'Logout'}.map(
+                        (String choice) {
+                          return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice),
+                          );
+                        },
+                      ).toList();
+                    },
                   ),
-                ),*/
-                CalendarStrip(
-                  startDate: startDate,
-                  endDate: endDate,
-                  onDateSelected: onSelect,
-                  dateTileBuilder: dateTileBuilder,
-                  iconColor: Colors.black87,
-                  monthNameWidget: monthNameWidget,
-                  markedDates: markedDates,
-                  containerDecoration: BoxDecoration(color: Colors.black12),
-                ),
-                Expanded(
-                  child: StreamBuilder<ApiResponse<List<Reception>>>(
-                      stream: receptionsBloc.receptionsStream,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          switch (snapshot.data.status) {
-                            case Status.COMPLETED:
-                              if (snapshot.data.data.length == 0) {
-                                return Center(
+                ],
+              ),
+              floatingActionButton: FloatingActionButton(
+                elevation: 0,
+                heroTag: "Create Reception",
+                onPressed: () async {
+                  logger.d('Create reception route on date ');
+                  await Navigator.pushNamed(
+                    context,
+                    CreateReceptionScreen.id,
+                    arguments: selectedDate,
+                  );
+                  // receptionsBloc.getReceptionsByDate();
+                },
+                tooltip: 'Create Reception',
+                child: Icon(Icons.event),
+              ),
+              body: Column(
+                children: <Widget>[
+                  /*Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.fromLTRB(10, 30, 10, 20),
+                            child: Icon(
+                              Icons.menu,
+                              size: 30,
+                            ),
+                          ),*/
+                  CalendarStrip(
+                    startDate: startDate,
+                    endDate: endDate,
+                    onDateSelected: (DateTime select) {
+                      logger.d(select.toString());
+                      selectedDate = select;
+                      BlocProvider.of<ReceptionBloc>(context).add(
+                        DateWiseReceptionsRequested(date: select),
+                      );
+                    },
+                    dateTileBuilder: dateTileBuilder,
+                    iconColor: Colors.black87,
+                    monthNameWidget: monthNameWidget,
+                    markedDates: markedDates,
+                    containerDecoration: BoxDecoration(color: Colors.black12),
+                  ),
+                  Expanded(
+                    // child: StreamBuilder<ApiResponse<List<Reception>>>(
+                    //     stream: receptionsBloc.receptionsStream,
+                    //     builder: (context, snapshot) {
+                    //       if (snapshot.hasData) {
+                    //         switch (snapshot.data.status) {
+                    //           case Status.COMPLETED:
+                    //             if (snapshot.data.data.length == 0) {
+                    //               return Center(
+                    //                 child: Text(
+                    //                     'No reception found on ${getDate(Provider.of<ReceptionsBloc>(context).selectedDate).toString()}'),
+                    //               );
+                    //             }
+                    //             return ReceptionsListView(
+                    //                 receptions: snapshot.data.data);
+                    //             break;
+                    //           case Status.LOADING:
+                    //             return Loading(
+                    //                 loadingMessage: snapshot.data.message);
+                    //             break;
+                    //           case Status.ERROR:
+                    //             return Error(errorMessage: snapshot.data.message);
+                    //             break;
+                    //         }
+                    //       } else {
+                    //         return Text('No data');
+                    //       }
+                    //       return Container();
+                    //     }),
+                    child: BlocConsumer<ReceptionBloc, ReceptionState>(
+                      builder: (context, state) {
+                        if (state is ReceptionInitial) {
+                          BlocProvider.of<ReceptionBloc>(context).add(
+                            DateWiseReceptionsRequested(date: selectedDate),
+                          );
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (state is ReceptionsLoadFailure) {
+                          return Center(
+                            child: Text("${state.error}"),
+                          );
+                        } else if (state is ReceptionLoadSuccessful) {
+                          if (state.receptions.length == 0) {
+                            return RefreshIndicator(
+                              onRefresh: () {
+                                BlocProvider.of<ReceptionBloc>(context).add(
+                                    ReceptionBlocUpdateRequested(selectedDate));
+                                return _completer.future;
+                              },
+                              child: Stack(children: <Widget>[
+                                ListView(),
+                                Center(
                                   child: Text(
-                                      'No reception found on ${getDate(Provider.of<ReceptionsBloc>(context).selectedDate).toString()}'),
-                                );
-                              }
-                              return ReceptionsListView(
-                                  receptions: snapshot.data.data);
-                              break;
-                            case Status.LOADING:
-                              return Loading(
-                                  loadingMessage: snapshot.data.message);
-                              break;
-                            case Status.ERROR:
-                              return Error(errorMessage: snapshot.data.message);
-                              break;
+                                    "No Receptions found on ${DateFormat.yMMMd().format(selectedDate)}",
+                                  ),
+                                ),
+                              ]),
+                            );
+                          } else {
+                            return RefreshIndicator(
+                              onRefresh: () {
+                                BlocProvider.of<ReceptionBloc>(context).add(
+                                    ReceptionBlocUpdateRequested(selectedDate));
+                                return _completer.future;
+                              },
+                              child: ReceptionsListView(
+                                receptions: state.receptions,
+                              ),
+                            );
                           }
                         } else {
-                          return Text('No data');
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
-                        return Container();
-                      }),
-                ),
-              ],
-            ),
-          ),
+                      },
+                      listener: (context, state) {
+                        if (state is ReceptionLoadSuccessful ||
+                            state is ReceptionsLoadFailure) {
+                          _completer?.complete();
+                          _completer = Completer();
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ),
       ),
+      // ),
     );
   }
 }
@@ -224,7 +297,55 @@ class ReceptionsListView extends StatelessWidget {
         Reception reception = receptions[receptionsIndex];
         return ChangeNotifierProvider.value(
           value: reception,
-          child: ReceptionAppointmentListView(),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  RaisedButton(
+                    onPressed: () {
+                      BlocProvider.of<ReceptionBloc>(context)
+                          .add(StatusUpdateOfReceptionRequested(
+                        receptionId: reception.receptionId,
+                        updatedStatus: "CANCELLED",
+                        date: reception.startTime,
+                      ));
+                    },
+                    child: Text("Delete Reception"),
+                  ),
+                  RaisedButton(
+                    onPressed: () {
+                      BlocProvider.of<ReceptionBloc>(context)
+                          .add(StatusUpdateOfReceptionRequested(
+                        receptionId: reception.receptionId,
+                        updatedStatus: "ACTIVE",
+                        date: reception.startTime,
+                      ));
+                    },
+                    child: Text("Open Reception"),
+                  )
+                ],
+              ),
+              ReceptionAppointmentListView(),
+              Container(
+                margin: EdgeInsets.all(10),
+                child: RaisedButton(
+                  onPressed: () {
+                    BlocProvider.of<ReceptionBloc>(context)
+                          .add(StatusUpdateOfReceptionRequested(
+                        receptionId: reception.receptionId,
+                        updatedStatus: "DONE",
+                        date: reception.startTime,
+                      ));
+                  },
+                  child: Text("Close Reception"),
+                ),
+              ),
+              Divider(
+                thickness: 2,
+              )
+            ],
+          ),
         );
       },
     );
@@ -288,10 +409,11 @@ class ReceptionAppointmentListView extends StatelessWidget {
                         slot: slot,
                       ),
                     );
-                    Provider.of<ReceptionsBloc>(
-                      context,
-                      listen: false,
-                    ).getReceptionsByDate();
+                    BlocProvider.of<ReceptionBloc>(context).add(
+                      DateWiseReceptionsRequested(
+                        date: DateTime.now(),
+                      ),
+                    );
                   },
                   child: SlotTiming(),
                 ),
@@ -302,6 +424,28 @@ class ReceptionAppointmentListView extends StatelessWidget {
                     children: allBoxes,
                   ),
                 ),
+                GestureDetector(
+                  onTap: () async {
+                    await Navigator.pushNamed(
+                      context,
+                      SlotView.id,
+                      arguments: SlotViewArguments(
+                        reception: reception,
+                        slot: slot,
+                      ),
+                    );
+                    BlocProvider.of<ReceptionBloc>(context).add(
+                      DateWiseReceptionsRequested(
+                        date: DateTime.now(),
+                      ),
+                    );
+                  },
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(width: 10)
               ],
             ),
           ),
@@ -347,10 +491,11 @@ class UpcomingSeat extends StatelessWidget {
             slot: Provider.of<Slot>(context, listen: false),
           ),
         );
-        Provider.of<ReceptionsBloc>(
-          context,
-          listen: false,
-        ).getReceptionsByDate();
+        BlocProvider.of<ReceptionBloc>(context).add(
+          DateWiseReceptionsRequested(
+            date: DateTime.now(),
+          ),
+        );
       },
       child: Container(
         height: 50,
@@ -386,10 +531,11 @@ class DoneSeat extends StatelessWidget {
             slot: Provider.of<Slot>(context, listen: false),
           ),
         );
-        Provider.of<ReceptionsBloc>(
-          context,
-          listen: false,
-        ).getReceptionsByDate();
+        BlocProvider.of<ReceptionBloc>(context).add(
+          DateWiseReceptionsRequested(
+            date: DateTime.now(),
+          ),
+        );
       },
       child: Container(
         height: 50,
@@ -435,10 +581,11 @@ class UnbookedSeat extends StatelessWidget {
             slot: slot,
           ),
         );
-        Provider.of<ReceptionsBloc>(
-          context,
-          listen: false,
-        ).getReceptionsByDate();
+        BlocProvider.of<ReceptionBloc>(context).add(
+          DateWiseReceptionsRequested(
+            date: DateTime.now(),
+          ),
+        );
       },
       child: Container(
         height: 50,
