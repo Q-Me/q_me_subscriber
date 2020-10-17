@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
+import 'package:qme_subscriber/utilities/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/base_helper.dart';
@@ -59,16 +60,13 @@ class SubscriberRepository {
   }
 
   Future<Map<String, dynamic>> signOut() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    final String accessToken = prefs.getString("accessToken");
+    final String accessToken = await getAccessTokenFromStorage();
     final response = await _helper.post(
       kSignOut,
       headers: {'Authorization': 'Bearer $accessToken'},
     );
     if (response["msg"] == "Logged out successfully") {
-      prefs.remove('accessToken');
-      prefs.remove('refreshToken');
+      await clearSession();
     }
     return response;
   }

@@ -24,6 +24,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
   DateTime _startDateTime, _endDateTime;
   Map<String, dynamic> formData = {};
   final formKey = GlobalKey<FormState>();
+  bool buttonPressable;
 
   Future<DateTime> _selectDate(DateTime oldDateTime) async {
     DateTime dateTime = oldDateTime;
@@ -73,7 +74,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
         if (newDateTime != null) {
           newDateTime = DateTime(newDateTime.year, newDateTime.month,
               newDateTime.day, picked.hour, picked.minute);
-          logger.d('Time added');
+//          logger.d('Time added');
         } else {
           final now = DateTime.now();
           newDateTime = DateTime(
@@ -93,6 +94,7 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
 
   @override
   void initState() {
+    buttonPressable = true;
     _startDateTime = widget.selectedDate;
     _endDateTime = widget.selectedDate;
     formData['starttime'] = _startDateTime;
@@ -167,8 +169,8 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
                                 setState(() {
                                   _startDateTime = temp;
                                   formData['starttime'] = _startDateTime;
-                                  logger.d(
-                                      'Time Set state called $_startDateTime');
+//                                  logger.d(
+//                                      'Time Set state called $_startDateTime');
                                 });
                               } else {
                                 logger.d('no time selected');
@@ -351,10 +353,16 @@ class _CreateReceptionScreenState extends State<CreateReceptionScreen> {
               ),
               SizedBox(height: 20),
               Provider.value(
-                  value: formData,
+                child: MultiProvider(
+                  providers: [
+                    Provider.value(value: formData),
+                    Provider.value(value: buttonPressable),
+                  ],
                   child: Builder(
                       builder: (context) =>
-                          CreateReceptionButton(formKey: formKey))),
+                          CreateReceptionButton(formKey: formKey)),
+                ),
+              ),
             ],
           ),
         ),
@@ -380,6 +388,7 @@ class CreateReceptionButton extends StatelessWidget {
     }
 
     Map<String, dynamic> formData = Provider.of<Map<String, dynamic>>(context);
+    bool buttonPressable = context.watch<bool>();
     return Container(
       height: 50.0,
       margin: EdgeInsets.all(20),
@@ -391,20 +400,22 @@ class CreateReceptionButton extends StatelessWidget {
         elevation: 7.0,
         child: InkWell(
           onTap: () async {
-            if (formKey.currentState.validate()) {
-              logger.d('Form Valid $formData');
+            if (formKey.currentState.validate() && buttonPressable == true) {
+              buttonPressable = false;
+              logger.d("buttonPressable:$buttonPressable");
+//              logger.d('Form Valid $formData');
 
               Scaffold.of(context).showSnackBar(SnackBar(
                 content: Text('Creating reception...'),
-                duration: Duration(seconds: 1),
               ));
 
               try {
                 final Reception reception = Reception(
-                    startTime: formData["starttime"],
-                    endTime: formData["endtime"],
-                    slotDuration: Duration(minutes: formData["slot"]),
-                    customersInSlot: formData["cust_per_slot"]);
+                  startTime: formData["starttime"],
+                  endTime: formData["endtime"],
+                  slotDuration: Duration(minutes: formData["slot"]),
+                  customersInSlot: formData["cust_per_slot"],
+                );
                 final now = DateTime.now();
 
                 // Time Checks
@@ -429,13 +440,15 @@ class CreateReceptionButton extends StatelessWidget {
                   customerPerSlot: reception.customersInSlot,
                   accessToken: accessToken,
                 );
-                logger.d(response);
+//                logger.d(response);
 
                 showSnackBar(response);
 
-                logger.d('Timer start');
+//                logger.d('Timer start');
                 await Future.delayed(Duration(seconds: 3));
-                logger.d('Timer end');
+//                logger.d('Timer end');
+                buttonPressable = true;
+                logger.d("buttonPressable:$buttonPressable");
 
                 // TODO add the reception to the list of all receptions in the receptions bloc
                 if (response == 'Counter Created Successfully') {
@@ -444,6 +457,8 @@ class CreateReceptionButton extends StatelessWidget {
               } catch (e) {
                 logger.e(e.toString());
                 // Show persistent snack bar with error
+                buttonPressable = true;
+                logger.d("buttonPressable:$buttonPressable");
                 showSnackBar(e.toString());
                 return;
               }

@@ -136,8 +136,14 @@ class BookingBlocConsumer extends StatelessWidget {
         } else if (state is BookingLoadSuccessful) {
           DateTime now = DateTime.now();
           now = DateTime.utc(
-              now.year, now.month, now.day, now.hour, now.minute, now.second);
-          bool bookingEnabled = slot.endTime.isAfter(now);
+            now.year,
+            now.month,
+            now.day,
+            now.hour,
+            now.minute,
+            now.second,
+          );
+          bool bookingEnabled = slot.startTime.isAfter(now);
           logger.d(
               'Reception:${reception.toJson()}\nSlot:${slot.toJson()}\n Now:${now.toString()} \nNow:${now.timeZoneName}\tSlot end:${slot.endTime.timeZoneName}\nBookingEnabled:$bookingEnabled');
           if (state.response is List) {

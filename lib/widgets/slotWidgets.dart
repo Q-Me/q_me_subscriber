@@ -52,8 +52,6 @@ class TimeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String hourLabel = _addLeadingZeroIfNeeded(dateTime.hour);
-    final String minuteLabel = _addLeadingZeroIfNeeded(dateTime.minute);
     return Card(
       elevation: 3.0,
       child: Padding(
@@ -74,7 +72,7 @@ class TimeCard extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            '$hourLabel:$minuteLabel',
+            DateFormat('h:mm a').format(dateTime),
             style: Theme.of(context)
                 .textTheme
                 .headline5
