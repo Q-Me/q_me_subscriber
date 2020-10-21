@@ -29,23 +29,21 @@ class ReceptionsScreen extends StatefulWidget {
   _ReceptionsScreenState createState() => _ReceptionsScreenState();
 }
 
-class _ReceptionsScreenState extends State<ReceptionsScreen> {
+class _ReceptionsScreenState extends State<ReceptionsScreen>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Completer<void> _completer = Completer<void>();
 
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(Duration(days: 7));
   DateTime selectedDate = DateTime.now();
+  List<String> status = [
+    "DONE",
+    "UPCOMING",
+    "CANCELLED",
+  ];
   List<DateTime> markedDates = [];
-  // ReceptionsBloc receptionsBloc;
-
-//   onSelect(DateTime select) {
-// //    logger.d('Select functions: $select');
-//     setState(() {
-//       selectedDate = select;
-//     });
-//     receptionsBloc.date = select;
-//   }
+  TabController _tabController;
 
   addedReception() {
     /*TODO When coming back from Create Reception page*/
@@ -53,9 +51,14 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
 
   @override
   void initState() {
-    // receptionsBloc = ReceptionsBloc(selectedDate);
-    // receptionsBloc.date = selectedDate;
+    _tabController = TabController(length: 4, vsync: this);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<bool> _onBackPressed() {
@@ -111,13 +114,22 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                   if (logOutResponse["msg"] == "Logged out successfully") {
                     logger.d('Log Out');
                     Navigator.pushNamedAndRemoveUntil(
-                        context, SignInScreen.id, (route) => false);
+                      context,
+                      SignInScreen.id,
+                      (route) => false,
+                    );
                   }
                 } on BadRequestException catch (e) {
-                  showSnackBar(e.toMap()["error"], 5);
+                  showSnackBar(
+                    e.toMap()["error"],
+                    5,
+                  );
                   return;
                 } catch (e) {
-                  showSnackBar(e.toString(), 10);
+                  showSnackBar(
+                    e.toString(),
+                    10,
+                  );
                 }
               },
             ),
@@ -141,8 +153,6 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
       child: BlocProvider(
         create: (context) => ReceptionBloc(),
         child: SafeArea(
-          // child: ChangeNotifierProvider.value(
-          //   value: receptionsBloc,
           child: Builder(builder: (context) {
             return Scaffold(
               key: _scaffoldKey,
@@ -175,21 +185,12 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                     CreateReceptionScreen.id,
                     arguments: selectedDate,
                   );
-                  // receptionsBloc.getReceptionsByDate();
                 },
                 tooltip: 'Create Reception',
                 child: Icon(Icons.event),
               ),
               body: Column(
                 children: <Widget>[
-                  /*Container(
-                            alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.fromLTRB(10, 30, 10, 20),
-                            child: Icon(
-                              Icons.menu,
-                              size: 30,
-                            ),
-                          ),*/
                   CalendarStrip(
                     startDate: startDate,
                     endDate: endDate,
@@ -197,7 +198,9 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                       logger.d(select.toString());
                       selectedDate = select;
                       BlocProvider.of<ReceptionBloc>(context).add(
-                        DateWiseReceptionsRequested(date: select),
+                        DateWiseReceptionsRequested(
+                          date: select,
+                        ),
                       );
                     },
                     dateTileBuilder: dateTileBuilder,
@@ -206,40 +209,146 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                     markedDates: markedDates,
                     containerDecoration: BoxDecoration(color: Colors.black12),
                   ),
+                  Wrap(
+                    spacing: 10,
+                    children: [
+                      FilterChip(
+                        selectedColor: Colors.blue,
+                        checkmarkColor: Colors.white,
+                        label: Text(
+                          "Done",
+                          style: TextStyle(
+                            color: BlocProvider.of<ReceptionBloc>(context)
+                                    .isHaving(counter: "DONE")
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                        onSelected: (value) {
+                          if (!BlocProvider.of<ReceptionBloc>(context)
+                              .isHaving(counter: "DONE")) {
+                            BlocProvider.of<ReceptionBloc>(context)
+                                .addElementToStatus(
+                              element: "DONE",
+                            );
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              DateWiseReceptionsRequested(
+                                date: selectedDate,
+                              ),
+                            );
+                            setState(() {});
+                          } else {
+                            BlocProvider.of<ReceptionBloc>(context)
+                                .removeElementFromStatus(
+                              element: "DONE",
+                            );
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              DateWiseReceptionsRequested(
+                                date: selectedDate,
+                              ),
+                            );
+                            setState(() {});
+                          }
+                        },
+                        selected:
+                            BlocProvider.of<ReceptionBloc>(context).isHaving(
+                          counter: "DONE",
+                        ),
+                      ),
+                      FilterChip(
+                        selectedColor: Colors.blue,
+                        checkmarkColor: Colors.white,
+                        label: Text(
+                          "Upcoming",
+                          style: TextStyle(
+                            color: BlocProvider.of<ReceptionBloc>(context)
+                                    .isHaving(counter: "UPCOMING")
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                        onSelected: (value) {
+                          if (value) {
+                            BlocProvider.of<ReceptionBloc>(context)
+                                .addElementToStatus(
+                              element: "UPCOMING",
+                            );
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              DateWiseReceptionsRequested(
+                                date: selectedDate,
+                              ),
+                            );
+                            setState(() {});
+                          } else {
+                            BlocProvider.of<ReceptionBloc>(context)
+                                .removeElementFromStatus(
+                              element: "UPCOMING",
+                            );
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              DateWiseReceptionsRequested(
+                                date: selectedDate,
+                              ),
+                            );
+                            setState(() {});
+                          }
+                        },
+                        selected:
+                            BlocProvider.of<ReceptionBloc>(context).isHaving(
+                          counter: "UPCOMING",
+                        ),
+                      ),
+                      FilterChip(
+                        selectedColor: Colors.blue,
+                        checkmarkColor: Colors.white,
+                        label: Text(
+                          "Cancelled",
+                          style: TextStyle(
+                            color: BlocProvider.of<ReceptionBloc>(context)
+                                    .isHaving(counter: "CANCELLED")
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                        onSelected: (value) {
+                          if (value) {
+                            BlocProvider.of<ReceptionBloc>(context)
+                                .addElementToStatus(
+                              element: "CANCELLED",
+                            );
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              DateWiseReceptionsRequested(
+                                date: selectedDate,
+                              ),
+                            );
+                            setState(() {});
+                          } else {
+                            BlocProvider.of<ReceptionBloc>(context)
+                                .removeElementFromStatus(
+                              element: "CANCELLED",
+                            );
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              DateWiseReceptionsRequested(
+                                date: selectedDate,
+                              ),
+                            );
+                            setState(() {});
+                          }
+                        },
+                        selected:
+                            BlocProvider.of<ReceptionBloc>(context).isHaving(
+                          counter: "CANCELLED",
+                        ),
+                      ),
+                    ],
+                  ),
                   Expanded(
-                    // child: StreamBuilder<ApiResponse<List<Reception>>>(
-                    //     stream: receptionsBloc.receptionsStream,
-                    //     builder: (context, snapshot) {
-                    //       if (snapshot.hasData) {
-                    //         switch (snapshot.data.status) {
-                    //           case Status.COMPLETED:
-                    //             if (snapshot.data.data.length == 0) {
-                    //               return Center(
-                    //                 child: Text(
-                    //                     'No reception found on ${getDate(Provider.of<ReceptionsBloc>(context).selectedDate).toString()}'),
-                    //               );
-                    //             }
-                    //             return ReceptionsListView(
-                    //                 receptions: snapshot.data.data);
-                    //             break;
-                    //           case Status.LOADING:
-                    //             return Loading(
-                    //                 loadingMessage: snapshot.data.message);
-                    //             break;
-                    //           case Status.ERROR:
-                    //             return Error(errorMessage: snapshot.data.message);
-                    //             break;
-                    //         }
-                    //       } else {
-                    //         return Text('No data');
-                    //       }
-                    //       return Container();
-                    //     }),
                     child: BlocConsumer<ReceptionBloc, ReceptionState>(
                       builder: (context, state) {
                         if (state is ReceptionInitial) {
                           BlocProvider.of<ReceptionBloc>(context).add(
-                            DateWiseReceptionsRequested(date: selectedDate),
+                            DateWiseReceptionsRequested(
+                              date: selectedDate,
+                            ),
                           );
                           return Center(
                             child: CircularProgressIndicator(),
@@ -252,8 +361,10 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                           if (state.receptions.length == 0) {
                             return RefreshIndicator(
                               onRefresh: () {
-                                BlocProvider.of<ReceptionBloc>(context).add(
-                                    ReceptionBlocUpdateRequested(selectedDate));
+                                BlocProvider.of<ReceptionBloc>(context)
+                                    .add(ReceptionBlocUpdateRequested(
+                                  date: selectedDate,
+                                ));
                                 return _completer.future;
                               },
                               child: Stack(children: <Widget>[
@@ -268,12 +379,15 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
                           } else {
                             return RefreshIndicator(
                               onRefresh: () {
-                                BlocProvider.of<ReceptionBloc>(context).add(
-                                    ReceptionBlocUpdateRequested(selectedDate));
+                                BlocProvider.of<ReceptionBloc>(context)
+                                    .add(ReceptionBlocUpdateRequested(
+                                  date: selectedDate,
+                                ));
                                 return _completer.future;
                               },
                               child: ReceptionsListView(
                                 receptions: state.receptions,
+                                status: status,
                               ),
                             );
                           }
@@ -298,7 +412,6 @@ class _ReceptionsScreenState extends State<ReceptionsScreen> {
           }),
         ),
       ),
-      // ),
     );
   }
 }
@@ -307,6 +420,7 @@ class ReceptionsListView extends StatelessWidget {
   const ReceptionsListView({
     Key key,
     @required this.receptions,
+    @required List<String> status,
   }) : super(key: key);
 
   final List<Reception> receptions;
@@ -355,11 +469,11 @@ class ReceptionsListView extends StatelessWidget {
                 child: RaisedButton(
                   onPressed: () {
                     BlocProvider.of<ReceptionBloc>(context)
-                          .add(StatusUpdateOfReceptionRequested(
-                        receptionId: reception.receptionId,
-                        updatedStatus: "DONE",
-                        date: reception.startTime,
-                      ));
+                        .add(StatusUpdateOfReceptionRequested(
+                      receptionId: reception.receptionId,
+                      updatedStatus: "DONE",
+                      date: reception.startTime,
+                    ));
                   },
                   child: Text("Close Reception"),
                 ),

@@ -15,11 +15,20 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
   ReceptionBloc() : super(ReceptionInitial());
 
   ReceptionRepository _receptionRepo = new ReceptionRepository();
+  List<String> status = [
+    "DONE",
+    "CANCELLED",
+    "UPCOMING",
+  ];
+
+  List<String> get currentStatus {
+    return status;
+  }
+
   @override
   Stream<ReceptionState> mapEventToState(
     ReceptionEvent event,
   ) async* {
-    logger.i(event.toString() + " is the event called");
     if (event is DateWiseReceptionsRequested) {
       yield* _mapDateWiseReceptionsRequestedToState(event);
     } else if (event is ReceptionBlocUpdateRequested) {
@@ -33,14 +42,21 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
       DateWiseReceptionsRequested event) async* {
     yield ReceptionLoading();
     try {
-      List<Reception> receptions = await _getSortedReceptions(
-        date: event.date,
-      );
-      yield ReceptionLoadSuccessful(
-        receptions: receptions,
-      );
+      if (this.status.length != 0) {
+        List<Reception> receptions = await _getSortedReceptions(
+          date: event.date,
+          status: this.status,
+        );
+        yield ReceptionLoadSuccessful(
+          receptions: receptions,
+        );
+      } else {
+        yield ReceptionsLoadFailure(error: "Please select atleast one option to view receptions");
+      }
     } catch (e) {
-      yield ReceptionsLoadFailure(error: e);
+      yield ReceptionsLoadFailure(
+        error: e.toString(),
+      );
     }
   }
 
@@ -49,6 +65,7 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
     try {
       List<Reception> receptions = await _getSortedReceptions(
         date: event.date,
+        status: this.status,
       );
       yield ReceptionLoadSuccessful(
         receptions: receptions,
@@ -72,6 +89,7 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
 
       List<Reception> receptions = await _getSortedReceptions(
         date: event.date,
+        status: this.status,
       );
       yield ReceptionLoadSuccessful(
         receptions: receptions,
@@ -83,12 +101,14 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
     }
   }
 
-  Future<List<Reception>> _getSortedReceptions(
-      {@required DateTime date}) async {
+  Future<List<Reception>> _getSortedReceptions({
+    @required DateTime date,
+    @required List<String> status,
+  }) async {
     String _accessToken =
         await SubscriberRepository().getAccessTokenFromStorage();
     List<Reception> listOfAllReceptions = await _receptionRepo
-        .viewReceptionsByStatus(status: ["ALL"], accessToken: _accessToken);
+        .viewReceptionsByStatus(status: status, accessToken: _accessToken);
     List<Reception> requiredReceptions = [];
     for (Reception reception in listOfAllReceptions) {
       if (reception.startTime.isSameDate(date) ||
@@ -103,4 +123,15 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
     );
     return requiredReceptions;
   }
+
+  void addElementToStatus({@required String element}) =>
+      this.status.add(element);
+
+  void removeElementFromStatus({@required String element}) =>
+      this.status.remove(element);
+
+  void replaceStatusList({@required List<String> updatedStatus}) =>
+      this.status = updatedStatus;
+
+  bool isHaving({@required String counter}) => this.status.contains(counter);
 }

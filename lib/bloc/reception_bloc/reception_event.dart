@@ -6,7 +6,9 @@ abstract class ReceptionEvent {}
 class DateWiseReceptionsRequested extends ReceptionEvent {
   final DateTime date;
 
-  DateWiseReceptionsRequested({@required this.date});
+  DateWiseReceptionsRequested({
+    @required this.date,
+  });
 }
 
 class StatusUpdateOfReceptionRequested extends ReceptionEvent {
@@ -24,5 +26,7 @@ class StatusUpdateOfReceptionRequested extends ReceptionEvent {
 class ReceptionBlocUpdateRequested extends ReceptionEvent {
   final DateTime date;
 
-  ReceptionBlocUpdateRequested(this.date);
+  ReceptionBlocUpdateRequested({
+    @required this.date,
+  });
 }
