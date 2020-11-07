@@ -31,10 +31,10 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
   ) async* {
     if (event is DateWiseReceptionsRequested) {
       yield* _mapDateWiseReceptionsRequestedToState(event);
+    } else if (event is StatusUpdateOfReceptionRequested) {
+      yield* _mapStatusUpdateOfReceptionRequestedToState(event);
     } else if (event is ReceptionBlocUpdateRequested) {
       yield* _mapReceptionBlocUpdateRequestedToState(event);
-    } else if (event is StatusUpdateOfReceptionRequested) {
-      _mapStatusUpdateOfReceptionRequestedToState(event);
     }
   }
 
@@ -51,7 +51,8 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
           receptions: receptions,
         );
       } else {
-        yield ReceptionsLoadFailure(error: "Please select atleast one option to view receptions");
+        yield ReceptionsLoadFailure(
+            error: "Please select atleast one option to view receptions");
       }
     } catch (e) {
       yield ReceptionsLoadFailure(
@@ -83,9 +84,10 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
           await SubscriberRepository().getAccessTokenFromStorage();
       Map<String, dynamic> _response =
           await _receptionRepo.updateReceptionStatus(
-              counterId: event.receptionId,
-              status: event.updatedStatus,
-              accessToken: _accessToken);
+        counterId: event.receptionId,
+        status: event.updatedStatus,
+        accessToken: _accessToken,
+      );
 
       List<Reception> receptions = await _getSortedReceptions(
         date: event.date,

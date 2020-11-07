@@ -146,6 +146,31 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
     }
   }
 
+  void filterChipOnSelect(
+      {@required String status, @required BuildContext context}) {
+    if (!BlocProvider.of<ReceptionBloc>(context).isHaving(counter: status)) {
+      BlocProvider.of<ReceptionBloc>(context).addElementToStatus(
+        element: status,
+      );
+      BlocProvider.of<ReceptionBloc>(context).add(
+        DateWiseReceptionsRequested(
+          date: selectedDate,
+        ),
+      );
+      setState(() {});
+    } else {
+      BlocProvider.of<ReceptionBloc>(context).removeElementFromStatus(
+        element: status,
+      );
+      BlocProvider.of<ReceptionBloc>(context).add(
+        DateWiseReceptionsRequested(
+          date: selectedDate,
+        ),
+      );
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -224,32 +249,10 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                                 : Colors.black,
                           ),
                         ),
-                        onSelected: (value) {
-                          if (!BlocProvider.of<ReceptionBloc>(context)
-                              .isHaving(counter: "DONE")) {
-                            BlocProvider.of<ReceptionBloc>(context)
-                                .addElementToStatus(
-                              element: "DONE",
-                            );
-                            BlocProvider.of<ReceptionBloc>(context).add(
-                              DateWiseReceptionsRequested(
-                                date: selectedDate,
-                              ),
-                            );
-                            setState(() {});
-                          } else {
-                            BlocProvider.of<ReceptionBloc>(context)
-                                .removeElementFromStatus(
-                              element: "DONE",
-                            );
-                            BlocProvider.of<ReceptionBloc>(context).add(
-                              DateWiseReceptionsRequested(
-                                date: selectedDate,
-                              ),
-                            );
-                            setState(() {});
-                          }
-                        },
+                        onSelected: (value) => filterChipOnSelect(
+                          status: "DONE",
+                          context: context,
+                        ),
                         selected:
                             BlocProvider.of<ReceptionBloc>(context).isHaving(
                           counter: "DONE",
@@ -267,31 +270,10 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                                 : Colors.black,
                           ),
                         ),
-                        onSelected: (value) {
-                          if (value) {
-                            BlocProvider.of<ReceptionBloc>(context)
-                                .addElementToStatus(
-                              element: "UPCOMING",
-                            );
-                            BlocProvider.of<ReceptionBloc>(context).add(
-                              DateWiseReceptionsRequested(
-                                date: selectedDate,
-                              ),
-                            );
-                            setState(() {});
-                          } else {
-                            BlocProvider.of<ReceptionBloc>(context)
-                                .removeElementFromStatus(
-                              element: "UPCOMING",
-                            );
-                            BlocProvider.of<ReceptionBloc>(context).add(
-                              DateWiseReceptionsRequested(
-                                date: selectedDate,
-                              ),
-                            );
-                            setState(() {});
-                          }
-                        },
+                        onSelected: (value) => filterChipOnSelect(
+                          status: "UPCOMING",
+                          context: context,
+                        ),
                         selected:
                             BlocProvider.of<ReceptionBloc>(context).isHaving(
                           counter: "UPCOMING",
@@ -309,31 +291,10 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                                 : Colors.black,
                           ),
                         ),
-                        onSelected: (value) {
-                          if (value) {
-                            BlocProvider.of<ReceptionBloc>(context)
-                                .addElementToStatus(
-                              element: "CANCELLED",
-                            );
-                            BlocProvider.of<ReceptionBloc>(context).add(
-                              DateWiseReceptionsRequested(
-                                date: selectedDate,
-                              ),
-                            );
-                            setState(() {});
-                          } else {
-                            BlocProvider.of<ReceptionBloc>(context)
-                                .removeElementFromStatus(
-                              element: "CANCELLED",
-                            );
-                            BlocProvider.of<ReceptionBloc>(context).add(
-                              DateWiseReceptionsRequested(
-                                date: selectedDate,
-                              ),
-                            );
-                            setState(() {});
-                          }
-                        },
+                        onSelected: (value) => filterChipOnSelect(
+                          status: "CANCELLED",
+                          context: context,
+                        ),
                         selected:
                             BlocProvider.of<ReceptionBloc>(context).isHaving(
                           counter: "CANCELLED",
