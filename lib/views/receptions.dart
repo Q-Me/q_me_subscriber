@@ -23,8 +23,17 @@ import 'package:qme_subscriber/widgets/calenderItems.dart';
 import 'package:qme_subscriber/widgets/error.dart';
 import 'package:qme_subscriber/widgets/loader.dart';
 
+class ReceptionScreenArguments {
+  final bool isValidCache;
+
+  ReceptionScreenArguments({@required this.isValidCache});
+}
+
 class ReceptionsScreen extends StatefulWidget {
   static const String id = '/receptions';
+  final ReceptionScreenArguments arguments;
+
+  const ReceptionsScreen({Key key, @required this.arguments}) : super(key: key);
   @override
   _ReceptionsScreenState createState() => _ReceptionsScreenState();
 }
@@ -37,13 +46,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(Duration(days: 7));
   DateTime selectedDate = DateTime.now();
-  List<String> status = [
-    "DONE",
-    "UPCOMING",
-    "CANCELLED",
-  ];
   List<DateTime> markedDates = [];
-  TabController _tabController;
 
   addedReception() {
     /*TODO When coming back from Create Reception page*/
@@ -51,13 +54,11 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
 
   @override
   void initState() {
-    _tabController = TabController(length: 4, vsync: this);
     super.initState();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -149,18 +150,8 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
   void filterChipOnSelect(
       {@required String status, @required BuildContext context}) {
     if (!BlocProvider.of<ReceptionBloc>(context).isHaving(counter: status)) {
-      BlocProvider.of<ReceptionBloc>(context).addElementToStatus(
-        element: status,
-      );
-      BlocProvider.of<ReceptionBloc>(context).add(
-        DateWiseReceptionsRequested(
-          date: selectedDate,
-        ),
-      );
-      setState(() {});
-    } else {
-      BlocProvider.of<ReceptionBloc>(context).removeElementFromStatus(
-        element: status,
+      BlocProvider.of<ReceptionBloc>(context).replaceStatusList(
+        updatedStatus: [status],
       );
       BlocProvider.of<ReceptionBloc>(context).add(
         DateWiseReceptionsRequested(
@@ -348,7 +339,8 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                               },
                               child: ReceptionsListView(
                                 receptions: state.receptions,
-                                status: status,
+                                status: BlocProvider.of<ReceptionBloc>(context)
+                                    .currentStatus,
                               ),
                             );
                           }
@@ -363,6 +355,13 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                             state is ReceptionsLoadFailure) {
                           _completer?.complete();
                           _completer = Completer();
+                        }
+                        if (widget.arguments.isValidCache != true) {
+                          BlocProvider.of<ReceptionBloc>(context).add(
+                            ReceptionBlocUpdateRequested(
+                              date: selectedDate,
+                            ),
+                          );
                         }
                       },
                     ),
@@ -400,26 +399,35 @@ class ReceptionsListView extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // TODO: Implement button logic
                   RaisedButton(
-                    onPressed: () {
-                      BlocProvider.of<ReceptionBloc>(context)
-                          .add(StatusUpdateOfReceptionRequested(
-                        receptionId: reception.receptionId,
-                        updatedStatus: "CANCELLED",
-                        date: reception.startTime,
-                      ));
-                    },
-                    child: Text("Delete Reception"),
+                    onPressed: reception.status == "UPCOMING"
+                        ? () {
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              StatusUpdateOfReceptionRequested(
+                                receptionId: reception.receptionId,
+                                updatedStatus: "CANCELLED",
+                                date: reception.startTime,
+                              ),
+                            );
+                          }
+                        : null,
+                    child: Text(
+                      "Delete Reception",
+                    ),
                   ),
                   RaisedButton(
-                    onPressed: () {
-                      BlocProvider.of<ReceptionBloc>(context)
-                          .add(StatusUpdateOfReceptionRequested(
-                        receptionId: reception.receptionId,
-                        updatedStatus: "ACTIVE",
-                        date: reception.startTime,
-                      ));
-                    },
+                    onPressed: reception.status == "UPCOMING"
+                        ? () {
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              StatusUpdateOfReceptionRequested(
+                                receptionId: reception.receptionId,
+                                updatedStatus: "ACTIVE",
+                                date: reception.startTime,
+                              ),
+                            );
+                          }
+                        : null,
                     child: Text("Open Reception"),
                   )
                 ],
@@ -428,14 +436,17 @@ class ReceptionsListView extends StatelessWidget {
               Container(
                 margin: EdgeInsets.all(10),
                 child: RaisedButton(
-                  onPressed: () {
-                    BlocProvider.of<ReceptionBloc>(context)
-                        .add(StatusUpdateOfReceptionRequested(
-                      receptionId: reception.receptionId,
-                      updatedStatus: "DONE",
-                      date: reception.startTime,
-                    ));
-                  },
+                  onPressed: reception.status == "ACTIVE"
+                      ? () {
+                          BlocProvider.of<ReceptionBloc>(context).add(
+                            StatusUpdateOfReceptionRequested(
+                              receptionId: reception.receptionId,
+                              updatedStatus: "DONE",
+                              date: reception.startTime,
+                            ),
+                          );
+                        }
+                      : null,
                   child: Text("Close Reception"),
                 ),
               ),

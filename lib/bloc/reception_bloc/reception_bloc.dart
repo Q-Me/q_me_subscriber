@@ -5,7 +5,6 @@ import 'package:meta/meta.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
-import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
 
 part 'reception_event.dart';
@@ -16,8 +15,6 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
 
   ReceptionRepository _receptionRepo = new ReceptionRepository();
   List<String> status = [
-    "DONE",
-    "CANCELLED",
     "UPCOMING",
   ];
 
