@@ -6,14 +6,17 @@ import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/time.dart';
+import 'package:equatable/equatable.dart';
 
 part 'reception_event.dart';
 part 'reception_state.dart';
 
 class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
-  ReceptionBloc() : super(ReceptionInitial());
+  ReceptionBloc({@required this.receptionRepo,@required this.subscriberRepository})
+      : super(ReceptionInitial());
 
-  ReceptionRepository _receptionRepo = new ReceptionRepository();
+  ReceptionRepository receptionRepo;
+  SubscriberRepository subscriberRepository;
   List<String> status = [
     "UPCOMING",
   ];
@@ -78,9 +81,9 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
     yield ReceptionLoading();
     try {
       String _accessToken =
-          await SubscriberRepository().getAccessTokenFromStorage();
+          await subscriberRepository.getAccessTokenFromStorage();
       Map<String, dynamic> _response =
-          await _receptionRepo.updateReceptionStatus(
+          await receptionRepo.updateReceptionStatus(
         counterId: event.receptionId,
         status: event.updatedStatus,
         accessToken: _accessToken,
@@ -105,14 +108,14 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
     @required List<String> status,
   }) async {
     String _accessToken =
-        await SubscriberRepository().getAccessTokenFromStorage();
-    List<Reception> listOfAllReceptions = await _receptionRepo
+        await subscriberRepository.getAccessTokenFromStorage();
+    List<Reception> listOfAllReceptions = await receptionRepo
         .viewReceptionsByStatus(status: status, accessToken: _accessToken);
     List<Reception> requiredReceptions = [];
     for (Reception reception in listOfAllReceptions) {
       if (reception.startTime.isSameDate(date) ||
           reception.endTime.isSameDate(date)) {
-        Reception element = await _receptionRepo.viewReceptionDetailed(
+        Reception element = await receptionRepo.viewReceptionDetailed(
             receptionId: reception.receptionId);
         requiredReceptions.add(element);
       }
