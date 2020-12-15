@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qme_subscriber/bloc_observer.dart';
 
 import 'package:qme_subscriber/repository/subscriber.dart';
+import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/receptions.dart';
 
 import 'router.dart' as router;
@@ -38,6 +39,11 @@ class _FireBaseNotificationHandlerState
   @override
   void initState() {
     super.initState();
+    _fcm.getToken().then(
+      (token) {
+        logger.i(token);
+      },
+    );
     _fcm.configure(
       onLaunch: (Map<String, dynamic> message) async {
         isValidCache = false;
