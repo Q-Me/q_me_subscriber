@@ -12,6 +12,7 @@ import 'package:qme_subscriber/bloc/reception_bloc/reception_bloc.dart';
 import 'package:qme_subscriber/bloc/receptions.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
+import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/utilities/time.dart';
@@ -147,27 +148,15 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
     }
   }
 
-  void filterChipOnSelect(
-      {@required String status, @required BuildContext context}) {
-    if (!BlocProvider.of<ReceptionBloc>(context).isHaving(counter: status)) {
-      BlocProvider.of<ReceptionBloc>(context).replaceStatusList(
-        updatedStatus: [status],
-      );
-      BlocProvider.of<ReceptionBloc>(context).add(
-        DateWiseReceptionsRequested(
-          date: selectedDate,
-        ),
-      );
-      setState(() {});
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: BlocProvider(
-        create: (context) => ReceptionBloc(),
+        create: (context) => ReceptionBloc(
+          receptionRepo: ReceptionRepository(),
+          subscriberRepository: SubscriberRepository(),
+        ),
         child: SafeArea(
           child: Builder(builder: (context) {
             return Scaffold(
@@ -225,73 +214,8 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                     markedDates: markedDates,
                     containerDecoration: BoxDecoration(color: Colors.black12),
                   ),
-                  Wrap(
-                    spacing: 10,
-                    children: [
-                      FilterChip(
-                        selectedColor: Colors.blue,
-                        checkmarkColor: Colors.white,
-                        label: Text(
-                          "Done",
-                          style: TextStyle(
-                            color: BlocProvider.of<ReceptionBloc>(context)
-                                    .isHaving(counter: "DONE")
-                                ? Colors.white
-                                : Colors.black,
-                          ),
-                        ),
-                        onSelected: (value) => filterChipOnSelect(
-                          status: "DONE",
-                          context: context,
-                        ),
-                        selected:
-                            BlocProvider.of<ReceptionBloc>(context).isHaving(
-                          counter: "DONE",
-                        ),
-                      ),
-                      FilterChip(
-                        selectedColor: Colors.blue,
-                        checkmarkColor: Colors.white,
-                        label: Text(
-                          "Upcoming",
-                          style: TextStyle(
-                            color: BlocProvider.of<ReceptionBloc>(context)
-                                    .isHaving(counter: "UPCOMING")
-                                ? Colors.white
-                                : Colors.black,
-                          ),
-                        ),
-                        onSelected: (value) => filterChipOnSelect(
-                          status: "UPCOMING",
-                          context: context,
-                        ),
-                        selected:
-                            BlocProvider.of<ReceptionBloc>(context).isHaving(
-                          counter: "UPCOMING",
-                        ),
-                      ),
-                      FilterChip(
-                        selectedColor: Colors.blue,
-                        checkmarkColor: Colors.white,
-                        label: Text(
-                          "Cancelled",
-                          style: TextStyle(
-                            color: BlocProvider.of<ReceptionBloc>(context)
-                                    .isHaving(counter: "CANCELLED")
-                                ? Colors.white
-                                : Colors.black,
-                          ),
-                        ),
-                        onSelected: (value) => filterChipOnSelect(
-                          status: "CANCELLED",
-                          context: context,
-                        ),
-                        selected:
-                            BlocProvider.of<ReceptionBloc>(context).isHaving(
-                          counter: "CANCELLED",
-                        ),
-                      ),
-                    ],
+                  FilterChips(
+                    selectedDate: selectedDate,
                   ),
                   Expanded(
                     child: BlocConsumer<ReceptionBloc, ReceptionState>(
@@ -323,7 +247,8 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                                 ListView(),
                                 Center(
                                   child: Text(
-                                    "No Receptions found on ${DateFormat.yMMMd().format(selectedDate)}",
+                                    "No Receptions found on ${DateFormat.yMMMd().format(selectedDate)} in the status of ${BlocProvider.of<ReceptionBloc>(context).currentStatus[0].toLowerCase()}",
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
                               ]),
@@ -356,13 +281,15 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                           _completer?.complete();
                           _completer = Completer();
                         }
-                        if (widget.arguments.isValidCache != true) {
-                          BlocProvider.of<ReceptionBloc>(context).add(
-                            ReceptionBlocUpdateRequested(
-                              date: selectedDate,
-                            ),
-                          );
-                        }
+                          if (widget.arguments != null) {
+                            if (widget.arguments.isValidCache != true) {
+                              BlocProvider.of<ReceptionBloc>(context).add(
+                                ReceptionBlocUpdateRequested(
+                                  date: selectedDate,
+                                ),
+                              );
+                            }
+                          }
                       },
                     ),
                   ),
@@ -372,6 +299,100 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
           }),
         ),
       ),
+    );
+  }
+}
+
+class FilterChips extends StatefulWidget {
+  const FilterChips({Key key, @required this.selectedDate}) : super(key: key);
+
+  final DateTime selectedDate;
+  @override
+  _FilterChipsState createState() => _FilterChipsState();
+}
+
+class _FilterChipsState extends State<FilterChips> {
+  void filterChipOnSelect(
+      {@required String status, @required BuildContext context}) {
+    if (!BlocProvider.of<ReceptionBloc>(context).isHaving(counter: status)) {
+      BlocProvider.of<ReceptionBloc>(context).replaceStatusList(
+        updatedStatus: [status],
+      );
+      BlocProvider.of<ReceptionBloc>(context).add(
+        DateWiseReceptionsRequested(
+          date: widget.selectedDate,
+        ),
+      );
+    }
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      children: [
+        FilterChip(
+          selectedColor: Colors.blue,
+          checkmarkColor: Colors.white,
+          label: Text(
+            "Done",
+            style: TextStyle(
+              color: BlocProvider.of<ReceptionBloc>(context)
+                      .isHaving(counter: "DONE")
+                  ? Colors.white
+                  : Colors.black,
+            ),
+          ),
+          onSelected: (value) => filterChipOnSelect(
+            status: "DONE",
+            context: context,
+          ),
+          selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
+            counter: "DONE",
+          ),
+        ),
+        FilterChip(
+          selectedColor: Colors.blue,
+          checkmarkColor: Colors.white,
+          label: Text(
+            "Upcoming",
+            style: TextStyle(
+              color: BlocProvider.of<ReceptionBloc>(context)
+                      .isHaving(counter: "UPCOMING")
+                  ? Colors.white
+                  : Colors.black,
+            ),
+          ),
+          onSelected: (value) => filterChipOnSelect(
+            status: "UPCOMING",
+            context: context,
+          ),
+          selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
+            counter: "UPCOMING",
+          ),
+        ),
+        FilterChip(
+          selectedColor: Colors.blue,
+          checkmarkColor: Colors.white,
+          label: Text(
+            "Cancelled",
+            style: TextStyle(
+              color: BlocProvider.of<ReceptionBloc>(context)
+                      .isHaving(counter: "CANCELLED")
+                  ? Colors.white
+                  : Colors.black,
+            ),
+          ),
+          onSelected: (value) => filterChipOnSelect(
+            status: "CANCELLED",
+            context: context,
+          ),
+          selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
+            counter: "CANCELLED",
+          ),
+        ),
+      ],
     );
   }
 }
