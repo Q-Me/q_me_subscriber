@@ -7,9 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:qme_subscriber/api/app_exceptions.dart';
-import 'package:qme_subscriber/api/base_helper.dart';
 import 'package:qme_subscriber/bloc/reception_bloc/reception_bloc.dart';
-import 'package:qme_subscriber/bloc/receptions.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/model/slot.dart';
 import 'package:qme_subscriber/repository/reception.dart';
@@ -21,8 +19,6 @@ import 'package:qme_subscriber/views/createReception.dart';
 import 'package:qme_subscriber/views/signin.dart';
 import 'package:qme_subscriber/views/slot.dart';
 import 'package:qme_subscriber/widgets/calenderItems.dart';
-import 'package:qme_subscriber/widgets/error.dart';
-import 'package:qme_subscriber/widgets/loader.dart';
 
 class ReceptionScreenArguments {
   final bool isValidCache;
@@ -46,7 +42,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
 
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(Duration(days: 7));
-  DateTime selectedDate = DateTime.now();
+  ValueNotifier<DateTime> selectedDate = ValueNotifier(DateTime.now(),);
   List<DateTime> markedDates = [];
 
   addedReception() {
@@ -184,11 +180,11 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                 elevation: 0,
                 heroTag: "Create Reception",
                 onPressed: () async {
-                  logger.d('Create reception route on date ');
+                  logger.d('Create a reception route on date ');
                   await Navigator.pushNamed(
                     context,
                     CreateReceptionScreen.id,
-                    arguments: selectedDate,
+                    arguments: selectedDate.value,
                   );
                 },
                 tooltip: 'Create Reception',
@@ -201,7 +197,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                     endDate: endDate,
                     onDateSelected: (DateTime select) {
                       logger.d(select.toString());
-                      selectedDate = select;
+                      selectedDate.value = select;
                       BlocProvider.of<ReceptionBloc>(context).add(
                         DateWiseReceptionsRequested(
                           date: select,
@@ -223,7 +219,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                         if (state is ReceptionInitial) {
                           BlocProvider.of<ReceptionBloc>(context).add(
                             DateWiseReceptionsRequested(
-                              date: selectedDate,
+                              date: selectedDate.value,
                             ),
                           );
                           return Center(
@@ -239,7 +235,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                               onRefresh: () {
                                 BlocProvider.of<ReceptionBloc>(context)
                                     .add(ReceptionBlocUpdateRequested(
-                                  date: selectedDate,
+                                  date: selectedDate.value,
                                 ));
                                 return _completer.future;
                               },
@@ -247,7 +243,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                                 ListView(),
                                 Center(
                                   child: Text(
-                                    "No Receptions found on ${DateFormat.yMMMd().format(selectedDate)} in the status of ${BlocProvider.of<ReceptionBloc>(context).currentStatus[0].toLowerCase()}",
+                                    "No Receptions found on ${DateFormat.yMMMd().format(selectedDate.value)} in the status of ${BlocProvider.of<ReceptionBloc>(context).currentStatus[0].toLowerCase()}",
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
@@ -258,7 +254,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                               onRefresh: () {
                                 BlocProvider.of<ReceptionBloc>(context)
                                     .add(ReceptionBlocUpdateRequested(
-                                  date: selectedDate,
+                                  date: selectedDate.value,
                                 ));
                                 return _completer.future;
                               },
@@ -285,7 +281,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                             if (widget.arguments.isValidCache != true) {
                               BlocProvider.of<ReceptionBloc>(context).add(
                                 ReceptionBlocUpdateRequested(
-                                  date: selectedDate,
+                                  date: selectedDate.value,
                                 ),
                               );
                             }
@@ -306,7 +302,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
 class FilterChips extends StatefulWidget {
   const FilterChips({Key key, @required this.selectedDate}) : super(key: key);
 
-  final DateTime selectedDate;
+  final ValueNotifier<DateTime> selectedDate;
   @override
   _FilterChipsState createState() => _FilterChipsState();
 }
@@ -320,7 +316,7 @@ class _FilterChipsState extends State<FilterChips> {
       );
       BlocProvider.of<ReceptionBloc>(context).add(
         DateWiseReceptionsRequested(
-          date: widget.selectedDate,
+          date: widget.selectedDate.value,
         ),
       );
     }
@@ -329,70 +325,73 @@ class _FilterChipsState extends State<FilterChips> {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      children: [
-        FilterChip(
-          selectedColor: Colors.blue,
-          checkmarkColor: Colors.white,
-          label: Text(
-            "Done",
-            style: TextStyle(
-              color: BlocProvider.of<ReceptionBloc>(context)
-                      .isHaving(counter: "DONE")
-                  ? Colors.white
-                  : Colors.black,
+    return ValueListenableBuilder(
+      builder: (BuildContext context, DateTime value, Widget child) => Wrap(
+        spacing: 10,
+        children: [
+          FilterChip(
+            selectedColor: Colors.blue,
+            checkmarkColor: Colors.white,
+            label: Text(
+              "Done",
+              style: TextStyle(
+                color: BlocProvider.of<ReceptionBloc>(context)
+                        .isHaving(counter: "DONE")
+                    ? Colors.white
+                    : Colors.black,
+              ),
+            ),
+            onSelected: (value) => filterChipOnSelect(
+              status: "DONE",
+              context: context,
+            ),
+            selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
+              counter: "DONE",
             ),
           ),
-          onSelected: (value) => filterChipOnSelect(
-            status: "DONE",
-            context: context,
-          ),
-          selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
-            counter: "DONE",
-          ),
-        ),
-        FilterChip(
-          selectedColor: Colors.blue,
-          checkmarkColor: Colors.white,
-          label: Text(
-            "Upcoming",
-            style: TextStyle(
-              color: BlocProvider.of<ReceptionBloc>(context)
-                      .isHaving(counter: "UPCOMING")
-                  ? Colors.white
-                  : Colors.black,
+          FilterChip(
+            selectedColor: Colors.blue,
+            checkmarkColor: Colors.white,
+            label: Text(
+              "Upcoming",
+              style: TextStyle(
+                color: BlocProvider.of<ReceptionBloc>(context)
+                        .isHaving(counter: "UPCOMING")
+                    ? Colors.white
+                    : Colors.black,
+              ),
+            ),
+            onSelected: (value) => filterChipOnSelect(
+              status: "UPCOMING",
+              context: context,
+            ),
+            selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
+              counter: "UPCOMING",
             ),
           ),
-          onSelected: (value) => filterChipOnSelect(
-            status: "UPCOMING",
-            context: context,
-          ),
-          selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
-            counter: "UPCOMING",
-          ),
-        ),
-        FilterChip(
-          selectedColor: Colors.blue,
-          checkmarkColor: Colors.white,
-          label: Text(
-            "Cancelled",
-            style: TextStyle(
-              color: BlocProvider.of<ReceptionBloc>(context)
-                      .isHaving(counter: "CANCELLED")
-                  ? Colors.white
-                  : Colors.black,
+          FilterChip(
+            selectedColor: Colors.blue,
+            checkmarkColor: Colors.white,
+            label: Text(
+              "Cancelled",
+              style: TextStyle(
+                color: BlocProvider.of<ReceptionBloc>(context)
+                        .isHaving(counter: "CANCELLED")
+                    ? Colors.white
+                    : Colors.black,
+              ),
+            ),
+            onSelected: (value) => filterChipOnSelect(
+              status: "CANCELLED",
+              context: context,
+            ),
+            selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
+              counter: "CANCELLED",
             ),
           ),
-          onSelected: (value) => filterChipOnSelect(
-            status: "CANCELLED",
-            context: context,
-          ),
-          selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
-            counter: "CANCELLED",
-          ),
-        ),
-      ],
+        ],
+      ),
+      valueListenable: widget.selectedDate,
     );
   }
 }

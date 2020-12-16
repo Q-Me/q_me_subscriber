@@ -32,5 +32,5 @@ class ReceptionsLoadFailure extends ReceptionState {
 
   @override
   // TODO: implement props
-  List<Object> get props => [this.error];
+  List<Object> get props => [];
 }
