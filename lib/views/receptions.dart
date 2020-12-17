@@ -243,7 +243,7 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                                 ListView(),
                                 Center(
                                   child: Text(
-                                    "No Receptions found on ${DateFormat.yMMMd().format(selectedDate.value)} in the status of ${BlocProvider.of<ReceptionBloc>(context).currentStatus[0].toLowerCase()}",
+                                    "No Receptions found on ${DateFormat.yMMMd().format(selectedDate.value)}",
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
