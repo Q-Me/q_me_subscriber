@@ -1,4 +1,4 @@
-const String baseURL = 'http://13.127.245.177:4000/api',
+const String baseURL = 'http://qme.company:4000/api',
     kSignUpOld = '/subscriber/signup',
     kSignUp = '/subscriber/signupfirebase',
     kSignIn = '/subscriber/login',
