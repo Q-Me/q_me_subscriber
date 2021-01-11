@@ -28,7 +28,7 @@ class _FancyFabState extends State<FancyFab>
   @override
   initState() {
     _animationController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500))
+        AnimationController(value: this, duration: Duration(milliseconds: 500))
           ..addListener(() {
             setState(() {});
           });
