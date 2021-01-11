@@ -39,7 +39,7 @@ dependencies:
   google_maps_place_picker: 0.9.4
   firebase_analytics: ^5.0.14
   get: ^3.2.0
-  calendar_strip: ^1.0.6
+  # calendar_strip: ^1.0.6
   ordered_set: ^2.0.0
   logger: ^0.9.1
   animated_floatactionbuttons: ^0.1.0

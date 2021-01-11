@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 class AppException implements Exception {
-  final _message;
+  final message;
   final _prefix;
-  AppException(this._message, this._prefix);
+  AppException(this.message, this._prefix);
 
   Map toMap() {
-    return jsonDecode(_message);
+    return jsonDecode(message);
   }
 
   String toString() {
-    return "$_prefix$_message";
+    return "$_prefix$message";
   }
 }
 

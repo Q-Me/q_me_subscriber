@@ -49,9 +49,9 @@ class ThemedSolidButton extends StatelessWidget {
             if (notification != null) {
               displaySnackBar(notification);
             }
-//            log('Solid Theme Button pressed');
+          //  log('Solid Theme Button pressed');
             buttonFunction();
-//            log('btn fn executed');
+          //  log('btn fn executed');
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),

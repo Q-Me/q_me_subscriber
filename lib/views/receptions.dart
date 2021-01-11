@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:calendar_strip/calendar_strip.dart';
+// import 'package:calendar_strip/calendar_strip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +18,7 @@ import 'package:qme_subscriber/views/createAppointment.dart';
 import 'package:qme_subscriber/views/createReception.dart';
 import 'package:qme_subscriber/views/signin.dart';
 import 'package:qme_subscriber/views/slot.dart';
+import 'package:qme_subscriber/widgets/calendar_strip.dart';
 import 'package:qme_subscriber/widgets/calenderItems.dart';
 
 class ReceptionScreenArguments {
@@ -30,19 +31,23 @@ class ReceptionsScreen extends StatefulWidget {
   static const String id = '/receptions';
   final ReceptionScreenArguments arguments;
 
-  const ReceptionsScreen({Key key, @required this.arguments}) : super(key: key);
+  const ReceptionsScreen({
+    Key key,
+    @required this.arguments,
+  }) : super(key: key);
   @override
   _ReceptionsScreenState createState() => _ReceptionsScreenState();
 }
 
-class _ReceptionsScreenState extends State<ReceptionsScreen>
-    with SingleTickerProviderStateMixin {
+class _ReceptionsScreenState extends State<ReceptionsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Completer<void> _completer = Completer<void>();
 
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(Duration(days: 7));
-  ValueNotifier<DateTime> selectedDate = ValueNotifier(DateTime.now(),);
+  ValueNotifier<DateTime> selectedDate = ValueNotifier(
+    DateTime.now(),
+  );
   List<DateTime> markedDates = [];
 
   addedReception() {
@@ -67,11 +72,17 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
         actions: [
           FlatButton(
             child: Text('No'),
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(
+              context,
+              false,
+            ),
           ),
           FlatButton(
             child: Text('Yes'),
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(
+              context,
+              true,
+            ),
           )
         ],
       ),
@@ -82,7 +93,9 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
     _scaffoldKey.currentState.hideCurrentSnackBar();
     _scaffoldKey.currentState.showSnackBar(
       SnackBar(
-        content: Text(text),
+        content: Text(
+          text,
+        ),
         duration: Duration(seconds: seconds),
         action: SnackBarAction(
           label: 'Dismiss',
@@ -193,22 +206,14 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
               body: Column(
                 children: <Widget>[
                   CalendarStrip(
-                    startDate: startDate,
-                    endDate: endDate,
-                    onDateSelected: (DateTime select) {
-                      logger.d(select.toString());
-                      selectedDate.value = select;
+                    onSelectDate: (DateTime selectDate) {
+                      this.selectedDate.value = selectDate;
                       BlocProvider.of<ReceptionBloc>(context).add(
                         DateWiseReceptionsRequested(
-                          date: select,
+                          date: selectDate,
                         ),
                       );
                     },
-                    dateTileBuilder: dateTileBuilder,
-                    iconColor: Colors.black87,
-                    monthNameWidget: monthNameWidget,
-                    markedDates: markedDates,
-                    containerDecoration: BoxDecoration(color: Colors.black12),
                   ),
                   FilterChips(
                     selectedDate: selectedDate,
@@ -226,8 +231,23 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                             child: CircularProgressIndicator(),
                           );
                         } else if (state is ReceptionsLoadFailure) {
-                          return Center(
-                            child: Text("${state.error}"),
+                          return RefreshIndicator(
+                            onRefresh: () {
+                              BlocProvider.of<ReceptionBloc>(context)
+                                  .add(ReceptionBlocUpdateRequested(
+                                date: selectedDate.value,
+                              ));
+                              return _completer.future;
+                            },
+                            child: Stack(children: <Widget>[
+                              ListView(),
+                              Center(
+                                child: Text(
+                                  state.error,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ]),
                           );
                         } else if (state is ReceptionLoadSuccessful) {
                           if (state.receptions.length == 0) {
@@ -274,18 +294,18 @@ class _ReceptionsScreenState extends State<ReceptionsScreen>
                       listener: (context, state) {
                         if (state is ReceptionLoadSuccessful ||
                             state is ReceptionsLoadFailure) {
-                          _completer?.complete();
+                          _completer.complete();
                           _completer = Completer();
                         }
-                          if (widget.arguments != null) {
-                            if (widget.arguments.isValidCache != true) {
-                              BlocProvider.of<ReceptionBloc>(context).add(
-                                ReceptionBlocUpdateRequested(
-                                  date: selectedDate.value,
-                                ),
-                              );
-                            }
+                        if (widget.arguments != null) {
+                          if (widget.arguments.isValidCache != true) {
+                            BlocProvider.of<ReceptionBloc>(context).add(
+                              ReceptionBlocUpdateRequested(
+                                date: selectedDate.value,
+                              ),
+                            );
                           }
+                        }
                       },
                     ),
                   ),
@@ -389,6 +409,26 @@ class _FilterChipsState extends State<FilterChips> {
               counter: "CANCELLED",
             ),
           ),
+          FilterChip(
+            selectedColor: Colors.blue,
+            checkmarkColor: Colors.white,
+            label: Text(
+              "Active",
+              style: TextStyle(
+                color: BlocProvider.of<ReceptionBloc>(context)
+                        .isHaving(counter: "ACTIVE")
+                    ? Colors.white
+                    : Colors.black,
+              ),
+            ),
+            onSelected: (value) => filterChipOnSelect(
+              status: "ACTIVE",
+              context: context,
+            ),
+            selected: BlocProvider.of<ReceptionBloc>(context).isHaving(
+              counter: "ACTIVE",
+            ),
+          ),
         ],
       ),
       valueListenable: widget.selectedDate,
@@ -416,13 +456,21 @@ class ReceptionsListView extends StatelessWidget {
           value: reception,
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 10,
                 children: [
                   // TODO: Implement button logic
-                  RaisedButton(
-                    onPressed: reception.status == "UPCOMING"
-                        ? () {
+                  reception.status == "UPCOMING"
+                      ? RaisedButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              10,
+                            ),
+                          ),
+                          color: Colors.blue,
+                          textColor: Colors.white,
+                          onPressed: () {
                             BlocProvider.of<ReceptionBloc>(context).add(
                               StatusUpdateOfReceptionRequested(
                                 receptionId: reception.receptionId,
@@ -430,15 +478,22 @@ class ReceptionsListView extends StatelessWidget {
                                 date: reception.startTime,
                               ),
                             );
-                          }
-                        : null,
-                    child: Text(
-                      "Delete Reception",
-                    ),
-                  ),
-                  RaisedButton(
-                    onPressed: reception.status == "UPCOMING"
-                        ? () {
+                          },
+                          child: Text(
+                            "Delete Reception",
+                          ),
+                        )
+                      : Container(),
+                  reception.status == "UPCOMING"
+                      ? RaisedButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              10,
+                            ),
+                          ),
+                          color: Colors.blue,
+                          textColor: Colors.white,
+                          onPressed: () {
                             BlocProvider.of<ReceptionBloc>(context).add(
                               StatusUpdateOfReceptionRequested(
                                 receptionId: reception.receptionId,
@@ -446,18 +501,25 @@ class ReceptionsListView extends StatelessWidget {
                                 date: reception.startTime,
                               ),
                             );
-                          }
-                        : null,
-                    child: Text("Open Reception"),
-                  )
+                          },
+                          child: Text("Open Reception"),
+                        )
+                      : Container()
                 ],
               ),
               ReceptionAppointmentListView(),
-              Container(
-                margin: EdgeInsets.all(10),
-                child: RaisedButton(
-                  onPressed: reception.status == "ACTIVE"
-                      ? () {
+              reception.status == "ACTIVE"
+                  ? Container(
+                      margin: EdgeInsets.all(10),
+                      child: RaisedButton(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            10,
+                          ),
+                        ),
+                        color: Colors.blue,
+                        textColor: Colors.white,
+                        onPressed: () {
                           BlocProvider.of<ReceptionBloc>(context).add(
                             StatusUpdateOfReceptionRequested(
                               receptionId: reception.receptionId,
@@ -465,11 +527,11 @@ class ReceptionsListView extends StatelessWidget {
                               date: reception.startTime,
                             ),
                           );
-                        }
-                      : null,
-                  child: Text("Close Reception"),
-                ),
-              ),
+                        },
+                        child: Text("Close Reception"),
+                      ),
+                    )
+                  : Container(),
               Divider(
                 thickness: 2,
               )

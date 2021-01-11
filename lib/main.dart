@@ -2,10 +2,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qme_subscriber/bloc_observer.dart';
+import 'package:qme_subscriber/model/reception.dart';
+import 'package:qme_subscriber/model/slot.dart';
 
 import 'package:qme_subscriber/repository/subscriber.dart';
 import 'package:qme_subscriber/utilities/logger.dart';
 import 'package:qme_subscriber/views/receptions.dart';
+import 'package:qme_subscriber/views/slot.dart';
 
 import 'router.dart' as router;
 import 'services/analytics.dart';
@@ -50,6 +53,10 @@ class _FireBaseNotificationHandlerState
       },
       onResume: (Map<String, dynamic> message) async {
         isValidCache = false;
+        logger.d(
+          message["data"],
+        );
+        initialHome = SlotView.id;
       },
     );
   }
@@ -86,6 +93,10 @@ class MyApp extends StatelessWidget {
               ),
             ),
           ];
+        } else if (initialRoute == SlotView.id) {
+          return [MaterialPageRoute(
+            builder: (context) => SlotView(SlotViewArguments(reception: Reception(), slot: Slot())),
+          )];
         } else {
           return [
             MaterialPageRoute(

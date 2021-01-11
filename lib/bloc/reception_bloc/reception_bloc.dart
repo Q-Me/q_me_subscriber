@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
+import 'package:qme_subscriber/api/app_exceptions.dart';
 import 'package:qme_subscriber/model/reception.dart';
 import 'package:qme_subscriber/repository/reception.dart';
 import 'package:qme_subscriber/repository/subscriber.dart';
@@ -12,8 +13,10 @@ part 'reception_event.dart';
 part 'reception_state.dart';
 
 class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
-  ReceptionBloc({@required this.receptionRepo,@required this.subscriberRepository})
-      : super(ReceptionInitial());
+  ReceptionBloc({
+    @required this.receptionRepo,
+    @required this.subscriberRepository,
+  }) : super(ReceptionInitial());
 
   ReceptionRepository receptionRepo;
   SubscriberRepository subscriberRepository;
@@ -54,15 +57,16 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
         yield ReceptionsLoadFailure(
             error: "Please select atleast one option to view receptions");
       }
-    } catch (e) {
+    } on AppException catch (e) {
       yield ReceptionsLoadFailure(
-        error: e.toString(),
+        error: e.message,
       );
     }
   }
 
   Stream<ReceptionState> _mapReceptionBlocUpdateRequestedToState(
       ReceptionBlocUpdateRequested event) async* {
+    yield ReceptionLoading();
     try {
       List<Reception> receptions = await _getSortedReceptions(
         date: event.date,
@@ -71,8 +75,8 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
       yield ReceptionLoadSuccessful(
         receptions: receptions,
       );
-    } catch (e) {
-      yield ReceptionsLoadFailure(error: e);
+    } on AppException catch (e) {
+      yield ReceptionsLoadFailure(error: e.message);
     }
   }
 
@@ -96,9 +100,9 @@ class ReceptionBloc extends Bloc<ReceptionEvent, ReceptionState> {
       yield ReceptionLoadSuccessful(
         receptions: receptions,
       );
-    } catch (e) {
+    } on AppException catch (e) {
       yield ReceptionsLoadFailure(
-        error: e.toString(),
+        error: e.message,
       );
     }
   }
